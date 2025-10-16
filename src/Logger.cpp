@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/16 17:42:42 by elagouch          #+#    #+#             */
-/*   Updated: 2025/10/16 19:07:45 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/10/16 20:23:07 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,50 +14,45 @@
 
 #include <cstdlib>
 #include <ctime>
-
-#ifdef _WIN32
-#include <io.h>
-#define isatty _isatty
-#define STDOUT_FILENO 1
-#define STDERR_FILENO 2
-#else
 #include <unistd.h>
-#endif
 
 namespace logger {
 
 LogStream::LogStream(Logger &logger, LogLevel level)
-    : logger_(logger), level_(level), first_output_(true) {}
+    : _logger(logger), _level(level), _first_output(true) {}
 
 LogStream::~LogStream() {
   // this ensures we reset color at end if colors are enabled
-  if (logger_.colorsEnabled()) {
-    std::cerr << logger_.getReset();
+  if (_logger.colorsEnabled()) {
+    std::cerr << _logger.getReset();
   }
 }
 
 LogStream &LogStream::operator<<(std::ostream &(*manip)(std::ostream &)) {
-  if (first_output_) {
+  if (!_logger.shouldLog(_level)) {
+    return *this;
+  }
+  if (_first_output) {
     writePrefix();
-    first_output_ = false;
+    _first_output = false;
   }
   manip(std::cerr);
   return *this;
 }
 
 void LogStream::writePrefix() {
-  if (logger_.colorsEnabled()) {
-    std::cerr << logger_.getLevelColor(level_) << colors::FG_BOLD_BG << " "
-              << logger_.getLevelName(level_) << " " << logger_.getReset()
+  if (_logger.colorsEnabled()) {
+    std::cerr << _logger.getLevelColor(_level) << colors::FG_BOLD_BG << " "
+              << _logger.getLevelName(_level) << " " << _logger.getReset()
               << " ";
   } else {
-    std::cerr << logger_.getTimestamp() << "[" << logger_.getLevelName(level_)
+    std::cerr << _logger.getTimestamp() << "[" << _logger.getLevelName(_level)
               << "] ";
   }
 }
 
-Logger::Logger() : show_timestamps_(true), min_level_(DEBUG) {
-  colors_enabled_ = detectColorSupport();
+Logger::Logger() : _show_timestamps(true), _min_level(INFO) {
+  _colors_enabled = detectColorSupport();
 }
 
 bool Logger::detectColorSupport() {
@@ -100,20 +95,20 @@ Logger &Logger::getInstance() {
   return instance;
 }
 
-bool Logger::colorsEnabled() const { return colors_enabled_; }
+bool Logger::colorsEnabled() const { return _colors_enabled; }
 
-void Logger::setColorsEnabled(bool enabled) { colors_enabled_ = enabled; }
+void Logger::setColorsEnabled(bool enabled) { _colors_enabled = enabled; }
 
-void Logger::setShowTimestamps(bool show) { show_timestamps_ = show; }
+void Logger::setShowTimestamps(bool show) { _show_timestamps = show; }
 
-bool Logger::showTimestamps() const { return show_timestamps_; }
+bool Logger::showTimestamps() const { return _show_timestamps; }
 
-void Logger::setMinLevel(LogLevel level) { min_level_ = level; }
+void Logger::setMinLevel(LogLevel level) { _min_level = level; }
 
-LogLevel Logger::getMinLevel() const { return min_level_; }
+LogLevel Logger::getMinLevel() const { return _min_level; }
 
 const char *Logger::getLevelColor(LogLevel level) const {
-  if (!colors_enabled_) {
+  if (!_colors_enabled) {
     return "";
   }
 
@@ -146,10 +141,12 @@ const char *Logger::getLevelName(LogLevel level) const {
   }
 }
 
-const char *Logger::getReset() const { return colors_enabled_ ? colors::RESET : ""; }
+const char *Logger::getReset() const {
+  return _colors_enabled ? colors::RESET : "";
+}
 
 std::string Logger::getTimestamp() const {
-  if (!show_timestamps_) {
+  if (!_show_timestamps) {
     return "";
   }
 
@@ -160,7 +157,7 @@ std::string Logger::getTimestamp() const {
   return std::string(buffer);
 }
 
-bool Logger::shouldLog(LogLevel level) const { return level >= min_level_; }
+bool Logger::shouldLog(LogLevel level) const { return level >= _min_level; }
 
 LogStream debug() { return LogStream(Logger::getInstance(), DEBUG); }
 

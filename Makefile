@@ -6,7 +6,7 @@
 #    By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/10/08 15:49:16 by elagouch          #+#    #+#              #
-#    Updated: 2025/10/16 19:07:59 by elagouch         ###   ########.fr        #
+#    Updated: 2025/10/16 19:27:09 by elagouch         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -72,7 +72,7 @@ CXXFLAGS	+=	-O2						# slower comp, faster runtime
 # **************************************************************************** #
 
 NAME			:=		ft_irc
-SRC_O			?=		main Logger
+SRC_O			?=		main Logger Socket
 SRC				:=		$(addprefix src/, $(addsuffix .cpp, $(SRC_O)))
 OBJ				:=		$(SRC:.cpp=.o)
 DEPS			:=		$(SRC:.cpp=.d)

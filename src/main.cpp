@@ -6,40 +6,42 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/08 16:46:16 by elagouch          #+#    #+#             */
-/*   Updated: 2025/10/16 18:28:03 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/10/16 20:39:36 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Logger.hpp"
+#include "Socket.hpp"
 #include <ostream>
+#include <stdexcept>
 
 int main() {
-  // Basic usage with automatic color detection
-  logger::info() << "Application started" << std::endl;
-  logger::debug() << "Debug value: " << 42 << std::endl;
-  logger::warning() << "This is a warning message" << std::endl;
-  logger::error() << "Error code: " << -1 << std::endl;
+  logger::Logger::getInstance().setMinLevel(logger::DEBUG);
 
-  // Multiple values in one log line
-  logger::info() << "Processing " << 100 << " items" << std::endl;
+  try {
+    Socket server;
+    server.bind(IRC_PORT);
 
-  // Disable colors manually if needed
-  logger::Logger::getInstance().setColorsEnabled(false);
-  logger::info() << "This will not have colors" << std::endl;
+    logger::info() << "Server listening on port " << IRC_PORT << std::endl;
+    server.listen();
 
-  // Re-enable colors
-  logger::Logger::getInstance().setColorsEnabled(true);
-  logger::info() << "Colors are back" << std::endl;
+    for (;;) {
+      Socket *client = server.accept();
+      logger::debug() << "New client connected" << std::endl;
 
-  // Disable timestamps
-  logger::Logger::getInstance().setShowTimestamps(false);
-  logger::info() << "No timestamp on this line" << std::endl;
+      // stupid handling which just echoes back the data for now
+      std::string data = client->recv(1024);
+      if (!data.empty()) {
+        logger::debug() << "Received: " << data << std::endl;
+        client->send("Echo: " + data);
+      }
 
-  // Set minimum log level
-  logger::Logger::getInstance().setMinLevel(logger::WARNING);
-  logger::debug() << "This won't be shown" << std::endl;
-  logger::info() << "This won't be shown either" << std::endl;
-  logger::warning() << "But this will be shown" << std::endl;
+      client->close();
+      delete client;
+    }
+  } catch (const std::runtime_error &e) {
+    logger::error() << e.what() << std::endl;
+  }
 
   return 0;
 }

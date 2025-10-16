@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/16 17:42:42 by elagouch          #+#    #+#             */
-/*   Updated: 2025/10/16 19:07:18 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/10/16 19:56:44 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,15 +27,15 @@ enum LogLevel { DEBUG, INFO, WARNING, ERROR };
 // the palette
 // https://www.reddit.com/r/unixporn/comments/hjzw5f/oc_qualitative_color_palette_for_ansi_terminal/
 namespace colors {
-const char *const RESET       = "\033[0m";
-const char *const FG_BOLD_BG  = "\033[1;30m";
-const char *const BG_FG       = "\033[47m";
+const char *const RESET = "\033[0m";
+const char *const FG_BOLD_BG = "\033[1;30m";
+const char *const BG_FG = "\033[47m";
 // pastel
 // https://gist.github.com/JBlond/2fea43a3049b38287e5e9cefc87b2124?permalink_comment_id=3892823#gistcomment-3892823
-const char *const BG_ERR      = "\033[48;2;239;166;162m";
-const char *const BG_INFO     = "\033[48;2;128;201;144m";
-const char *const BG_WARN     = "\033[48;2;200;200;116m";
-const char *const BG_DEBUG    = "\033[48;2;204;172;237m";
+const char *const BG_ERR = "\033[48;2;239;166;162m";
+const char *const BG_INFO = "\033[48;2;128;201;144m";
+const char *const BG_WARN = "\033[48;2;200;200;116m";
+const char *const BG_DEBUG = "\033[48;2;204;172;237m";
 } // namespace colors
 
 class Logger;
@@ -43,9 +43,9 @@ class Logger;
 // this is to enable << operator chaining
 class LogStream {
 private:
-  Logger &logger_;
-  LogLevel level_;
-  bool first_output_;
+  Logger &_logger;
+  LogLevel _level;
+  bool _first_output;
 
 public:
   LogStream(Logger &logger, LogLevel level);
@@ -61,11 +61,10 @@ private:
   void writePrefix();
 };
 
-template <typename T>
-LogStream &LogStream::operator<<(const T &value) {
-  if (first_output_) {
+template <typename T> LogStream &LogStream::operator<<(const T &value) {
+  if (_first_output) {
     writePrefix();
-    first_output_ = false;
+    _first_output = false;
   }
   std::cerr << value;
   return *this;
@@ -74,9 +73,9 @@ LogStream &LogStream::operator<<(const T &value) {
 // (this is a singleton)
 class Logger {
 private:
-  bool colors_enabled_;
-  bool show_timestamps_;
-  LogLevel min_level_;
+  bool _colors_enabled;
+  bool _show_timestamps;
+  LogLevel _min_level;
 
   // private constructor bc singleton
   Logger();
