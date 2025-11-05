@@ -72,7 +72,7 @@ CXXFLAGS	+=	-O2						# slower comp, faster runtime
 # **************************************************************************** #
 
 NAME			:=		ft_irc
-SRC_O			?=		main Logger Socket
+SRC_O			?=		main Logger Socket Client
 SRC				:=		$(addprefix src/, $(addsuffix .cpp, $(SRC_O)))
 OBJ				:=		$(SRC:.cpp=.o)
 DEPS			:=		$(SRC:.cpp=.d)
