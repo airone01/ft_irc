@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/08 16:46:16 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/10 16:45:44 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/10 17:29:36 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,13 +21,13 @@
 #include <netinet/tcp.h>
 #include <unistd.h>
 
+#include "Client.hpp"
 #include "Logger.hpp"
-#include "User.hpp"
+#include "TimerManager.hpp"
 #include "net/Connection.hpp"
 #include "net/ConnectionManager.hpp"
 #include "net/Listener.hpp"
 #include "net/Reactor.hpp"
-#include "TimerManager.hpp"
 
 #ifndef DEFAULT_PORT
 #define DEFAULT_PORT 6697
@@ -47,13 +47,13 @@ extern "C" void handle_sigint(int) {
  */
 static Connection *userFactory(int fd, Reactor *reactor,
                                ConnectionManager *mgr) {
-  return new User(fd, reactor, mgr);
+  return new Client(fd, reactor, mgr);
 }
 
 /**
  * Very small demo message callback.
  *
- * It receives a Connection* (may be a User*) and the bytes read since the
+ * It receives a Connection* (may be a Client*) and the bytes read since the
  * last callback. For simplicity this callback treats the bytes as text,
  * splits on '\\n', trims '\\r', and handles a tiny subset of IRC-like commands:
  *
@@ -68,7 +68,7 @@ static void demoIrcCallback(Connection *conn, const std::vector<char> &data) {
   if (!conn)
     return;
 
-  User *user = dynamic_cast<User *>(conn); // may be NULL if plain Connection
+  Client *user = dynamic_cast<Client *>(conn); // may be NULL if plain Connection
   // copy into a string for easy splitting
   std::string s(data.begin(), data.end());
   size_t start = 0;
@@ -87,7 +87,7 @@ static void demoIrcCallback(Connection *conn, const std::vector<char> &data) {
     if (line.size() >= 5 && line.substr(0, 5) == "NICK ") {
       if (user) {
         std::string nick = line.substr(5);
-        user->setNick(nick);
+        user->setNickname(nick);
         logger::info() << "Set nick to " << nick << " for fd=" << user->fd()
                        << std::endl;
       }
@@ -113,7 +113,7 @@ static void demoIrcCallback(Connection *conn, const std::vector<char> &data) {
         while (!username.empty() && username[username.size() - 1] == ' ')
           username.erase(username.size() - 1);
         user->setUsername(username);
-        user->setRealname(realname);
+        // user->setRealname(realname);
         logger::info() << "Set username to " << username << " realname='"
                        << realname << "'" << std::endl;
       }
@@ -126,16 +126,16 @@ static void demoIrcCallback(Connection *conn, const std::vector<char> &data) {
 
     // if we have both nick and username, mark registered and send a welcome
     // message
-    if (user && !user->isRegistered()) {
-      if (!user->nick().empty() && !user->username().empty()) {
+    if (user && !user->getRegistered()) {
+      if (!user->getNickname().empty() && !user->getUsername().empty()) {
         user->setRegistered(true);
         std::string welcome = ":" + std::string("irc.example.com") + " 001 " +
-                              user->nick() +
+                              user->getNickname() +
                               " :Welcome to this minimal IRC demo\r\n";
         std::vector<char> wv(welcome.begin(), welcome.end());
         conn->send(wv);
         logger::info() << "User fd=" << user->fd() << " registered as "
-                       << user->nick() << std::endl;
+                       << user->getNickname() << std::endl;
       }
     }
 
@@ -168,7 +168,7 @@ int main(int argc, char **argv) {
 
   Listener listener("0.0.0.0", port, &reactor, &connMgr);
 
-  // set factory so Listener creates User objects
+  // set factory so Listener creates Client objects
   listener.setConnectionFactory(&userFactory);
 
   // set default message callback (our demo IRC-ish handler)
