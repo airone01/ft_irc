@@ -6,7 +6,7 @@
 #    By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/10/08 15:49:16 by elagouch          #+#    #+#              #
-#    Updated: 2025/11/10 17:28:15 by elagouch         ###   ########.fr        #
+#    Updated: 2025/11/10 18:26:52 by elagouch         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -71,7 +71,7 @@ CXXFLAGS	+=	-O2						# slower comp, faster runtime
 #                                     SRC                                      #
 # **************************************************************************** #
 
-NAME			:=		ft_irc
+NAME			:=		ircserv
 # main and utils
 SRC_O			:=		main Logger
 # irc logic
