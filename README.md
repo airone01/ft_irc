@@ -1,3 +1,7 @@
 # ft_irc
 
-WIP.
+## Recommended client
+
+- HexChat (GUI)
+- irssi (TUI)
+
