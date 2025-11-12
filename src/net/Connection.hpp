@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:10:50 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/10 16:30:15 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/12 15:38:45 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,12 +82,12 @@ public:
   time_t lastActivity() const;
 
 private:
-  int m_fd;
-  Reactor *m_reactor;
-  ConnectionManager *m_manager;
-  std::vector<char> m_readBuf;
-  std::vector<char> m_writeBuf;
-  MessageCallback m_msgCb;
-  bool m_closed;
-  time_t m_lastActivity;
+  int _fd;
+  Reactor *_reactor;
+  ConnectionManager *_manager;
+  std::vector<char> _readBuf;
+  std::vector<char> _writeBuf;
+  MessageCallback _msgCb;
+  bool _closed;
+  time_t _lastActivity;
 };

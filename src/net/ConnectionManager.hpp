@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:13:30 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/10 16:30:54 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/12 15:37:46 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,6 @@ public:
 
 private:
   typedef std::map<int, Connection *> MapType; // fd -> Connection*
-  MapType m_map;
-  Reactor *m_reactor;
+  MapType _map;
+  Reactor *_reactor;
 };

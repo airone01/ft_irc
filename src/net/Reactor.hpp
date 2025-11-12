@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:12:58 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/10 16:32:02 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/12 15:35:24 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,8 +55,8 @@ public:
   bool delFd(int fd);
 
 private:
-  int m_epollFd;
-  int m_eventFd; // used to wake up the loop
-  bool m_running;
-  std::vector<struct epoll_event> m_events;
+  int _epollFd;
+  int _eventFd; // used to wake up the loop
+  bool _running;
+  std::vector<struct epoll_event> _events;
 };

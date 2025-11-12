@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 16:22:28 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/10 16:32:20 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/12 15:40:39 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,5 +59,5 @@ public:
 
 private:
   typedef std::multimap<std::time_t, Connection *> Timers;
-  Timers m_timers;
+  Timers _timers;
 };

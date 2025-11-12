@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/16 19:11:37 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/10 16:32:39 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/12 15:36:28 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,5 +108,5 @@ public:
   bool valid() const;
 
 private:
-  int m_fd;
+  int _fd;
 };

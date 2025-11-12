@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:08:42 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/10 16:32:30 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/12 15:37:18 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,12 +66,12 @@ public:
   void setConnectionFactory(ConnectionFactory f);
 
 private:
-  Socket m_socket;
-  std::string m_addr;
-  unsigned short m_port;
-  Reactor *m_reactor;
-  ConnectionManager *m_connManager;
+  Socket _socket;
+  std::string _addr;
+  unsigned short _port;
+  Reactor *_reactor;
+  ConnectionManager *_connManager;
 
-  Connection::MessageCallback m_defaultMsgCb;
-  ConnectionFactory m_factory;
+  Connection::MessageCallback _defaultMsgCb;
+  ConnectionFactory _factory;
 };
