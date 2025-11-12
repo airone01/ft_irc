@@ -6,7 +6,7 @@
 #    By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/10/08 15:49:16 by elagouch          #+#    #+#              #
-#    Updated: 2025/10/16 19:27:09 by elagouch         ###   ########.fr        #
+#    Updated: 2025/11/10 18:26:52 by elagouch         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -71,8 +71,14 @@ CXXFLAGS	+=	-O2						# slower comp, faster runtime
 #                                     SRC                                      #
 # **************************************************************************** #
 
-NAME			:=		ft_irc
-SRC_O			?=		main Logger Socket Client
+NAME			:=		ircserv
+# main and utils
+SRC_O			:=		main Logger
+# irc logic
+SRC_O			+=		Client TimerManager
+# networking
+SRC_O			+=		net/Socket net/Connection net/ConnectionManager net/Listener \
+								net/Reactor
 SRC				:=		$(addprefix src/, $(addsuffix .cpp, $(SRC_O)))
 OBJ				:=		$(SRC:.cpp=.o)
 DEPS			:=		$(SRC:.cpp=.d)
