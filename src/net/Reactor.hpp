@@ -6,11 +6,12 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:12:58 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/12 15:35:24 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/12 16:01:41 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
+#ifndef REACTOR_HPP
+#define REACTOR_HPP
 
 #include "EventHandler.hpp"
 #include <stdint.h>
@@ -60,3 +61,5 @@ private:
   bool _running;
   std::vector<struct epoll_event> _events;
 };
+
+#endif // !REACTOR_HPP

@@ -6,11 +6,12 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:08:42 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/12 15:37:18 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/12 16:01:17 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
+#ifndef LISTENER_HPP
+#define LISTENER_HPP
 
 #include "Connection.hpp"
 #include "EventHandler.hpp"
@@ -75,3 +76,5 @@ private:
   Connection::MessageCallback _defaultMsgCb;
   ConnectionFactory _factory;
 };
+
+#endif // !LISTENER_HPP

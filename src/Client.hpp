@@ -6,11 +6,12 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 16:57:04 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/10 17:31:41 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/12 16:02:33 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
+#ifndef CLIENT_HPP
+#define CLIENT_HPP
 
 #include <string>
 
@@ -54,3 +55,5 @@ private:
   bool _auth;
   bool _registered;
 };
+
+#endif // !CLIENT_HPP

@@ -6,16 +6,12 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/16 19:11:37 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/12 15:36:28 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/12 16:02:12 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
-
-/**
- * @file Socket.hpp
- * @brief Thin platform-specific socket wrapper.
- */
+#ifndef SOCKET_HPP
+#define SOCKET_HPP
 
 #include <string>
 #include <sys/types.h>
@@ -110,3 +106,5 @@ public:
 private:
   int _fd;
 };
+
+#endif // !SOCKET_HPP

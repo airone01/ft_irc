@@ -6,11 +6,12 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:10:50 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/12 15:38:45 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/12 15:58:36 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
+#ifndef CONNECTION_HPP
+#define CONNECTION_HPP
 
 #include <sys/types.h>
 #include <vector>
@@ -91,3 +92,5 @@ private:
   bool _closed;
   time_t _lastActivity;
 };
+
+#endif // !CONNECTION_HPP

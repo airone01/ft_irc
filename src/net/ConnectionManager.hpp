@@ -6,11 +6,12 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:13:30 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/12 15:37:46 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/12 16:00:00 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
+#ifndef CONNECTIONMANAGER_HPP
+#define CONNECTIONMANAGER_HPP
 
 #include <ctime>
 #include <map>
@@ -47,3 +48,5 @@ private:
   MapType _map;
   Reactor *_reactor;
 };
+
+#endif // !CONNECTIONMANAGER_HPP

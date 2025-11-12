@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:23:02 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/12 15:38:41 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/12 16:04:34 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,7 +98,7 @@ ssize_t Connection::handleWrite() {
         _writeBuf.clear();
         // remove EPOLLOUT interest
         if (_reactor)
-          _reactor->modFd(m_fd, EPOLLIN | EPOLLRDHUP | EPOLLHUP | EPOLLERR,
+          _reactor->modFd(_fd, EPOLLIN | EPOLLRDHUP | EPOLLHUP | EPOLLERR,
                            this);
         return n;
       } else {
@@ -126,7 +126,7 @@ void Connection::send(const std::vector<char> &data) {
   _writeBuf.insert(_writeBuf.end(), data.begin(), data.end());
   if (wasEmpty && _reactor) {
     _reactor->modFd(
-        m_fd, EPOLLIN | EPOLLOUT | EPOLLRDHUP | EPOLLHUP | EPOLLERR, this);
+        _fd, EPOLLIN | EPOLLOUT | EPOLLRDHUP | EPOLLHUP | EPOLLERR, this);
   }
 }
 
@@ -135,7 +135,7 @@ void Connection::close() {
     return;
   _closed = true;
   if (_reactor)
-    _reactor->delFd(m_fd);
+    _reactor->delFd(_fd);
   if (_manager)
     _manager->remove(this);
   if (_fd >= 0)

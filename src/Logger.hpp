@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/16 17:42:42 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/10 16:32:55 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/12 16:03:07 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,8 @@
 Hi, this is a basic logger implementation to make our job easier later.
 */
 
-#pragma once
+#ifndef LOGGER_HPP
+#define LOGGER_HPP
 
 #include <iostream>
 #include <string>
@@ -121,3 +122,5 @@ LogStream warning();
 LogStream error();
 
 } // namespace logger
+
+#endif // !LOGGER_HPP
