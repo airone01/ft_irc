@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:13:30 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/12 16:00:00 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/13 11:33:53 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,8 +22,12 @@ class Connection;
 
 class ConnectionManager {
 public:
+  ConnectionManager();
+  ConnectionManager(const ConnectionManager &);
   ConnectionManager(Reactor *reactor);
   ~ConnectionManager();
+
+  ConnectionManager &operator=(const ConnectionManager &);
 
   void add(Connection *conn);
   void remove(Connection *conn);

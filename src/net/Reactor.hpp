@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:12:58 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/12 16:01:41 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/13 11:36:55 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,11 +24,15 @@
  */
 class Reactor {
 public:
+  Reactor();
+  Reactor(const Reactor &);
   /**
    * @param int maxEvents Maximum number of events to fetch per epoll_wait.
    */
   Reactor(int maxEvents = 64);
   ~Reactor();
+
+  Reactor &operator=(const Reactor &);
 
   /**
    * @brief Start the event loop. This call blocks until stop() is called.
@@ -36,7 +40,7 @@ public:
   void run();
 
   /**
-   * @brief Stop the event loop. Safe to call from another thread.
+   * @brief Stop the event loop.
    */
   void stop();
 

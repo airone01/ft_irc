@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 16:23:14 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/12 15:40:40 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/13 11:49:00 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,9 +15,19 @@
 #include "TimerManager.hpp"
 #include "net/Connection.hpp"
 
-TimerManager::TimerManager() {}
+TimerManager::TimerManager() : _timers() {}
+
+TimerManager::TimerManager(const TimerManager &other)
+    : _timers(other._timers) {}
 
 TimerManager::~TimerManager() { _timers.clear(); }
+
+TimerManager &TimerManager::operator=(const TimerManager &other) {
+  if (this != &other) {
+    this->_timers = other._timers;
+  }
+  return (*this);
+}
 
 void TimerManager::schedule(Connection *c, std::time_t when) {
   if (!c)

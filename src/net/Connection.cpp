@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:23:02 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/12 16:04:34 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/13 11:18:45 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,16 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+Connection::Connection()
+    : _fd(-1), _reactor(NULL), _manager(NULL), _readBuf(), _writeBuf(),
+      _msgCb(NULL), _closed(false), _lastActivity(std::time(NULL)) {}
+
+Connection::Connection(const Connection &other)
+    : _fd(other._fd), _reactor(other._reactor), _manager(other._manager),
+      _readBuf(other._readBuf), _writeBuf(other._writeBuf),
+      _msgCb(other._msgCb), _closed(other._closed),
+      _lastActivity(other._lastActivity) {}
+
 Connection::Connection(int fd, Reactor *reactor, ConnectionManager *mgr)
     : _fd(fd), _reactor(reactor), _manager(mgr), _readBuf(), _writeBuf(),
       _msgCb(NULL), _closed(false), _lastActivity(std::time(NULL)) {}
@@ -29,13 +39,27 @@ Connection::~Connection() {
     ::close(_fd);
 }
 
-int Connection::fd() const { return _fd; }
+Connection &Connection::operator=(const Connection &other) {
+  if (this != &other) {
+    this->_fd = other._fd;
+    this->_reactor = other._reactor;
+    this->_manager = other._manager;
+    this->_readBuf = other._readBuf;
+    this->_writeBuf = other._writeBuf;
+    this->_msgCb = other._msgCb;
+    this->_closed = other._closed;
+    this->_lastActivity = other._lastActivity;
+  }
+  return (*this);
+}
+
+int Connection::getFd() const { return _fd; }
 
 void Connection::setMessageCallback(MessageCallback cb) { _msgCb = cb; }
 
 void Connection::touch() { _lastActivity = std::time(NULL); }
 
-std::time_t Connection::lastActivity() const { return _lastActivity; }
+std::time_t Connection::getLastActivity() const { return _lastActivity; }
 
 void Connection::handleEvent(uint32_t events) {
   if (_closed)
@@ -99,7 +123,7 @@ ssize_t Connection::handleWrite() {
         // remove EPOLLOUT interest
         if (_reactor)
           _reactor->modFd(_fd, EPOLLIN | EPOLLRDHUP | EPOLLHUP | EPOLLERR,
-                           this);
+                          this);
         return n;
       } else {
         _writeBuf.erase(_writeBuf.begin(), _writeBuf.begin() + n);
@@ -125,8 +149,8 @@ void Connection::send(const std::vector<char> &data) {
   bool wasEmpty = _writeBuf.empty();
   _writeBuf.insert(_writeBuf.end(), data.begin(), data.end());
   if (wasEmpty && _reactor) {
-    _reactor->modFd(
-        _fd, EPOLLIN | EPOLLOUT | EPOLLRDHUP | EPOLLHUP | EPOLLERR, this);
+    _reactor->modFd(_fd, EPOLLIN | EPOLLOUT | EPOLLRDHUP | EPOLLHUP | EPOLLERR,
+                    this);
   }
 }
 

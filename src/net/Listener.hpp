@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:08:42 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/12 16:01:17 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/13 11:32:03 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,11 +30,12 @@ public:
   typedef Connection *(*ConnectionFactory)(int fd, Reactor *reactor,
                                            ConnectionManager *mgr);
 
-  /**
-   * @brief Construct a listener bound to address/port.
-   */
+  Listener();
+  Listener(const Listener &);
   Listener(const std::string &addr, unsigned short port, Reactor *reactor,
            ConnectionManager *cm);
+
+  Listener &operator=(const Listener &);
 
   /**
    * @brief Destructor.

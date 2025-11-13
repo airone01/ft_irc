@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:10:50 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/12 15:58:36 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/13 11:18:43 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,8 +33,11 @@ public:
   typedef void (*MessageCallback)(Connection *conn,
                                   const std::vector<char> &data);
 
+  Connection();
+  Connection(const Connection &);
   Connection(int fd, Reactor *reactor, ConnectionManager *mgr);
   virtual ~Connection();
+  Connection &operator=(const Connection &);
 
   /**
    * @brief Handle epoll events for this connection.
@@ -63,11 +66,6 @@ public:
   void close();
 
   /**
-   * @brief Get raw fd.
-   */
-  int fd() const;
-
-  /**
    * @brief Set message callback (dispatcher provided by peer).
    */
   void setMessageCallback(MessageCallback cb);
@@ -78,9 +76,14 @@ public:
   void touch();
 
   /**
+   * @brief Get raw fd.
+   */
+  int getFd() const;
+
+  /**
    * @brief Get last-activity timestamp.
    */
-  time_t lastActivity() const;
+  time_t getLastActivity() const;
 
 private:
   int _fd;

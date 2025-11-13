@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 16:57:04 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/12 16:02:33 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/13 11:33:36 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ class Client : public Connection {
 public:
   Client(int fd, Reactor *reactor, ConnectionManager *mgr);
   // Client(const Client &copy); // copy constructor is too annoying to maintain
-  Client &operator=(const Client &other);
+  Client &operator=(const Client &);
   virtual ~Client();
   // getter
   int getSocket() const;

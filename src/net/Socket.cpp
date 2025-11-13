@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/16 19:22:32 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/12 15:36:34 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/13 11:45:11 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,8 @@
 
 Socket::Socket() : _fd(-1) {}
 
+Socket::Socket(const Socket &other) : _fd(other._fd) {}
+
 Socket::Socket(int fd) : _fd(fd) {}
 
 Socket::~Socket() {
@@ -30,6 +32,13 @@ Socket::~Socket() {
     ::close(_fd);
     _fd = -1;
   }
+}
+
+Socket &Socket::operator=(const Socket &other) {
+  if (this != &other) {
+    this->_fd = other._fd;
+  }
+  return (*this);
 }
 
 bool Socket::createAndBind(const std::string &addr, unsigned short port) {
@@ -88,7 +97,7 @@ void Socket::close() {
   }
 }
 
-int Socket::fd() const { return _fd; }
+int Socket::getFd() const { return _fd; }
 
 bool Socket::setNonBlocking(bool nonBlocking) {
   if (_fd < 0)

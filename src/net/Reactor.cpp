@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:16:29 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/12 15:35:37 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/13 11:39:55 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,12 @@
 #include <unistd.h>
 
 #include "Reactor.hpp"
+
+Reactor::Reactor() : _epollFd(-1), _eventFd(-1), _running(false), _events() {}
+
+Reactor::Reactor(const Reactor &other)
+    : _epollFd(other._epollFd), _eventFd(other._eventFd),
+      _running(other._running), _events(other._running) {}
 
 Reactor::Reactor(int maxEvents) : _epollFd(-1), _eventFd(-1), _running(false) {
   _epollFd = ::epoll_create(1024);
@@ -45,6 +51,16 @@ Reactor::~Reactor() {
     ::close(_eventFd);
   if (_epollFd >= 0)
     ::close(_epollFd);
+}
+
+Reactor &Reactor::operator=(const Reactor &other) {
+  if (this != &other) {
+    this->_epollFd = other._epollFd;
+    this->_eventFd = other._eventFd;
+    this->_running = other._running;
+    this->_events = other._events;
+  }
+  return (*this);
 }
 
 void Reactor::run() {

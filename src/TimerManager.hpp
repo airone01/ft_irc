@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 16:22:28 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/12 16:03:30 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/13 11:49:02 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,10 @@ class Connection;
 class TimerManager {
 public:
   TimerManager();
+  TimerManager(const TimerManager &);
   ~TimerManager();
+
+  TimerManager &operator=(const TimerManager &);
 
   /**
    * @brief Schedule a connection to expire at absolute time \"when\" (time_t).
