@@ -48,7 +48,6 @@ public:
 	const std::string&				getTrailing() const;
 	// methods
 	size_t	getCountParams() const;
-	// bool	parse(const std::string& line);
 };
 
 #endif

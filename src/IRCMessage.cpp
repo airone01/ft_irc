@@ -1,6 +1,6 @@
 #include "IRCMessage.hpp"
 
-static std::string trimCRLF(const std::string& line) {
+static std::string trimCRLF(std::string& line) {
 	if (!line.empty() && line[line.size() - 1] == '\n')
 		line.erase(line.size() - 1);
 	if (!line.empty() && line[line.size() - 1] == '\r')
@@ -8,35 +8,41 @@ static std::string trimCRLF(const std::string& line) {
 	return (line);
 }
 
-static std::string extractPrefix(const std::string& line, size_t& pos) {
-	std::string newLine = line;
+static std::string extractPrefix(std::string& line, size_t& pos) {
 	if (line[0] == ':') {
-		pos = line.find(" ");
-		if (pos == std::string::npos)
-			return (NULL);
-		std::string prefix = line.substr(1, pos - 1);
-		newLine = line.substr(pos + 1);
+		size_t spacePos = line.find(' ');
+		if (spacePos == std::string::npos)
+			return ("");
+		std::string prefix = line.substr(1, spacePos - 1);
+		line = line.substr(spacePos + 1);
+		pos += spacePos;
+		return (prefix);
 	}
-	return (newLine);
+	pos = 0;
+	return ("");
 }
 
-static std::string extractCommand(const std::string& line, size_t& pos) {
+static std::string extractCommand(std::string& line, size_t& pos) {
 	std::string newLine = line;
 	pos = newLine.find(" ");
 	if (pos == std::string::npos)
-		return (NULL);
-	newLine = line.substr(0, pos - 1);
+		return ("");
+	newLine = line.substr(0, pos);
 	return (newLine);
 }
 
-int main() {
-	size_t pos = 0;
-	std::string line = ":Angel PRIVMSG Wiz :Hello are you receiving this message ?\r\n";
-	std::string cleanLine = trimCRLF(line);
-	if (cleanLine.empty())
-		return 1;
-	std::string prefix = extractPrefix(cleanLine, pos);
-	std::string command = extractCommand(cleanLine, pos);
+static std::string extractTrailing(const std::string& line, size_t& pos) {
+	std::string newLine = line;
+	pos = newLine.find(" :");
+	if (pos == std::string::npos)
+		return ("");
+	newLine = line.substr(pos + 2);
+	return (newLine);
+}
+
+static std::string extractParams(const std::string& line, size_t& pos) {
+	std::string newLine = line;
+
 }
 
 IRCMessage::IRCMessage(const std::string& line) {
@@ -44,17 +50,10 @@ IRCMessage::IRCMessage(const std::string& line) {
 	if (cleanLine.empty())
 		throw MsgEmptyException();
 	size_t pos = 0;
-	_prefix = extractPrefix(cleanLine, pos);
-	_trailing = extractCommand(cleanLine, pos);
-
-	size_t trailingPos = cleanLine.find(" :");
-	std::string beforeTrailing;
-	if (trailingPos != std::string::npos) {
-		beforeTrailing = cleanLine.substr(0, trailingPos);
-		_trailing = cleanLine.substr(trailingPos + 2);
-	} else
-		beforeTrailing = cleanLine;
-
+	setPrefix(extractPrefix(cleanLine, pos));
+	setCommand(extractCommand(cleanLine, pos));
+	setTrailing(extractTrailing(cleanLine, pos));
+	addParams(extractParams(cleanLine, pos));
 }
 
 IRCMessage::~IRCMessage() {
