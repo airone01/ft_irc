@@ -6,7 +6,7 @@
 #    By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/10/08 15:49:16 by elagouch          #+#    #+#              #
-#    Updated: 2025/11/13 14:37:14 by elagouch         ###   ########.fr        #
+#    Updated: 2025/11/13 15:11:13 by elagouch         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -75,7 +75,7 @@ NAME			:=		ircserv
 # main and utils
 SRC_O			:=		main Logger
 # irc logic
-SRC_O			+=		Client TimerManager ChannelManager
+SRC_O			+=		Client TimerManager ChannelManager ClientManager
 # networking
 SRC_O			+=		net/Socket net/Connection net/ConnectionManager net/Listener \
 								net/Reactor
