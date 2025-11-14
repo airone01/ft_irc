@@ -8,7 +8,7 @@
 
 /**
  *	@Brief This is the parsing of the messages sent.
- *	Format			:	[ ':' <prefix> <SPACE> ] <command> <SPACE> <params>[ ',' <params> ] <SPACE> ':' <trailing>
+ *	Format			:	[ ':' <prefix> <SPACE> ] <command> <SPACE> <params1>[ ',' <params1> ] [ <SPACE> <params2> [ ',' <params2>]] <SPACE> ':' <trailing>
  *	Numeric Replies	:
  *						ERR_NORECIPIENT			ERR_NOTEXTTOSEND
  *						ERR_CANNOTSENDTOCHAN	ERR_NOTOPLEVEL
