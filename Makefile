@@ -79,6 +79,8 @@ SRC_O			+=		Client TimerManager
 # networking
 SRC_O			+=		net/Socket net/Connection net/ConnectionManager net/Listener \
 								net/Reactor
+# parser
+SRC_O			+=		Parser
 SRC				:=		$(addprefix src/, $(addsuffix .cpp, $(SRC_O)))
 OBJ				:=		$(SRC:.cpp=.o)
 DEPS			:=		$(SRC:.cpp=.d)

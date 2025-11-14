@@ -14,51 +14,64 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-Client::Client(int fd, Reactor *reactor, ConnectionManager *mgr)
-    : Connection(fd, reactor, mgr), _nickname(), _username(),
-      _registered(false) {}
-
-// copy constructor is too annoying to maintain
-// Client::Client(const Client &copy)
-//     : _socket(copy._socket), _nickname(copy._nickname),
-//       _username(copy._username), _hostname(copy._hostname),
-//       _buffer(copy._buffer), _auth(copy._auth), _registered(copy._registered)
-//       {}
-
-Client &Client::operator=(const Client &other) {
-  if (this != &other) {
-    this->_socket = other._socket;
-    this->_nickname = other._nickname;
-    this->_username = other._username;
-    this->_hostname = other._hostname;
-    this->_buffer = other._buffer;
-    this->_auth = other._auth;
-    this->_registered = other._registered;
-  }
-  return (*this);
+Client::Client(int fd, Reactor *reactor, ConnectionManager *mgr): Connection(fd, reactor, mgr), _socket(fd), _nickname(""), _username(""), _hostname(""), _registered(false) {
 }
 
-Client::~Client() {}
+Client &Client::operator=(const Client &other) {
+	if (this != &other) {
+		this->_socket = other._socket;
+		this->_nickname = other._nickname;
+		this->_username = other._username;
+		this->_hostname = other._hostname;
+		this->_buffer = other._buffer;
+		this->_auth = other._auth;
+		this->_registered = other._registered;
+	}
+	return (*this);
+}
 
-int Client::getSocket() const { return (this->_socket); }
+Client::~Client() {
+}
 
-std::string Client::getNickname() const { return (this->_nickname); }
+int Client::getSocket() const {
+	return (this->_socket);
+}
 
-std::string Client::getUsername() const { return (this->_username); }
+std::string Client::getNickname() const {
+	return (this->_nickname);
+}
 
-std::string Client::getHostname() const { return (this->_hostname); }
+std::string Client::getUsername() const {
+	return (this->_username);
+}
 
-bool Client::getAuth() const { return (this->_auth); }
+std::string Client::getHostname() const {
+	return (this->_hostname);
+}
 
-bool Client::getRegistered() const { return (this->_registered); }
+bool Client::getAuth() const {
+	return (this->_auth);
+}
 
-void Client::setNickname(const std::string &nick) { this->_nickname = nick; }
+bool Client::getRegistered() const {
+	return (this->_registered);
+}
 
-void Client::setUsername(const std::string &user) { this->_username = user; }
+void Client::setNickname(const std::string &nick) {
+	this->_nickname = nick;
+}
 
-void Client::setAuth(bool auth) { this->_auth = auth; }
+void Client::setUsername(const std::string &user) {
+	this->_username = user;
+}
 
-void Client::setRegistered(bool reg) { this->_registered = reg; }
+void Client::setAuth(bool auth) {
+	this->_auth = auth;
+}
+
+void Client::setRegistered(bool reg) {
+	this->_registered = reg;
+}
 
 void Client::appendToBuffer(const std::string &buffer) {
   this->_buffer += buffer;
