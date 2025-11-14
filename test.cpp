@@ -49,7 +49,7 @@ std::vector<std::string> extractParams(const std::string& line) {
 	std::vector<std::string> params;
 	std::string word;
 	for (size_t i = 0; i < line.length(); i++) {
-		if (line[i] == ',') {
+		if (line[i] == ' ') {
 			if (!word.empty()) {
 				params.push_back(word);
 				word.clear();
@@ -65,7 +65,7 @@ std::vector<std::string> extractParams(const std::string& line) {
 
 int main() {
 	size_t pos = 0;
-	std::string line = ":qqqq PRIVMSG Wiz,Biz,Fiz,Giz :Hello are you receiving this message ?\r\n";
+	std::string line = ":qqqq PRIVMSG Wiz,Biz,Fiz,Giz hello :Hello are you receiving this message ?\r\n";
 	std::string cleanLine = trimCRLF(line);
 	if (cleanLine.empty())
 		return 1;

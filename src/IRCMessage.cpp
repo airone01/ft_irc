@@ -28,15 +28,17 @@ static std::string extractCommand(std::string& line, size_t& pos) {
 	if (pos == std::string::npos)
 		return ("");
 	newLine = line.substr(0, pos);
+	line = line.substr(pos + 1);
 	return (newLine);
 }
 
-static std::string extractTrailing(const std::string& line, size_t& pos) {
+static std::string extractTrailing(std::string& line, size_t& pos) {
 	std::string newLine = line;
 	pos = newLine.find(" :");
 	if (pos == std::string::npos)
 		return ("");
 	newLine = line.substr(pos + 2);
+	line = line.substr(0, pos);
 	return (newLine);
 }
 
@@ -44,7 +46,7 @@ static std::vector<std::string> extractParams(const std::string& line) {
 	std::vector<std::string> params;
 	std::string word;
 	for (size_t i = 0; i < line.length(); i++) {
-		if (line[i] == ',') {
+		if (line[i] == ' ') {
 			if (!word.empty()) {
 				params.push_back(word);
 				word.clear();
