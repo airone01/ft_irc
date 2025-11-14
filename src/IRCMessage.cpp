@@ -40,12 +40,25 @@ static std::string extractTrailing(const std::string& line, size_t& pos) {
 	return (newLine);
 }
 
-static std::string extractParams(const std::string& line, size_t& pos) {
-	std::string newLine = line;
-
+static std::vector<std::string> extractParams(const std::string& line) {
+	std::vector<std::string> params;
+	std::string word;
+	for (size_t i = 0; i < line.length(); i++) {
+		if (line[i] == ',') {
+			if (!word.empty()) {
+				params.push_back(word);
+				word.clear();
+			}
+		} else
+			word += line[i];
+	}
+	if (!word.empty()) {
+		params.push_back(word);
+	}
+	return params;
 }
 
-IRCMessage::IRCMessage(const std::string& line) {
+IRCMessage::IRCMessage(std::string& line) {
 	std::string cleanLine = trimCRLF(line);
 	if (cleanLine.empty())
 		throw MsgEmptyException();
@@ -53,7 +66,7 @@ IRCMessage::IRCMessage(const std::string& line) {
 	setPrefix(extractPrefix(cleanLine, pos));
 	setCommand(extractCommand(cleanLine, pos));
 	setTrailing(extractTrailing(cleanLine, pos));
-	addParams(extractParams(cleanLine, pos));
+	setParams(extractParams(cleanLine));
 }
 
 IRCMessage::~IRCMessage() {
@@ -87,8 +100,8 @@ void	IRCMessage::setCommand(const std::string& command) {
 	this->_command = command;
 }
 
-void	IRCMessage::addParams(const std::string& params) {
-	this->_params.push_back(params);
+void	IRCMessage::setParams(const std::vector<std::string>& params) {
+	this->_params = params;
 }
 
 void	IRCMessage::setTrailing(const std::string& trailing) {

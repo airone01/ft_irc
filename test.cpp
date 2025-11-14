@@ -45,14 +45,27 @@ std::string extractTrailing(std::string& line, size_t& pos) {
 	return (newLine);
 }
 
-void extractParams(const std::string& line, std::vector<std::string>& params) {
-	size_t pos = 0;
-	while (pos < line.size())
+std::vector<std::string> extractParams(const std::string& line) {
+	std::vector<std::string> params;
+	std::string word;
+	for (size_t i = 0; i < line.length(); i++) {
+		if (line[i] == ',') {
+			if (!word.empty()) {
+				params.push_back(word);
+				word.clear();
+			}
+		} else
+			word += line[i];
+	}
+	if (!word.empty()) {
+		params.push_back(word);
+	}
+	return params;
 }
 
 int main() {
 	size_t pos = 0;
-	std::string line = ":qqqq PRIVMSG Wiz Biz Fiz Giz :Hello are you receiving this message ?\r\n";
+	std::string line = ":qqqq PRIVMSG Wiz,Biz,Fiz,Giz :Hello are you receiving this message ?\r\n";
 	std::string cleanLine = trimCRLF(line);
 	if (cleanLine.empty())
 		return 1;
@@ -60,10 +73,10 @@ int main() {
 	std::string prefix = extractPrefix(cleanLine, pos);
 	std::string command = extractCommand(cleanLine, pos);
 	std::string trailing = extractTrailing(cleanLine, pos);
-	std::vector<std::string> params;
-	extractParams(cleanLine, params);
+	std::vector<std::string> params = extractParams(cleanLine);
 	std::cout << "Prefix: " << prefix << "\nCommand: " << command << "\nTrailing: " << trailing << "\nPos: " << pos << std::endl;
-	// for (int i = 0; i < params.size(); i++)
-	// 	std::iterator *it
-	// 	std::cout << "Params: "<< *it << std::endl;
+	for (auto i : params) {
+		std::cout << "Params: " << i << std::endl;
+	}
+	std::cout << line << std::endl;
 }

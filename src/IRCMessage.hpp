@@ -10,10 +10,10 @@
  *	@Brief This is the parsing of the messages sent.
  *	Format			:	[ ':' <prefix> <SPACE> ] <command> <SPACE> <params>[ ',' <params> ] <SPACE> ':' <trailing>
  *	Numeric Replies	:
- *		ERR_NORECIPIENT			ERR_NOTEXTTOSEND
- *		ERR_CANNOTSENDTOCHAN	ERR_NOTOPLEVEL
- *		ERR_WILDTOPLEVEL		ERR_TOOMANYTARGETS
- *		ERR_NOSUCHNICK			RPL_AWAY
+ *						ERR_NORECIPIENT			ERR_NOTEXTTOSEND
+ *						ERR_CANNOTSENDTOCHAN	ERR_NOTOPLEVEL
+ *						ERR_WILDTOPLEVEL		ERR_TOOMANYTARGETS
+ *						ERR_NOSUCHNICK			RPL_AWAY
  *	Exemple			:	:Angel PRIVMSG Wiz :Hello are you receiving this message ?;
  *						PRIVMSG Angel :yes I'm receiving it !receiving it !'u>(768u+1n) .br;
  *						PRIVMSG jtotolsun.oulu.fi :Hello !;
@@ -29,13 +29,13 @@ private:
 	// setter
 	void	setPrefix(const std::string& prefix);
 	void	setCommand(const std::string& command);
-	void	addParams(const std::string& params);
+	void	setParams(const std::vector<std::string>& params);
 	void	setTrailing(const std::string& trailing);
 	IRCMessage();
 	IRCMessage(const IRCMessage& copy);
 	IRCMessage& operator=(const IRCMessage& other);
 public:
-	IRCMessage(const std::string& line);
+	IRCMessage(std::string& line);
 	~IRCMessage();
 	// exception
 	class MsgEmptyException: public std::exception {
