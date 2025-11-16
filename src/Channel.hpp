@@ -1,74 +1,85 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Channel.hpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/11/12 16:21:59 by nahamida          #+#    #+#             */
+/*   Updated: 2025/11/16 10:30:48 by elagouch         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef CHANNEL_HPP
-# define CHANNEL_HPP
+#define CHANNEL_HPP
 
-# include <iostream>
-# include <map>
-# include <map>
-# include <vector>
-# include <set>
-# include <algorithm>
+#include <map>
+#include <set>
 
-# include "Client.hpp"
+#include "Client.hpp"
 
-# define ADMIN
-# define USER
+#define ADMIN
+#define USER
 
-class Channel
-{
-    private:
+class Channel {
+private:
+  std::map<int, Client> _users;
+  std::map<int, Client> _admins;
+  std::map<int, Client> _invitedUsers;
+  std::set<char> _mode;
+  std::string _topic;
+  std::string _pswrd;
+  std::string _name;
+  int _maxCapacity;
+  bool _modeSet;
 
-    std::map<int, Client> _users;
-    std::map<int, Client> _admins;
-    std::map<int, Client> _invitedUsers;
-	std::set<char>		  _mode;
-    std::string           _topic;
-    std::string           _pswrd;
-    std::string           _name;
-    int                   _maxCapacity;
-    bool                  _modeSet;
+  Channel(void);
+  Channel(const Channel &);
+  Channel &operator=(const Channel &);
 
-    Channel( void );
-    Channel(const Channel & );
-    Channel &operator=(const Channel & );
+public:
+  Channel(const Client &);
+  Channel(const Client &, int capacity);
+  ~Channel(void);
 
-    public:
+  // getters
+  std::string getTopic() const;
+  std::string getPswrd() const;
+  std::string getName() const;
+  int getCapacity() const;
+  bool getInvite() const;
 
-    Channel( const Client & );
-    Channel( const Client & , int capacity );
-    ~Channel( void );
+  // setters
+  void setTopic(std::string newTopic);
+  void setPswrd(std::string newPswrd);
+  void setName(std::string newName);
+  void setCapacity(int newCapacity);
+  void setInvite(bool changeMode);
 
-    std::string getTopic() const;
-    std::string getPswrd() const;
-    std::string getName() const;
-    int getCapacity() const;
-    bool getInvite() const;
+  void newUser(const Client &);
+  /**
+   * @brief Attempts to make a client join the channel
+   */
+  bool tryJoin(const Client &);
+  void updatePriv(const Client &admin, Client &user);
 
-    void    setTopic( std::string newTopic );
-    void    setPswrd( std::string newPswrd );
-    void    setName( std::string newName );
-    void    setCapacity( int newCapacity );
-    void    setInvite( bool changeMode );
+  // modifier les try catch pour les encapsuler dans les cpp des channel et des
+  // commandes
+  class maxCapacityReached : public std::exception {
+    const char *what() const throw();
+  };
 
-	void	newUser( const Client & );
-	bool	tryJoin( const Client & );
-	void	updatePriv( const Client &admin, Client &user );
+  class invitationNeeded : public std::exception {
+    const char *what() const throw();
+  };
 
-	// modifier les try catch pour les encapsuler dans les cpp des channel et des commandes
-	class maxCapacityReached : public std::exception{
-		const char *what() const throw();
-	};
+  class insufficientPrivilege : public std::exception {
+    const char *what() const throw();
+  };
 
-	class invitationNeeded : public std::exception{
-		const char *what() const throw();
-	};
-
-	class insufficientPrivilege : public std::exception{
-		const char *what() const throw();
-	};
-
-	class invalidChannelName : public std::exception{
-		const char *what() const throw();
-	};
+  class invalidChannelName : public std::exception {
+    const char *what() const throw();
+  };
 };
 
-#endif
+#endif // !CHANNEL_HPP
