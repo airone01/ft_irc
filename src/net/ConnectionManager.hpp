@@ -6,11 +6,12 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:13:30 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/10 16:30:54 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/13 11:33:53 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
+#ifndef CONNECTIONMANAGER_HPP
+#define CONNECTIONMANAGER_HPP
 
 #include <ctime>
 #include <map>
@@ -21,8 +22,12 @@ class Connection;
 
 class ConnectionManager {
 public:
+  ConnectionManager();
+  ConnectionManager(const ConnectionManager &);
   ConnectionManager(Reactor *reactor);
   ~ConnectionManager();
+
+  ConnectionManager &operator=(const ConnectionManager &);
 
   void add(Connection *conn);
   void remove(Connection *conn);
@@ -44,6 +49,8 @@ public:
 
 private:
   typedef std::map<int, Connection *> MapType; // fd -> Connection*
-  MapType m_map;
-  Reactor *m_reactor;
+  MapType _map;
+  Reactor *_reactor;
 };
+
+#endif // !CONNECTIONMANAGER_HPP

@@ -6,11 +6,12 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:42:35 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/10 16:31:51 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/12 16:00:36 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
+#ifndef EVENTHANDLER_CPP
+#define EVENTHANDLER_CPP
 
 #include <stdint.h>
 
@@ -30,3 +31,5 @@ public:
    */
   virtual void handleEvent(uint32_t events) = 0;
 };
+
+#endif // !EVENTHANDLER_CPP

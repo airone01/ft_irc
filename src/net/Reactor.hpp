@@ -6,11 +6,12 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:12:58 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/10 16:32:02 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/13 11:36:55 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
+#ifndef REACTOR_HPP
+#define REACTOR_HPP
 
 #include "EventHandler.hpp"
 #include <stdint.h>
@@ -23,11 +24,15 @@
  */
 class Reactor {
 public:
+  Reactor();
+  Reactor(const Reactor &);
   /**
    * @param int maxEvents Maximum number of events to fetch per epoll_wait.
    */
   Reactor(int maxEvents = 64);
   ~Reactor();
+
+  Reactor &operator=(const Reactor &);
 
   /**
    * @brief Start the event loop. This call blocks until stop() is called.
@@ -35,7 +40,7 @@ public:
   void run();
 
   /**
-   * @brief Stop the event loop. Safe to call from another thread.
+   * @brief Stop the event loop.
    */
   void stop();
 
@@ -55,8 +60,10 @@ public:
   bool delFd(int fd);
 
 private:
-  int m_epollFd;
-  int m_eventFd; // used to wake up the loop
-  bool m_running;
-  std::vector<struct epoll_event> m_events;
+  int _epollFd;
+  int _eventFd; // used to wake up the loop
+  bool _running;
+  std::vector<struct epoll_event> _events;
 };
+
+#endif // !REACTOR_HPP

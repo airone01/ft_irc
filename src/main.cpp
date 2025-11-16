@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/08 16:46:16 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/10 17:29:36 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/13 11:24:08 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,7 +88,7 @@ static void demoIrcCallback(Connection *conn, const std::vector<char> &data) {
       if (user) {
         std::string nick = line.substr(5);
         user->setNickname(nick);
-        logger::info() << "Set nick to " << nick << " for fd=" << user->fd()
+        logger::info() << "Set nick to " << nick << " for fd=" << user->getFd()
                        << std::endl;
       }
     } else if (line.size() >= 5 && line.substr(0, 5) == "USER ") {
@@ -134,7 +134,7 @@ static void demoIrcCallback(Connection *conn, const std::vector<char> &data) {
                               " :Welcome to this minimal IRC demo\r\n";
         std::vector<char> wv(welcome.begin(), welcome.end());
         conn->send(wv);
-        logger::info() << "User fd=" << user->fd() << " registered as "
+        logger::info() << "User fd=" << user->getFd() << " registered as "
                        << user->getNickname() << std::endl;
       }
     }

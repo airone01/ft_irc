@@ -6,16 +6,12 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/16 19:11:37 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/10 16:32:39 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/13 11:44:44 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
-
-/**
- * @file Socket.hpp
- * @brief Thin platform-specific socket wrapper.
- */
+#ifndef SOCKET_HPP
+#define SOCKET_HPP
 
 #include <string>
 #include <sys/types.h>
@@ -30,10 +26,8 @@
  */
 class Socket {
 public:
-  /**
-   * @brief Construct an invalid socket.
-   */
   Socket();
+  Socket(const Socket &);
 
   /**
    * @brief Construct from existing file descriptor (takes ownership).
@@ -45,6 +39,8 @@ public:
    * @brief Destructor closes the fd if valid.
    */
   ~Socket();
+
+  Socket &operator=(const Socket &other);
 
   /**
    * @brief Create a listening TCP socket bound to the given address and port.
@@ -75,7 +71,7 @@ public:
   /**
    * @brief Get the raw file descriptor.
    */
-  int fd() const;
+  int getFd() const;
 
   /**
    * @brief Set the socket to non-blocking mode.
@@ -108,5 +104,7 @@ public:
   bool valid() const;
 
 private:
-  int m_fd;
+  int _fd;
 };
+
+#endif // !SOCKET_HPP

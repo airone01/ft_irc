@@ -6,11 +6,12 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 16:57:04 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/10 17:31:41 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/13 11:33:36 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
+#ifndef CLIENT_HPP
+#define CLIENT_HPP
 
 #include <string>
 
@@ -26,7 +27,7 @@ class Client : public Connection {
 public:
   Client(int fd, Reactor *reactor, ConnectionManager *mgr);
   // Client(const Client &copy); // copy constructor is too annoying to maintain
-  Client &operator=(const Client &other);
+  Client &operator=(const Client &);
   virtual ~Client();
   // getter
   int getSocket() const;
@@ -54,3 +55,5 @@ private:
   bool _auth;
   bool _registered;
 };
+
+#endif // !CLIENT_HPP
