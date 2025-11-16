@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/12 16:21:59 by nahamida          #+#    #+#             */
-/*   Updated: 2025/11/16 10:30:55 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/16 10:47:12 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,17 +112,17 @@ bool Channel::tryJoin(const Client &tmp) {
 }
 
 const char *Channel::maxCapacityReached::what() const throw() {
-  return "error: max capacity for this channel already reached.";
+  return "Max capacity for this channel already reached.";
 }
 
 const char *Channel::invitationNeeded::what() const throw() {
-  return "error: you need a invitation to join this channel.";
+  return "You need a invitation to join this channel.";
 }
 
 const char *Channel::insufficientPrivilege::what() const throw() {
-  return "error: unsufficient privilege to do this action.";
+  return "Unsufficient privilege to do this action.";
 }
 
 const char *Channel::invalidChannelName::what() const throw() {
-  return "error: Channel name must begin with '&' or '#'.";
+  return "Channel name must begin with '&' or '#'.";
 }
