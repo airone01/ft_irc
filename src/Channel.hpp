@@ -14,11 +14,11 @@
 
 class Channel
 {
-    private:
+    protected:
 
-    std::map<int, Client> _users;
-    std::map<int, Client> _admins;
-    std::map<int, Client> _invitedUsers;
+    std::map<int, Client*> _users;
+    std::map<int, Client*> _admins;
+    std::map<int, Client*> _invitedUsers;
 	std::set<char>		  _mode;
     std::string           _topic;
     std::string           _pswrd;
@@ -32,23 +32,25 @@ class Channel
 
     public:
 
-    Channel( const Client & );
-    Channel( const Client & , int capacity );
+    Channel( Client & );
+    Channel( Client & , int capacity );
     ~Channel( void );
 
     std::string getTopic() const;
     std::string getPswrd() const;
     std::string getName() const;
     int getCapacity() const;
-    bool getInvite() const;
+    bool getModeSet() const;
+
+    std::map<int, Client*> getInvitedUsers();
 
     void    setTopic( std::string newTopic );
     void    setPswrd( std::string newPswrd );
     void    setName( std::string newName );
     void    setCapacity( int newCapacity );
-    void    setInvite( bool changeMode );
+    void    setModeSet( bool changeMode );
 
-	void	newUser( const Client & );
+	void	newUser( Client & );
 	bool	tryJoin( const Client & );
 	void	updatePriv( const Client &admin, Client &user );
 

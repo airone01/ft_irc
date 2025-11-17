@@ -6,16 +6,16 @@ Channel::Channel(const Channel &tmp ){}
 Channel &Channel::operator=(const Channel &tmp ) {return *this;}
 Channel::~Channel( void ){}
 
-Channel::Channel( const Client &tmp)
+Channel::Channel( Client &tmp)
 {
-	this->_users.insert({tmp.getSocket(), tmp});
+	this->_users.insert(std::pair<int, Client*>(tmp.getSocket(), &tmp));
 	this->_maxCapacity = -1;
 }
 
-Channel::Channel( const Client &tmp, int capacity ) :
+Channel::Channel( Client &tmp, int capacity ) :
 	_maxCapacity(capacity)
 {
-	this->_users.insert({tmp.getSocket(), tmp});
+	this->_users.insert(std::pair<int, Client*>(tmp.getSocket(), &tmp));
 	this->_maxCapacity = capacity;
 }
 
@@ -27,14 +27,19 @@ std::string Channel::getPswrd() const{
     return this->_pswrd;
 }
 
+std::string Channel::getName() const{
+    return this->_name;
+}
+
 int Channel::getCapacity() const{
     return this->_maxCapacity;
 }
 
-bool Channel::getInvite() const{
+bool Channel::getModeSet() const{
     return this->_modeSet;
 }
 
+std::map<int, Client*> Channel::getInvitedUsers() { return this->_invitedUsers; }
 
 void    Channel::setTopic( std::string newTopic ){
     this->_topic = newTopic;
@@ -46,11 +51,11 @@ void	validChannelName(std::string tmp){
 	size_t ctrlG = tmp.find(7);
 	size_t size = tmp.size();
 	if (size > 200 || space != size || comma != size || ctrlG != size)
-			throw invalidChannelName();
+			throw Channel::invalidChannelName();
 	if (tmp[0] == '#' || tmp[0] == '&')
 		;
 	else
-		throw invalidChannelName();
+		throw Channel::invalidChannelName();
 }	
 
 void    Channel::setName( std::string newName ){
@@ -73,18 +78,18 @@ void    Channel::setCapacity( int newCapacity ){
     this->_maxCapacity = newCapacity;
 }
 
-void    Channel::setInvite( bool changeMode ){
+void    Channel::setModeSet( bool changeMode ){
     this->_modeSet = changeMode;
 }
 
-void Channel::newUser( const Client &tmp){
-	_users.insert({tmp.getSocket(), tmp});
+void Channel::newUser( Client &tmp){
+	_users.insert(std::pair<int, Client*>(tmp.getSocket(), &tmp));
 }
 
 void Channel::updatePriv(const Client &admin, Client &user){
 	if (_admins.find(admin.getSocket()) == _admins.end())
 		throw insufficientPrivilege();
-	_admins.insert({user.getSocket(), user});
+	_admins.insert(std::pair<int, Client*>(user.getSocket(), &user));
 }
 
 bool Channel::tryJoin( const Client &tmp){
