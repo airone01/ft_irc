@@ -92,17 +92,19 @@ void Channel::updatePriv(const Client &admin, Client &user){
 	_admins.insert(std::pair<int, Client*>(user.getSocket(), &user));
 }
 
-bool Channel::tryJoin( const Client &tmp){
+void Channel::tryJoin( const Client &tmp, std::string pswrd){
 	if (_modeSet ){
 		if (_mode.find('i') != _mode.end()){
 			if (_invitedUsers.find(tmp.getSocket()) == _invitedUsers.end())
-				throw invitationNeeded();
+				throw errorMode("invitation needed to join this channel.");
 		}
 		if (_mode.find('l') != _mode.end())
 			if ((_users.size() == _maxCapacity))
-				throw maxCapacityReached();
+				throw errorMode("max capacity for this channel already reached.");
+		if (_mode.find('k') != _mode.end())
+			if (pswrd != _pswrd)
+				throw errorMode("invalid password.");
 	}
-	return true;
 }
 
 const char *Channel::maxCapacityReached::what() const throw(){
@@ -119,4 +121,8 @@ const char *Channel::insufficientPrivilege::what() const throw(){
 
 const char *Channel::invalidChannelName::what() const throw(){
 	return "error: Channel name must begin with '&' or '#'.";
+}
+
+const char *Channel::errorMode::what() const throw(){
+	return _errMsg.c_str();
 }

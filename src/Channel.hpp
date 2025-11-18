@@ -41,7 +41,6 @@ class Channel
     std::string getName() const;
     int getCapacity() const;
     bool getModeSet() const;
-
     std::map<int, Client*> getInvitedUsers();
 
     void    setTopic( std::string newTopic );
@@ -51,7 +50,7 @@ class Channel
     void    setModeSet( bool changeMode );
 
 	void	newUser( Client & );
-	bool	tryJoin( const Client & );
+	void	tryJoin( const Client &, std::string pswrd );
 	void	updatePriv( const Client &admin, Client &user );
 
 	// modifier les try catch pour les encapsuler dans les cpp des channel et des commandes
@@ -70,6 +69,16 @@ class Channel
 	class invalidChannelName : public std::exception{
 		const char *what() const throw();
 	};
+
+    class errorMode : public std::exception{
+        private:
+            std::string _errMsg;
+		public:
+            errorMode(std::string error) : _errMsg(std::string("error: ") + error) {}
+            const char *what() const throw();
+            ~errorMode() throw() {};
+
+    };
 };
 
 #endif
