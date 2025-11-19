@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/12 16:21:59 by nahamida          #+#    #+#             */
-/*   Updated: 2025/11/19 12:09:34 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/19 13:39:54 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@
 class Commands {
 public:
   // Auth
+  static void cap(IRCMessage const &msg, Client &user);
   static void nick(IRCMessage const &msg, ConnectionManager &conns,
                    Client &user);
   static void user(IRCMessage const &msg, ConnectionManager &conns,
@@ -46,4 +47,4 @@ private:
                                   const std::string &nick);
 };
 
-#endif
+#endif //!COMMANDS_HPP

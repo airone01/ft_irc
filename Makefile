@@ -6,7 +6,7 @@
 #    By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/10/08 15:49:16 by elagouch          #+#    #+#              #
-#    Updated: 2025/11/19 12:12:30 by elagouch         ###   ########.fr        #
+#    Updated: 2025/11/19 13:44:10 by elagouch         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -67,6 +67,10 @@ CXXFLAGS	+=	-Wl,-z,nodlopen
 # == prod ==
 CXXFLAGS	+=	-O2						# slower comp, faster runtime
 
+# == dev ==
+CXXFLAGS	+=	-g3
+
+
 # **************************************************************************** #
 #                                     SRC                                      #
 # **************************************************************************** #
@@ -75,7 +79,7 @@ NAME			:=		ircserv
 # main and utils
 SRC_O			:=		main Logger
 # irc logic
-SRC_O			+=		Client Channel TimerManager ChannelManager ClientManager IRCMessage Commands
+SRC_O			+=		Client Channel TimerManager ChannelManager ClientManager IRCMessage Commands Dispatcher
 # networking
 SRC_O			+=		net/Socket net/Connection net/ConnectionManager net/Listener \
 								net/Reactor

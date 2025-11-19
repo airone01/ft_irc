@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/12 16:21:59 by nahamida          #+#    #+#             */
-/*   Updated: 2025/11/19 12:10:03 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/19 13:40:17 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,28 @@ Client *Commands::findClientByNick(ConnectionManager &conns,
     }
   }
   return NULL;
+}
+
+void Commands::cap(IRCMessage const &msg, Client &user) {
+  if (msg.getParams().empty())
+    return;
+
+  std::string subcmd = msg.getParams()[0];
+  std::string target = user.getRegistered() ? user.getNickname() : "*";
+
+  if (subcmd == "LS") {
+    // We support NO capabilities. Send empty list.
+    std::string reply = ":irc.local CAP " + target + " LS :\r\n";
+    std::vector<char> r(reply.begin(), reply.end());
+    user.send(r);
+  } else if (subcmd == "REQ") {
+    // We support nothing, so we reject all requests
+    std::string reply =
+        ":irc.local CAP " + target + " NAK :" + msg.getTrailing() + "\r\n";
+    std::vector<char> r(reply.begin(), reply.end());
+    user.send(r);
+  }
+  // CAP END is ignored (just allows state machine to proceed)
 }
 
 void Commands::nick(IRCMessage const &msg, ConnectionManager &conns,
@@ -128,7 +150,6 @@ void Commands::join(IRCMessage const &msg, ChannelManager &channels,
         logger::info() << user.getNickname() << " created channel " << name
                        << std::endl;
       } catch (std::exception &e) {
-        // Send error
         continue;
       }
     } else {
@@ -137,7 +158,6 @@ void Commands::join(IRCMessage const &msg, ChannelManager &channels,
         chan->tryJoin(user, key); // Checks password, limit, invite
         chan->newUser(user);
       } catch (std::exception &e) {
-        // Send ERR_BADCHANNELKEY, ERR_CHANNELISFULL etc based on exception
         std::string err = ":irc.local 471 " + user.getNickname() + " " + name +
                           " :Cannot join channel (" + e.what() + ")\r\n";
         std::vector<char> resp(err.begin(), err.end());
@@ -146,17 +166,16 @@ void Commands::join(IRCMessage const &msg, ChannelManager &channels,
       }
     }
 
-    // Send JOIN confirmation to client
+    // Send JOIN confirmation
     std::string joinMsg = ":" + user.getNickname() + " JOIN " + name + "\r\n";
     std::vector<char> resp(joinMsg.begin(), joinMsg.end());
 
-    // Broadcast to everyone in channel (including user)
-    // Note: Channel class needs a way to get all users to broadcast
-    // For now, we assume Channel has a way or we iterate manually if exposed.
-    // Since Channel interface in your files is limited, I will just send to
-    // user for now
-    // TODO: Implement Channel::broadcast()
-    user.send(resp);
+    // Broadcast to EVERYONE in channel (including user)
+    const std::map<int, Client *> &members = chan->getUsers();
+    for (std::map<int, Client *>::const_iterator it = members.begin();
+         it != members.end(); ++it) {
+      it->second->send(resp);
+    }
   }
 }
 
@@ -189,19 +208,14 @@ void Commands::privmsg(IRCMessage const &msg, ChannelManager &channels,
       return;
     }
 
-    // TODO: Check if user can speak in channel (moderated, banned, etc)
-
     // Broadcast to all channel members EXCEPT sender
-    // We need access to channel users. Channel.hpp has protected _users.
-    // You need to add a public getter or a broadcast method to Channel.
-    // Assuming we can't change Channel.hpp right now, this part is tricky.
-    // I will assume you added `const std::map<int, Client*> &getUsers() const;`
-    // to Channel. OR, since _users is protected and we are outside, we need a
-    // friend or getter. FOR NOW: I will not implement the actual send loop to
-    // avoid compile error until you expose users. I will log it.
-    logger::info() << "PRIVMSG to channel " << targetName << " : " << text
-                   << std::endl;
-
+    const std::map<int, Client *> &members = chan->getUsers();
+    for (std::map<int, Client *>::const_iterator it = members.begin();
+         it != members.end(); ++it) {
+      if (it->second->getFd() != user.getFd()) {
+        it->second->send(payload);
+      }
+    }
   } else {
     // Private message
     Client *target = findClientByNick(conns, targetName);
