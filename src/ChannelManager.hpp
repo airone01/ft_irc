@@ -6,30 +6,36 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/13 14:13:42 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/13 15:06:17 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/19 12:11:57 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <vector>
+#ifndef CHANNELMANAGER_HPP
+#define CHANNELMANAGER_HPP
 
 #include "Channel.hpp"
+#include <map>
+#include <string>
 
-#ifndef CHANNELMANAGER_HPP
-
-// This was meant to be static, but it's too much trouble.
 class ChannelManager {
 public:
-  // ChannelManager();
-  // ChannelManager(const ChannelManager &);
-  // ~ChannelManager();
-  //
-  // ChannelManager &operator=(const ChannelManager &);
+  ChannelManager();
+  ~ChannelManager();
 
-  std::vector<Channel> getChannels();
-  Channel &getChannelFromName(std::string &name);
+  /**
+   * @brief Get a channel by name. Returns NULL if not found.
+   */
+  Channel *getChannel(const std::string &name);
+
+  /**
+   * @brief Create a new channel with the given name and admin.
+   * Throws if channel already exists or name is invalid.
+   */
+  Channel *createChannel(const std::string &name, Client &admin);
 
 private:
-  std::vector<Channel> _channels;
+  // Map Name -> Channel*
+  std::map<std::string, Channel *> _channels;
 };
 
 #endif // !CHANNELMANAGER_HPP

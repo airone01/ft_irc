@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 17:31:51 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/19 11:16:47 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/19 12:08:25 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,4 +55,25 @@ void Client::setRegistered(bool reg) { this->_registered = reg; }
 
 void Client::appendToBuffer(const std::string &buffer) {
   this->_buffer += buffer;
+}
+
+std::string Client::extractMessage() {
+  size_t pos = _buffer.find("\n");
+  if (pos == std::string::npos) {
+    return "";
+  }
+
+  // Extract the line including the newline
+  std::string line = _buffer.substr(0, pos + 1); // +1 to include \n
+
+  // Remove extracted line from buffer
+  _buffer.erase(0, pos + 1);
+
+  // Trim \r if present (CRLF -> LF)
+  if (!line.empty() && line[line.size() - 1] == '\n')
+    line.erase(line.size() - 1);
+  if (!line.empty() && line[line.size() - 1] == '\r')
+    line.erase(line.size() - 1);
+
+  return line;
 }

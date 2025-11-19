@@ -6,17 +6,16 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:13:30 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/13 11:33:53 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/19 12:10:19 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef CONNECTIONMANAGER_HPP
 #define CONNECTIONMANAGER_HPP
 
+#include "Reactor.hpp"
 #include <ctime>
 #include <map>
-
-#include "Reactor.hpp"
 
 class Connection;
 
@@ -31,25 +30,17 @@ public:
 
   void add(Connection *conn);
   void remove(Connection *conn);
-
-  /**
-   * @brief Close all connections and clear the manager.
-   */
   void closeAll();
-
-  /**
-   * @brief Sweep and close connections idle for longer than "seconds".
-   */
   void sweepIdle(std::time_t seconds);
-
-  /**
-   * @brief Return current number of managed connections.
-   */
   size_t size() const;
 
+  typedef std::map<int, Connection *> MapType;
+
+  // Added getter to allow iteration
+  const MapType &getMap() const { return _map; }
+
 private:
-  typedef std::map<int, Connection *> MapType; // fd -> Connection*
-  MapType _map;
+  MapType _map; // fd -> Connection*
   Reactor *_reactor;
 };
 

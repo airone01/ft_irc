@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/16 17:42:42 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/12 16:03:07 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/19 12:22:24 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,15 +61,6 @@ private:
   void writePrefix();
 };
 
-template <typename T> LogStream &LogStream::operator<<(const T &value) {
-  if (_first_output) {
-    writePrefix();
-    _first_output = false;
-  }
-  std::cerr << value;
-  return *this;
-}
-
 // (this is a singleton)
 class Logger {
 private:
@@ -120,6 +111,18 @@ LogStream info();
 LogStream warning();
 
 LogStream error();
+
+template <typename T> LogStream &LogStream::operator<<(const T &value) {
+  if (!_logger.shouldLog(_level)) {
+    return *this;
+  }
+  if (_first_output) {
+    writePrefix();
+    _first_output = false;
+  }
+  std::cerr << value;
+  return *this;
+}
 
 } // namespace logger
 
