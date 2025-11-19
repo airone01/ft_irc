@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 17:31:51 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/10 17:31:56 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/19 11:16:47 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,15 +15,8 @@
 #include <unistd.h>
 
 Client::Client(int fd, Reactor *reactor, ConnectionManager *mgr)
-    : Connection(fd, reactor, mgr), _nickname(), _username(),
-      _registered(false) {}
-
-// copy constructor is too annoying to maintain
-// Client::Client(const Client &copy)
-//     : _socket(copy._socket), _nickname(copy._nickname),
-//       _username(copy._username), _hostname(copy._hostname),
-//       _buffer(copy._buffer), _auth(copy._auth), _registered(copy._registered)
-//       {}
+    : Connection(fd, reactor, mgr), _socket(fd), _nickname(""), _username(""),
+      _hostname(""), _registered(false) {}
 
 Client &Client::operator=(const Client &other) {
   if (this != &other) {
