@@ -39,6 +39,15 @@ bool Channel::getModeSet() const{
     return this->_modeSet;
 }
 
+std::set<char> Channel::getMode() const{
+	return this->_mode;
+}
+
+std::set<int> Channel::getKickedUsers() const{
+	return this->_kickedUsers;
+}
+
+
 std::map<int, Client*> Channel::getInvitedUsers() { return this->_invitedUsers; }
 
 void    Channel::setTopic( std::string newTopic ){
@@ -82,6 +91,15 @@ void    Channel::setModeSet( bool changeMode ){
     this->_modeSet = changeMode;
 }
 
+void    Channel::setMode(const char c){
+	this->_mode.insert(c);
+}
+
+void    Channel::setKickedUsers(const int socket){
+	this->_kickedUsers.insert(socket);
+}
+
+
 void Channel::newUser( Client &tmp){
 	_users.insert(std::pair<int, Client*>(tmp.getSocket(), &tmp));
 }
@@ -96,14 +114,17 @@ void Channel::tryJoin( const Client &tmp, std::string pswrd){
 	if (_modeSet ){
 		if (_mode.find('i') != _mode.end()){
 			if (_invitedUsers.find(tmp.getSocket()) == _invitedUsers.end())
-				throw errorMode("invitation needed to join this channel.");
+				throw errorMode("ERR_INVITEONLYCHAN");
 		}
 		if (_mode.find('l') != _mode.end())
 			if ((_users.size() == _maxCapacity))
-				throw errorMode("max capacity for this channel already reached.");
-		if (_mode.find('k') != _mode.end())
-			if (pswrd != _pswrd)
-				throw errorMode("invalid password.");
+				throw errorMode("ERR_CHANNELISFULL");
+		if (_mode.find('k') != _mode.end()){
+			if (pswrd.empty())
+				throw errorMode("ERR_NEEDMOREPARAMS");
+			else if ((pswrd != _pswrd))
+				throw errorMode("ERR_BADCHANNELKEY");
+		}
 	}
 }
 

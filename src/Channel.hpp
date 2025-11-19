@@ -20,6 +20,7 @@ class Channel
     std::map<int, Client*> _admins;
     std::map<int, Client*> _invitedUsers;
 	std::set<char>		  _mode;
+	std::set<int>		  _kickedUsers;
     std::string           _topic;
     std::string           _pswrd;
     std::string           _name;
@@ -43,11 +44,17 @@ class Channel
     bool getModeSet() const;
     std::map<int, Client*> getInvitedUsers();
 
-    void    setTopic( std::string newTopic );
-    void    setPswrd( std::string newPswrd );
-    void    setName( std::string newName );
-    void    setCapacity( int newCapacity );
-    void    setModeSet( bool changeMode );
+    std::set<char> getMode() const;
+    std::set<int> getKickedUsers() const;
+
+
+    void    setTopic(const std::string newTopic );
+    void    setPswrd(const std::string newPswrd );
+    void    setName(const std::string newName );
+    void    setCapacity(const int newCapacity );
+    void    setModeSet(const bool changeMode );
+    void    setMode(const char c);
+    void    setKickedUsers(const int socket);
 
 	void	newUser( Client & );
 	void	tryJoin( const Client &, std::string pswrd );

@@ -42,6 +42,7 @@ void Commands::join(IRCMessage const &tmp, ChannelManager channels, Client user)
             Channel &actual = channels.getChannelFromName(*roomIt);
             actual.tryJoin(user, *pswrdIt);
             actual.newUser(user);
+            //todo: add numeric replies on succes RPL_TOPIC and RPL_NAMREPLY
             pswrdIt++;
         }
         catch(const std::exception& e)
