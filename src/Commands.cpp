@@ -34,7 +34,6 @@ void Commands::join(IRCMessage const &tmp, ChannelManager channels, Client user)
     it++;
     if (it != param.end() && std::find(it->begin(), it->end(), ',') != it->end())
         pswrd = paramHandler(*it);
-
         
     for (roomIt = rooms.begin(), pswrdIt = pswrd.begin(); roomIt != rooms.end() ;roomIt++){
         try
@@ -45,15 +44,37 @@ void Commands::join(IRCMessage const &tmp, ChannelManager channels, Client user)
             //todo: add numeric replies on succes RPL_TOPIC and RPL_NAMREPLY
             pswrdIt++;
         }
+        catch(const ChannelManager::noSuchChannel& e)
+        {
+            channels.addChannels(Channel(user, *roomIt));
+        }
         catch(const std::exception& e)
         {
+            //todo: add replies sender for error or valid commands 
             std::cerr << e.what() << '\n';
         }
     }
 }
 
-void Commands::part(IRCMessage param){
-
+void Commands::part(IRCMessage const &tmp, ChannelManager channels, Client &user){
+    std::vector<std::string> param = tmp.getParams();
+    std::vector<std::string>::iterator it;
+    for (it = param.begin(); it != param.end();it++){
+        try
+        {
+            Channel &actual = channels.getChannelFromName(*it);
+            actual.leaveChannel(user);
+            if (actual.getUsers().empty()){
+                channels.rmChannels(actual);
+                actual.~Channel();
+            //todo: reply
+            }
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+        }
+    }
 }
 
 void Commands::mode(IRCMessage param){
@@ -64,11 +85,23 @@ void Commands::topic(IRCMessage param){
 
 }
 
-void Commands::invite(IRCMessage param){
-
+void Commands::invite(IRCMessage const &tmp, ChannelManager channels, Client &user){
+    std::vector<std::string> param = tmp.getParams();
 }
 
-void Commands::kick(IRCMessage const &param, Client admin){
-    
+void Commands::kick(IRCMessage const &tmp, ChannelManager channels, Client &admin){
+    std::vector<std::string> param = tmp.getParams();
+    try
+    {
+        Channel &actual = channels.getChannelFromName(param[0]);
+        actual.tryKick(param, tmp, admin);
+        std::map<int, Client*>::iterator victimIt;
+        for (victimIt = actual.getUsers().begin(); victimIt != actual.getUsers().end();victimIt++)
+            if (victimIt->second->getUsername() == param[1])
+                actual.setKickedUsers(victimIt->second->getSocket());
+        }
+    catch(const std::exception& e){
+        std::cerr << e.what() << '\n';
+    }
 }
 

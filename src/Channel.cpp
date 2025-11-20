@@ -6,17 +6,31 @@ Channel::Channel(const Channel &tmp ){}
 Channel &Channel::operator=(const Channel &tmp ) {return *this;}
 Channel::~Channel( void ){}
 
-Channel::Channel( Client &tmp)
-{
-	this->_users.insert(std::pair<int, Client*>(tmp.getSocket(), &tmp));
-	this->_maxCapacity = -1;
-}
+// Channel::Channel( Client &tmp)
+// {
+// 	this->_users.insert(std::pair<int, Client*>(tmp.getSocket(), &tmp));
+// 	this->_maxCapacity = -1;
+// }
 
-Channel::Channel( Client &tmp, int capacity ) :
-	_maxCapacity(capacity)
+// Channel::Channel( Client &tmp, int capacity ) :
+// 	_maxCapacity(capacity)
+// {
+// 	this->_users.insert(std::pair<int, Client*>(tmp.getSocket(), &tmp));
+// }
+
+Channel::Channel( Client &tmp, std::string name ) : _modeSet(false)
 {
-	this->_users.insert(std::pair<int, Client*>(tmp.getSocket(), &tmp));
-	this->_maxCapacity = capacity;
+	try
+	{
+		validChannelName(name);
+		_name = name;
+		_users.insert(std::pair<int, Client*>(tmp.getSocket(), &tmp));
+		_admins.insert(std::pair<int, Client*>(tmp.getSocket(), &tmp));
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << '\n';
+	}	
 }
 
 std::string Channel::getTopic() const{
@@ -48,7 +62,13 @@ std::set<int> Channel::getKickedUsers() const{
 }
 
 
-std::map<int, Client*> Channel::getInvitedUsers() { return this->_invitedUsers; }
+std::map<int, Client*> Channel::getInvitedUsers() { 
+	return this->_invitedUsers; 
+}
+
+std::map<int, Client*> Channel::getUsers() { 
+	return this->_users; 
+}
 
 void    Channel::setTopic( std::string newTopic ){
     this->_topic = newTopic;
@@ -124,8 +144,42 @@ void Channel::tryJoin( const Client &tmp, std::string pswrd){
 				throw errorMode("ERR_NEEDMOREPARAMS");
 			else if ((pswrd != _pswrd))
 				throw errorMode("ERR_BADCHANNELKEY");
+
 		}
 	}
+}
+
+void    Channel::tryKick(std::vector<std::string> param, IRCMessage const &tmp, Client &admin){
+    std::vector<std::string>::iterator it = param.begin();
+	std::map<int, Client*>::iterator victimIt;
+
+	for (victimIt = _users.begin(); victimIt != _users.end();victimIt++)
+		if (victimIt == _users.end())
+			throw errorKick("ERR_NOTONCHANNEL");
+    if ((param[1].empty()) || (++it == param.end()))
+        throw errorKick("ERR_NEEDMOREPARAMS");
+	if (_admins.find(admin.getSocket()) == _admins.end())
+		throw errorKick("ERR_CHANOPRIVSNEEDED");
+}
+
+void Channel::leaveChannel(Client const &user){
+	std::map<int, Client*>::iterator it;
+
+	if (_users.find(user.getSocket()) != _users.end())
+		_users.erase(it);
+	else
+		throw errorPart("ERR_NOTONCHANNEL");
+	if (_admins.find(user.getSocket()) != _admins.end())
+		_admins.erase(it);	
+}
+
+void	Channel::tryInvite(std::vector<std::string> param, ClientManager clients, int adminSocket, int userSocket){
+
+    if ((param.size() > 2) || (std::find(param.begin(), param.end(), ',') != param.end())){
+        //todo: this error does not have any replies equivalent
+		throw errorInvite("ERR_TOOMANYPARAMS");}
+    if (param.size() != 2)
+		throw errorInvite("ERR_NEEDMOREPARAMS");
 }
 
 const char *Channel::maxCapacityReached::what() const throw(){
@@ -145,5 +199,17 @@ const char *Channel::invalidChannelName::what() const throw(){
 }
 
 const char *Channel::errorMode::what() const throw(){
+	return _errMsg.c_str();
+}
+
+const char *Channel::errorKick::what() const throw(){
+	return _errMsg.c_str();
+}
+
+const char *Channel::errorPart::what() const throw(){
+	return _errMsg.c_str();
+}
+
+const char *Channel::errorInvite::what() const throw(){
 	return _errMsg.c_str();
 }

@@ -4,17 +4,19 @@
 # include <iostream>
 # include <map>
 # include <map>
-# include <Client.hpp>
 # include <vector>
 # include <set>
 # include <algorithm>
+# include "Client.hpp"
+# include "ClientManager.hpp"
+# include "IRCMessage.hpp"
 
 # define ADMIN
 # define USER
 
 class Channel
 {
-    protected:
+    private:
 
     std::map<int, Client*> _users;
     std::map<int, Client*> _admins;
@@ -33,8 +35,9 @@ class Channel
 
     public:
 
-    Channel( Client & );
-    Channel( Client & , int capacity );
+    // Channel( Client & );
+    // Channel( Client & ,int capacity );
+    Channel( Client & ,std::string name);
     ~Channel( void );
 
     std::string getTopic() const;
@@ -43,6 +46,7 @@ class Channel
     int getCapacity() const;
     bool getModeSet() const;
     std::map<int, Client*> getInvitedUsers();
+    std::map<int, Client*> getUsers();
 
     std::set<char> getMode() const;
     std::set<int> getKickedUsers() const;
@@ -58,8 +62,10 @@ class Channel
 
 	void	newUser( Client & );
 	void	tryJoin( const Client &, std::string pswrd );
-	void	updatePriv( const Client &admin, Client &user );
-
+    void    tryKick(std::vector<std::string> param, IRCMessage const &tmp, Client &admin);
+	void    tryInvite(std::vector<std::string> param, ClientManager clients, int adminSocket, int userSocket);
+    void	updatePriv( const Client &admin, Client &user );
+    void    leaveChannel(Client const &user);
 	// modifier les try catch pour les encapsuler dans les cpp des channel et des commandes
 	class maxCapacityReached : public std::exception{
 		const char *what() const throw();
@@ -84,8 +90,35 @@ class Channel
             errorMode(std::string error) : _errMsg(std::string("error: ") + error) {}
             const char *what() const throw();
             ~errorMode() throw() {};
+    };
 
+    class errorKick : public std::exception{
+        private:
+            std::string _errMsg;
+		public:
+            errorKick(std::string error) : _errMsg(std::string("error: ") + error) {}
+            const char *what() const throw();
+            ~errorKick() throw() {};
+    };
+
+    class errorPart : public std::exception{
+        private:
+            std::string _errMsg;
+        public:
+            errorPart(std::string error) : _errMsg(std::string("error: ") + error) {}
+            const char *what() const throw();
+            ~errorPart() throw() {};
+    };
+    
+    class errorInvite : public std::exception{
+        private:
+            std::string _errMsg;
+        public:
+            errorInvite(std::string error) : _errMsg(std::string("error: ") + error) {}
+            const char *what() const throw();
+            ~errorInvite() throw() {};
     };
 };
+
 
 #endif
