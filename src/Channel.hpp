@@ -13,7 +13,7 @@
 
 # define ADMIN
 # define USER
-
+// todo: add ERR_NONICKNAMEGIVEN, ERR_NOSUCHCHANNEL replies error check 
 class Channel
 {
     private:
@@ -59,6 +59,7 @@ class Channel
     void    setModeSet(const bool changeMode );
     void    setMode(const char c);
     void    setKickedUsers(const int socket);
+    void    setInvitedUsers(Client&);
 
 	void	newUser( Client & );
 	void	tryJoin( const Client &, std::string pswrd );
@@ -66,14 +67,17 @@ class Channel
 	void    tryInvite(std::vector<std::string> param, ClientManager clients, int adminSocket, int userSocket);
     void	updatePriv( const Client &admin, Client &user );
     void    leaveChannel(Client const &user);
-	// modifier les try catch pour les encapsuler dans les cpp des channel et des commandes
-	class maxCapacityReached : public std::exception{
-		const char *what() const throw();
-	};
+	void    changeTopic(IRCMessage const &tmp, Client const &user);
+    void    updateMode(IRCMessage const &tmp, Client const &user);
 
-	class invitationNeeded : public std::exception{
-		const char *what() const throw();
-	};
+    // modifier les try catch pour les encapsuler dans les cpp des channel et des commandes
+	// class maxCapacityReached : public std::exception{
+	// 	const char *what() const throw();
+	// };
+
+	// class invitationNeeded : public std::exception{
+	// 	const char *what() const throw();
+	// };
 
 	class insufficientPrivilege : public std::exception{
 		const char *what() const throw();
@@ -117,6 +121,15 @@ class Channel
             errorInvite(std::string error) : _errMsg(std::string("error: ") + error) {}
             const char *what() const throw();
             ~errorInvite() throw() {};
+    };
+
+    class errorTopic : public std::exception{
+        private:
+            std::string _errMsg;
+        public:
+            errorTopic(std::string error) : _errMsg(std::string("error: ") + error) {}
+            const char *what() const throw();
+            ~errorTopic() throw() {};
     };
 };
 

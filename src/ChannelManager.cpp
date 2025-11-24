@@ -51,5 +51,5 @@ void ChannelManager::rmChannels(const Channel &tmp){
 }
 
 const char *ChannelManager::noSuchChannel::what() const throw(){
-	return ("");
+	return ("ERR_NOSUCHCHANNEL");
 }

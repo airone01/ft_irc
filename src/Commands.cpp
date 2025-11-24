@@ -17,6 +17,7 @@ std::vector<std::string> paramHandler(std::string params){
             break ;
         i++;
     }
+    return newParam;
 }
 
 void Commands::join(IRCMessage const &tmp, ChannelManager channels, Client user){
@@ -77,16 +78,55 @@ void Commands::part(IRCMessage const &tmp, ChannelManager channels, Client &user
     }
 }
 
-void Commands::mode(IRCMessage param){
+/*
+flags: 
+        i(set/unset invite only)
+        t(set/unset topic priv to admin)
+        k(set/unset password)
+        o(give/take admin priv)
+        l(set/unset limit size)
+
+replies :
+           ERR_NEEDMOREPARAMS              RPL_CHANNELMODEIS
+           ERR_CHANOPRIVSNEEDED            ERR_NOSUCHNICK
+           ERR_NOTONCHANNEL                ERR_KEYSET
+           RPL_BANLIST                     RPL_ENDOFBANLIST
+           ERR_UNKNOWNMODE                 ERR_NOSUCHCHANNEL
+           ERR_USERSDONTMATCH              ERR_UMODEUNKNOWNFLAG
+           RPL_UMODEIS
+*/
+void Commands::mode(IRCMessage const &tmp, ChannelManager channels, Client &user){
 
 }
 
-void Commands::topic(IRCMessage param){
+void Commands::topic(IRCMessage const &tmp, ChannelManager channels, Client &user){
+    if (tmp.getCountParams() != 1)
+        std::cerr << "ERR_NEEDMOREPARAMS\n";
+    std::vector<std::string> param = paramHandler(tmp.getParams()[0]);
+    std::vector<std::string>::iterator it = param.begin();
 
+    for ( ; it != param.end(); it++){
+        try
+        {
+            Channel &actual = channels.getChannelFromName(*it);
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+        }
+    }
 }
 
-void Commands::invite(IRCMessage const &tmp, ChannelManager channels, Client &user){
+void Commands::invite(IRCMessage const &tmp, ClientManager clients, ChannelManager channels, Client &user){
     std::vector<std::string> param = tmp.getParams();
+    try{
+        Channel &actual = channels.getChannelFromName(param[1]);
+        actual.tryInvite(param, clients, user.getSocket(), 
+            clients.getClientFromUsername(param[0]).getSocket());
+    }
+    catch (const std::exception& e){
+        std::cerr << e.what() << std::endl;
+    }
 }
 
 void Commands::kick(IRCMessage const &tmp, ChannelManager channels, Client &admin){

@@ -119,6 +119,10 @@ void    Channel::setKickedUsers(const int socket){
 	this->_kickedUsers.insert(socket);
 }
 
+void	Channel::setInvitedUsers(Client& user){
+	_invitedUsers.insert(std::pair<int, Client*>(user.getSocket(), &user));
+}
+
 
 void Channel::newUser( Client &tmp){
 	_users.insert(std::pair<int, Client*>(tmp.getSocket(), &tmp));
@@ -144,7 +148,6 @@ void Channel::tryJoin( const Client &tmp, std::string pswrd){
 				throw errorMode("ERR_NEEDMOREPARAMS");
 			else if ((pswrd != _pswrd))
 				throw errorMode("ERR_BADCHANNELKEY");
-
 		}
 	}
 }
@@ -173,25 +176,87 @@ void Channel::leaveChannel(Client const &user){
 		_admins.erase(it);	
 }
 
+/*		
+	-ERR_NEEDMOREPARAMS              -ERR_NOSUCHNICK
+	-ERR_NOTONCHANNEL                -ERR_USERONCHANNEL
+	-ERR_CHANOPRIVSNEEDED
+	RPL_INVITING                    RPL_AWAY
+*/
 void	Channel::tryInvite(std::vector<std::string> param, ClientManager clients, int adminSocket, int userSocket){
 
-    if ((param.size() > 2) || (std::find(param.begin(), param.end(), ',') != param.end())){
+	if (param.size() != 2 || (std::find(param.begin(), param.end(), ',') != param.end()))
+		throw errorInvite("ERR_NEEDMOREPARAMS");
+	if (_users.find(adminSocket) == _users.end())
+		throw errorInvite("ERR_NOTONCHANNEL");
+    if (std::find(param.begin(), param.end(), ',') != param.end()){
         //todo: this error does not have any replies equivalent
 		throw errorInvite("ERR_TOOMANYPARAMS");}
-    if (param.size() != 2)
-		throw errorInvite("ERR_NEEDMOREPARAMS");
+	if (_users.find(userSocket) != _users.end())
+		throw errorInvite("ERR_USERONCHANNEL");
+	clients.getClientFromSocket(userSocket);
+	if (_modeSet && _mode.find('o') != _mode.end() && _admins.find(adminSocket) == _admins.end())
+		throw errorInvite("ERR_CHANOPRIVSNEEDED");
+	setInvitedUsers(clients.getClientFromSocket(userSocket));
 }
 
-const char *Channel::maxCapacityReached::what() const throw(){
-	return "error: max capacity for this channel already reached.";
+void	Channel::changeTopic(IRCMessage const &tmp, Client const &user){
+	if (!tmp.getPrefix().empty())
+		if (user.getUsername() != tmp.getPrefix())
+			throw errorTopic("ERR_USERSDONTMATCH");
+	if (_modeSet && _mode.find('o') != _mode.end() && _admins.find(user.getSocket()) == _admins.end())
+		throw errorTopic("ERR_CHANOPRIVSNEEDED");
+	if (_topic.empty() && tmp.getTrailing().empty())
+		throw  errorTopic("RPL_NOTOPIC");
+	else{
+		_topic = tmp.getTrailing();
+		throw  errorTopic("RPL_TOPIC");
+	}
+}
+/*
+flags: 
+        i(set/unset invite only)
+        t(set/unset topic priv to admin)
+        k(set/unset password)
+        o(give/take admin priv)
+        l(set/unset limit size)
+
+replies :
+           -ERR_NEEDMOREPARAMS              
+           ERR_CHANOPRIVSNEEDED            ERR_NOSUCHNICK
+           ERR_NOTONCHANNEL                ERR_KEYSET
+           ERR_UNKNOWNMODE                 ERR_NOSUCHCHANNEL
+           ERR_USERSDONTMATCH              ERR_UMODEUNKNOWNFLAG
+           
+		   RPL_BANLIST                     RPL_ENDOFBANLIST
+           RPL_UMODEIS						RPL_CHANNELMODEIS
+*/
+
+void	isValidMode(std::string str){
+	std::string allMode = "itkol";
+	std::string::iterator it = std::find(allMode.begin(), allMode.end(), str[1]);
+	if ((str[0] != '+') || (str[0] != '-'))
+		throw Channel::errorMode("ERR_UNKNOWNMODE");
+	else if ((it = std::find(allMode.begin(), allMode.end(), str[1])) == allMode.end())
+		throw it != allMode.end() ? Channel::errorMode("ERR_UNKNOWNMODE") : Channel::errorMode("ERR_KEYSET");
 }
 
-const char *Channel::invitationNeeded::what() const throw(){
-	return "error: you need a invitation to join this channel.";
+void	Channel::updateMode(IRCMessage const &tmp, Client const &user){
+	if(tmp.getCountParams() < 2)
+		throw errorMode("ERR_NEEDMOREPARAMS");
+	isValidMode(tmp.getParams()[1]);
+	
 }
+
+// const char *Channel::maxCapacityReached::what() const throw(){
+// 	return "error: max capacity for this channel already reached.";
+// }
+
+// const char *Channel::invitationNeeded::what() const throw(){
+// 	return "error: you need a invitation to join this channel.";
+// }
 
 const char *Channel::insufficientPrivilege::what() const throw(){
-	return "error: unsufficient privilege to do this action.";
+	return "ERR_CHANOPRIVSNEEDED";
 }
 
 const char *Channel::invalidChannelName::what() const throw(){
@@ -211,5 +276,9 @@ const char *Channel::errorPart::what() const throw(){
 }
 
 const char *Channel::errorInvite::what() const throw(){
+	return _errMsg.c_str();
+}
+
+const char *Channel::errorTopic::what() const throw(){
 	return _errMsg.c_str();
 }
