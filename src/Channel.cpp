@@ -231,20 +231,19 @@ replies :
            RPL_UMODEIS						RPL_CHANNELMODEIS
 */
 
-void	isValidMode(std::string str){
+void	isValidMode(std::string str, Channel &actual){
 	std::string allMode = "itkol";
 	std::string::iterator it = std::find(allMode.begin(), allMode.end(), str[1]);
 	if ((str[0] != '+') || (str[0] != '-'))
 		throw Channel::errorMode("ERR_UNKNOWNMODE");
-	else if ((it = std::find(allMode.begin(), allMode.end(), str[1])) == allMode.end())
+	if ((it == allMode.end()) || (actual.getMode().find(str[1]) != actual.getMode().end()))
 		throw it != allMode.end() ? Channel::errorMode("ERR_UNKNOWNMODE") : Channel::errorMode("ERR_KEYSET");
 }
 
 void	Channel::updateMode(IRCMessage const &tmp, Client const &user){
 	if(tmp.getCountParams() < 2)
 		throw errorMode("ERR_NEEDMOREPARAMS");
-	isValidMode(tmp.getParams()[1]);
-	
+	isValidMode(tmp.getParams()[1], *this);	
 }
 
 // const char *Channel::maxCapacityReached::what() const throw(){

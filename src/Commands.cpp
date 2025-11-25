@@ -95,8 +95,18 @@ replies :
            ERR_USERSDONTMATCH              ERR_UMODEUNKNOWNFLAG
            RPL_UMODEIS
 */
-void Commands::mode(IRCMessage const &tmp, ChannelManager channels, Client &user){
-
+void Commands::mode(IRCMessage const &param, ChannelManager channels, Client &user){
+    std::vector<std::string> tmp = param.getParams();
+    try
+    {
+        Channel &actual = channels.getChannelFromName(tmp[0]);
+        actual.updateMode(param, user);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+    
 }
 
 void Commands::topic(IRCMessage const &tmp, ChannelManager channels, Client &user){
