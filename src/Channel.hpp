@@ -70,15 +70,6 @@ class Channel
 	void    changeTopic(IRCMessage const &tmp, Client const &user);
     void    updateMode(IRCMessage const &tmp, Client const &user);
 
-    // modifier les try catch pour les encapsuler dans les cpp des channel et des commandes
-	// class maxCapacityReached : public std::exception{
-	// 	const char *what() const throw();
-	// };
-
-	// class invitationNeeded : public std::exception{
-	// 	const char *what() const throw();
-	// };
-
 	class insufficientPrivilege : public std::exception{
 		const char *what() const throw();
 	};

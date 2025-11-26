@@ -240,19 +240,80 @@ void	isValidMode(std::string str, Channel &actual){
 		throw it != allMode.end() ? Channel::errorMode("ERR_UNKNOWNMODE") : Channel::errorMode("ERR_KEYSET");
 }
 
+enum CHNGMODE{
+	SINVITE,
+	UINVITE,
+	STOPIC,
+	UTOPIC,
+	SPASSWORD,
+	UPASSWORD,
+	SPRIV,
+	UPRIV,
+	SLIMIT,
+	ULIMIT,
+	DEFAULT
+};
+
+
+CHNGMODE applyMode(std::string &tmp){
+	if (tmp == "+i") return SINVITE;
+	if (tmp == "-i") return UINVITE;
+	if (tmp == "+t") return STOPIC;
+	if (tmp == "-t") return UTOPIC;
+	if (tmp == "+k") return SPASSWORD;
+	if (tmp == "-k") return UPASSWORD;
+	if (tmp == "+o") return SPRIV;
+	if (tmp == "-o") return UPRIV;
+	if (tmp == "+l") return SLIMIT;
+	if (tmp == "-l") return ULIMIT;
+	return DEFAULT;
+}
+
 void	Channel::updateMode(IRCMessage const &tmp, Client const &user){
 	if(tmp.getCountParams() < 2)
 		throw errorMode("ERR_NEEDMOREPARAMS");
-	isValidMode(tmp.getParams()[1], *this);	
+	isValidMode(tmp.getParams()[1], *this);
+	std::string param = tmp.getParams()[1];
+	if (tmp.getParams()[1][0] == '-')
+		_mode.erase(tmp.getParams()[1][1]);
+	else{
+		switch (applyMode(param))
+		{
+			case SINVITE:
+				_mode.insert(param[1]);
+				break;
+			case UINVITE:
+				_mode.erase(param[1]);
+				break;
+			case STOPIC:
+				_mode.insert(param[1]);
+				break;
+			case UTOPIC:
+				_mode.erase(param[1]);
+				break;
+			case SPASSWORD:
+				_mode.insert(param[1]);
+				break;
+			case UPASSWORD:
+				_mode.erase(param[1]);
+				break;
+			case SPRIV:
+				_mode.insert(param[1]);
+				break;
+			case UPRIV:
+				_mode.erase(param[1]);
+				break;
+			case SLIMIT:
+				_mode.insert(param[1]);
+				break;
+			case ULIMIT:
+				_mode.erase(param[1]);
+				break;
+			default:
+				break;
+		}
+	}
 }
-
-// const char *Channel::maxCapacityReached::what() const throw(){
-// 	return "error: max capacity for this channel already reached.";
-// }
-
-// const char *Channel::invitationNeeded::what() const throw(){
-// 	return "error: you need a invitation to join this channel.";
-// }
 
 const char *Channel::insufficientPrivilege::what() const throw(){
 	return "ERR_CHANOPRIVSNEEDED";
