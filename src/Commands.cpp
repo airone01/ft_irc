@@ -172,11 +172,11 @@ void Commands::kick(IRCMessage const &tmp, ChannelManager channels, Client &admi
  */
 void privmsg(IRCMessage const &msg, Client &sender, ClientManager &clients, ChannelManager &channels) {
 	if (msg.getCountParams() < 1) {
-		//TODO ERROR HANDLING
+		std::cerr << "411 ERROR HANDLING :No recipient given " << msg.getCommand() << std::endl;
 		return ;
 	}
 	if (msg.getTrailing().empty()) {
-		//TODO ERROR HANDLING
+		std::cerr << "412 ERR_NOTEXTTOSEND :No text to send" << std::endl;
 		return ;
 	}
 	std::string target = msg.getParams()[0];
@@ -188,7 +188,7 @@ void privmsg(IRCMessage const &msg, Client &sender, ClientManager &clients, Chan
 			Channel &chan = channels.getChannelFromName(target);
 			std::map<int, Client*> users = chan.getUsers();
 			if (users.find(sender.getSocket()) == users.end()) {
-				//TODO ERROR HANDLING
+				std::cerr << "404 ERR_CANNOTSENDTOCHAN " << msg.getParams()[0] << " :Cannot send to channel" << std::endl;
 				return;
 			}
 			for (std::map<int, Client*>::iterator it = users.begin(); it != users.end(); ++it) {
@@ -198,7 +198,7 @@ void privmsg(IRCMessage const &msg, Client &sender, ClientManager &clients, Chan
 			}
 		}
 		catch (const std::exception &e) {
-			//TODO ERROR
+			std::cerr << "403 ERR_NOSUCHCHANNEL " << msg.getParams()[0] << " :No such channel" << std::endl;
 		}
 	} else {
 		try {
@@ -206,7 +206,7 @@ void privmsg(IRCMessage const &msg, Client &sender, ClientManager &clients, Chan
 			recipient.send(msgVec);
 		}
 		catch (const std::exception &e) {
-			//TODO ERROR HANDLING
+			std::cerr << "401 ERR_NOSUCHNICK :No such nick" << std::endl;
 		}
 	}
 }
