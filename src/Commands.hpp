@@ -2,6 +2,8 @@
 # define COMMANDS_HPP
 
 # include "IRCMessage.hpp"
+# include "Client.hpp"
+# include "ChannelManager.hpp"
 # include <algorithm>
 
 class Commands
@@ -11,8 +13,8 @@ class Commands
     virtual void mode(IRCMessage const &tmp, ChannelManager channels, Client &user);
     virtual void topic(IRCMessage const &tmp, ChannelManager channels, Client &user);
     virtual void invite(IRCMessage const &tmp, ClientManager clients, ChannelManager channels, Client &user);
-    
     virtual void kick(IRCMessage const &param, ChannelManager channels, Client &admin);
+	void privmsg(IRCMessage const &msg, Client &sender, ClientManager &clients, ChannelManager &channels);
 };
 
 #endif

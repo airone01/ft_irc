@@ -155,3 +155,59 @@ void Commands::kick(IRCMessage const &tmp, ChannelManager channels, Client &admi
     }
 }
 
+
+/**
+ *	@Brief This is the parsing of the messages sent.
+ *	Format			:	[ ':' <prefix> <SPACE> ] <PRIVMSG> <SPACE> <params1>[ ',' <params2> ] [ <SPACE> <params2> [ ',' <params2>]] <SPACE> ':' <trailing>
+ *	Numeric Replies	:
+ *						ERR_NORECIPIENT					ERR_NOTEXTTOSEND
+ *						ERR_CANNOTSENDTOCHAN			ERR_NOTOPLEVEL
+ *						ERR_WILDTOPLEVEL				ERR_TOOMANYTARGETS
+ *						ERR_NOSUCHNICK					RPL_AWAY
+ *	Exemple			:	:Angel PRIVMSG Wiz :Hello are you receiving this message ?;
+ *						PRIVMSG Angel :yes I'm receiving it !receiving it !'u>(768u+1n) .br;
+ *						PRIVMSG jtotolsun.oulu.fi :Hello !;
+ *						PRIVMSG $*.fi :Server tolsun.oulu.fi rebooting.; Message to everyone on a server which has a name matching *.fi.
+ *						PRIVMSG #*.edu :NSFNet is undergoing work, expect interruptions; Message to all users who come from a host which has a name matching *.edu.
+ */
+void privmsg(IRCMessage const &msg, Client &sender, ClientManager &clients, ChannelManager &channels) {
+	if (msg.getCountParams() < 1) {
+		//TODO ERROR HANDLING
+		return ;
+	}
+	if (msg.getTrailing().empty()) {
+		//TODO ERROR HANDLING
+		return ;
+	}
+	std::string target = msg.getParams()[0];
+	std::string message = msg.getTrailing();
+	std::string formatted = ":" + sender.getNickname() + "!" + sender.getUsername() + "@" + sender.getHostname() + " PRIVMSG " + target + " :" + message + "\r\n";
+	std::vector<char> msgVec(formatted.begin(), formatted.end());
+	if (!target.empty() && (target[0] == '#' || target[0] == '&')) {
+		try {
+			Channel &chan = channels.getChannelFromName(target);
+			std::map<int, Client*> users = chan.getUsers();
+			if (users.find(sender.getSocket()) == users.end()) {
+				//TODO ERROR HANDLING
+				return;
+			}
+			for (std::map<int, Client*>::iterator it = users.begin(); it != users.end(); ++it) {
+				if (it->second->getSocket() != sender.getSocket()) {
+					it->second->send(msgVec);
+				}
+			}
+		}
+		catch (const std::exception &e) {
+			//TODO ERROR
+		}
+	} else {
+		try {
+			Client &recipient = clients.getClientFromUsername(target);
+			recipient.send(msgVec);
+		}
+		catch (const std::exception &e) {
+			//TODO ERROR HANDLING
+		}
+	}
+}
+
