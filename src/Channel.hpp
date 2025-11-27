@@ -4,22 +4,25 @@
 # include <iostream>
 # include <map>
 # include <map>
-# include <Client.hpp>
 # include <vector>
 # include <set>
 # include <algorithm>
+# include "Client.hpp"
+# include "ClientManager.hpp"
+# include "IRCMessage.hpp"
 
 # define ADMIN
 # define USER
-
+// todo: add ERR_NONICKNAMEGIVEN, ERR_NOSUCHCHANNEL replies error check 
 class Channel
 {
     private:
 
-    std::map<int, Client> _users;
-    std::map<int, Client> _admins;
-    std::map<int, Client> _invitedUsers;
+    std::map<int, Client*> _users;
+    std::map<int, Client*> _admins;
+    std::map<int, Client*> _invitedUsers;
 	std::set<char>		  _mode;
+	std::set<int>		  _kickedUsers;
     std::string           _topic;
     std::string           _pswrd;
     std::string           _name;
@@ -32,34 +35,40 @@ class Channel
 
     public:
 
-    Channel( const Client & );
-    Channel( const Client & , int capacity );
+    // Channel( Client & );
+    // Channel( Client & ,int capacity );
+    Channel( Client & ,std::string name);
     ~Channel( void );
 
     std::string getTopic() const;
     std::string getPswrd() const;
     std::string getName() const;
     int getCapacity() const;
-    bool getInvite() const;
+    bool getModeSet() const;
+    std::map<int, Client*> getInvitedUsers();
+    std::map<int, Client*> getUsers();
 
-    void    setTopic( std::string newTopic );
-    void    setPswrd( std::string newPswrd );
-    void    setName( std::string newName );
-    void    setCapacity( int newCapacity );
-    void    setInvite( bool changeMode );
+    std::set<char> getMode() const;
+    std::set<int> getKickedUsers() const;
 
-	void	newUser( const Client & );
-	bool	tryJoin( const Client & );
-	void	updatePriv( const Client &admin, Client &user );
 
-	// modifier les try catch pour les encapsuler dans les cpp des channel et des commandes
-	class maxCapacityReached : public std::exception{
-		const char *what() const throw();
-	};
+    void    setTopic(const std::string newTopic );
+    void    setPswrd(const std::string newPswrd );
+    void    setName(const std::string newName );
+    void    setCapacity(const int newCapacity );
+    void    setModeSet(const bool changeMode );
+    void    setMode(const char c);
+    void    setKickedUsers(const int socket);
+    void    setInvitedUsers(Client&);
 
-	class invitationNeeded : public std::exception{
-		const char *what() const throw();
-	};
+	void	newUser( Client & );
+	void	tryJoin( const Client &, std::string pswrd );
+    void    tryKick(std::vector<std::string> param, IRCMessage const &tmp, Client &admin);
+	void    tryInvite(std::vector<std::string> param, ClientManager clients, int adminSocket, int userSocket);
+    void	updatePriv( const Client &admin, Client &user );
+    void    leaveChannel(Client const &user);
+	void    changeTopic(IRCMessage const &tmp, Client const &user);
+    void    updateMode(IRCMessage const &tmp, Client const &user);
 
 	class insufficientPrivilege : public std::exception{
 		const char *what() const throw();
@@ -68,6 +77,52 @@ class Channel
 	class invalidChannelName : public std::exception{
 		const char *what() const throw();
 	};
+
+    class errorMode : public std::exception{
+        private:
+            std::string _errMsg;
+		public:
+            errorMode(std::string error) : _errMsg(std::string("error: ") + error) {}
+            const char *what() const throw();
+            ~errorMode() throw() {};
+    };
+
+    class errorKick : public std::exception{
+        private:
+            std::string _errMsg;
+		public:
+            errorKick(std::string error) : _errMsg(std::string("error: ") + error) {}
+            const char *what() const throw();
+            ~errorKick() throw() {};
+    };
+
+    class errorPart : public std::exception{
+        private:
+            std::string _errMsg;
+        public:
+            errorPart(std::string error) : _errMsg(std::string("error: ") + error) {}
+            const char *what() const throw();
+            ~errorPart() throw() {};
+    };
+    
+    class errorInvite : public std::exception{
+        private:
+            std::string _errMsg;
+        public:
+            errorInvite(std::string error) : _errMsg(std::string("error: ") + error) {}
+            const char *what() const throw();
+            ~errorInvite() throw() {};
+    };
+
+    class errorTopic : public std::exception{
+        private:
+            std::string _errMsg;
+        public:
+            errorTopic(std::string error) : _errMsg(std::string("error: ") + error) {}
+            const char *what() const throw();
+            ~errorTopic() throw() {};
+    };
 };
+
 
 #endif
