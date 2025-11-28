@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 16:23:14 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/10 16:41:43 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/13 11:49:00 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,14 +15,24 @@
 #include "TimerManager.hpp"
 #include "net/Connection.hpp"
 
-TimerManager::TimerManager() {}
+TimerManager::TimerManager() : _timers() {}
 
-TimerManager::~TimerManager() { m_timers.clear(); }
+TimerManager::TimerManager(const TimerManager &other)
+    : _timers(other._timers) {}
+
+TimerManager::~TimerManager() { _timers.clear(); }
+
+TimerManager &TimerManager::operator=(const TimerManager &other) {
+  if (this != &other) {
+    this->_timers = other._timers;
+  }
+  return (*this);
+}
 
 void TimerManager::schedule(Connection *c, std::time_t when) {
   if (!c)
     return;
-  m_timers.insert(std::make_pair(when, c));
+  _timers.insert(std::make_pair(when, c));
 }
 
 void TimerManager::scheduleIn(Connection *c, unsigned int secondsFromNow) {
@@ -35,9 +45,9 @@ void TimerManager::scheduleIn(Connection *c, unsigned int secondsFromNow) {
 void TimerManager::cancel(Connection *c) {
   if (!c)
     return;
-  for (Timers::iterator it = m_timers.begin(); it != m_timers.end();) {
+  for (Timers::iterator it = _timers.begin(); it != _timers.end();) {
     if (it->second == c) {
-      m_timers.erase(it);
+      _timers.erase(it);
       ++it;
     } else
       ++it;
@@ -47,13 +57,13 @@ void TimerManager::cancel(Connection *c) {
 std::vector<Connection *> TimerManager::pollExpired() {
   std::vector<Connection *> out;
   std::time_t now = std::time(NULL);
-  for (Timers::iterator it = m_timers.begin();
-       it != m_timers.end() && it->first <= now;) {
+  for (Timers::iterator it = _timers.begin();
+       it != _timers.end() && it->first <= now;) {
     out.push_back(it->second);
-    m_timers.erase(it);
+    _timers.erase(it);
     ++it;
   }
   return out;
 }
 
-void TimerManager::clear() { m_timers.clear(); }
+void TimerManager::clear() { _timers.clear(); }

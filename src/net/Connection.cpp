@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:23:02 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/10 14:33:07 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/13 11:18:45 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,25 +20,49 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+Connection::Connection()
+    : _fd(-1), _reactor(NULL), _manager(NULL), _readBuf(), _writeBuf(),
+      _msgCb(NULL), _closed(false), _lastActivity(std::time(NULL)) {}
+
+Connection::Connection(const Connection &other)
+    : _fd(other._fd), _reactor(other._reactor), _manager(other._manager),
+      _readBuf(other._readBuf), _writeBuf(other._writeBuf),
+      _msgCb(other._msgCb), _closed(other._closed),
+      _lastActivity(other._lastActivity) {}
+
 Connection::Connection(int fd, Reactor *reactor, ConnectionManager *mgr)
-    : m_fd(fd), m_reactor(reactor), m_manager(mgr), m_readBuf(), m_writeBuf(),
-      m_msgCb(NULL), m_closed(false), m_lastActivity(std::time(NULL)) {}
+    : _fd(fd), _reactor(reactor), _manager(mgr), _readBuf(), _writeBuf(),
+      _msgCb(NULL), _closed(false), _lastActivity(std::time(NULL)) {}
 
 Connection::~Connection() {
-  if (m_fd >= 0)
-    ::close(m_fd);
+  if (_fd >= 0)
+    ::close(_fd);
 }
 
-int Connection::fd() const { return m_fd; }
+Connection &Connection::operator=(const Connection &other) {
+  if (this != &other) {
+    this->_fd = other._fd;
+    this->_reactor = other._reactor;
+    this->_manager = other._manager;
+    this->_readBuf = other._readBuf;
+    this->_writeBuf = other._writeBuf;
+    this->_msgCb = other._msgCb;
+    this->_closed = other._closed;
+    this->_lastActivity = other._lastActivity;
+  }
+  return (*this);
+}
 
-void Connection::setMessageCallback(MessageCallback cb) { m_msgCb = cb; }
+int Connection::getFd() const { return _fd; }
 
-void Connection::touch() { m_lastActivity = std::time(NULL); }
+void Connection::setMessageCallback(MessageCallback cb) { _msgCb = cb; }
 
-std::time_t Connection::lastActivity() const { return m_lastActivity; }
+void Connection::touch() { _lastActivity = std::time(NULL); }
+
+std::time_t Connection::getLastActivity() const { return _lastActivity; }
 
 void Connection::handleEvent(uint32_t events) {
-  if (m_closed)
+  if (_closed)
     return;
   if (events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP)) {
     // remote closed or error
@@ -56,18 +80,18 @@ void Connection::handleEvent(uint32_t events) {
 }
 
 ssize_t Connection::handleRead() {
-  if (m_fd < 0)
+  if (_fd < 0)
     return -1;
   char buf[4096];
   while (1) {
-    ssize_t n = ::recv(m_fd, buf, sizeof(buf), 0);
+    ssize_t n = ::recv(_fd, buf, sizeof(buf), 0);
     if (n > 0) {
-      m_lastActivity = std::time(NULL);
-      m_readBuf.insert(m_readBuf.end(), buf, buf + n);
+      _lastActivity = std::time(NULL);
+      _readBuf.insert(_readBuf.end(), buf, buf + n);
       // notify dispatcher if present
-      if (m_msgCb) {
-        m_msgCb(this, m_readBuf);
-        m_readBuf.clear();
+      if (_msgCb) {
+        _msgCb(this, _readBuf);
+        _readBuf.clear();
       }
     } else if (n == 0) {
       // orderly shutdown by peer
@@ -83,26 +107,26 @@ ssize_t Connection::handleRead() {
       return -1;
     }
   }
-  return static_cast<ssize_t>(m_readBuf.size());
+  return static_cast<ssize_t>(_readBuf.size());
 }
 
 ssize_t Connection::handleWrite() {
-  if (m_fd < 0)
+  if (_fd < 0)
     return -1;
-  while (!m_writeBuf.empty()) {
-    ssize_t n = ::send(m_fd, &m_writeBuf[0], m_writeBuf.size(), MSG_NOSIGNAL);
+  while (!_writeBuf.empty()) {
+    ssize_t n = ::send(_fd, &_writeBuf[0], _writeBuf.size(), MSG_NOSIGNAL);
     if (n > 0) {
-      m_lastActivity = std::time(NULL);
+      _lastActivity = std::time(NULL);
       // if ((size_t)n >= m_writeBuf.size()) {
-      if (static_cast<size_t>(n) >= m_writeBuf.size()) {
-        m_writeBuf.clear();
+      if (static_cast<size_t>(n) >= _writeBuf.size()) {
+        _writeBuf.clear();
         // remove EPOLLOUT interest
-        if (m_reactor)
-          m_reactor->modFd(m_fd, EPOLLIN | EPOLLRDHUP | EPOLLHUP | EPOLLERR,
-                           this);
+        if (_reactor)
+          _reactor->modFd(_fd, EPOLLIN | EPOLLRDHUP | EPOLLHUP | EPOLLERR,
+                          this);
         return n;
       } else {
-        m_writeBuf.erase(m_writeBuf.begin(), m_writeBuf.begin() + n);
+        _writeBuf.erase(_writeBuf.begin(), _writeBuf.begin() + n);
       }
     } else {
       if (errno == EAGAIN || errno == EWOULDBLOCK) {
@@ -118,27 +142,27 @@ ssize_t Connection::handleWrite() {
 }
 
 void Connection::send(const std::vector<char> &data) {
-  if (m_closed)
+  if (_closed)
     return;
   if (data.empty())
     return;
-  bool wasEmpty = m_writeBuf.empty();
-  m_writeBuf.insert(m_writeBuf.end(), data.begin(), data.end());
-  if (wasEmpty && m_reactor) {
-    m_reactor->modFd(
-        m_fd, EPOLLIN | EPOLLOUT | EPOLLRDHUP | EPOLLHUP | EPOLLERR, this);
+  bool wasEmpty = _writeBuf.empty();
+  _writeBuf.insert(_writeBuf.end(), data.begin(), data.end());
+  if (wasEmpty && _reactor) {
+    _reactor->modFd(_fd, EPOLLIN | EPOLLOUT | EPOLLRDHUP | EPOLLHUP | EPOLLERR,
+                    this);
   }
 }
 
 void Connection::close() {
-  if (m_closed)
+  if (_closed)
     return;
-  m_closed = true;
-  if (m_reactor)
-    m_reactor->delFd(m_fd);
-  if (m_manager)
-    m_manager->remove(this);
-  if (m_fd >= 0)
-    ::close(m_fd);
-  m_fd = -1;
+  _closed = true;
+  if (_reactor)
+    _reactor->delFd(_fd);
+  if (_manager)
+    _manager->remove(this);
+  if (_fd >= 0)
+    ::close(_fd);
+  _fd = -1;
 }

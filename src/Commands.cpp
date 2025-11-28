@@ -1,6 +1,20 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Commands.cpp                                       :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/11/12 16:21:59 by nahamida          #+#    #+#             */
+/*   Updated: 2025/11/28 17:38:06 by elagouch         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "Commands.hpp"
 #include "ChannelManager.hpp"
 #include "ClientManager.hpp"
+#include <algorithm>
+#include <iostream>
 #include <vector> 
 
 std::vector<std::string> paramHandler(std::string params){
@@ -42,14 +56,12 @@ void Commands::join(IRCMessage const &tmp, ChannelManager channels, Client user)
             Channel &actual = channels.getChannelFromName(*roomIt);
             actual.tryJoin(user, *pswrdIt);
             actual.newUser(user);
-            std::cout << "success\n";
             //todo: add numeric replies on succes RPL_TOPIC and RPL_NAMREPLY
             pswrdIt++;
         }
         catch(const ChannelManager::noSuchChannel& e)
         {
             channels.addChannels(Channel(user, *roomIt));
-            std::cout << "success\n";
         }
         catch(const std::exception& e)
         {
@@ -213,4 +225,3 @@ void privmsg(IRCMessage const &msg, Client &sender, ClientManager &clients, Chan
 		}
 	}
 }
-

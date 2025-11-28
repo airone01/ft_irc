@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Dispatcher.hpp                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/11/19 12:30:19 by elagouch          #+#    #+#             */
+/*   Updated: 2025/11/28 17:17:57 by elagouch         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef DISPATCHER_HPP
 #define DISPATCHER_HPP
 
@@ -28,4 +40,4 @@ private:
   void executeCommand(Client &client, const std::string &line);
 };
 
-#endif
+#endif //! DISPATCHER_HPP

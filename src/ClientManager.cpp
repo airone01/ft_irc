@@ -1,9 +1,21 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ClientManager.cpp                                  :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/11/13 14:21:18 by elagouch          #+#    #+#             */
+/*   Updated: 2025/11/28 17:41:00 by elagouch         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "ClientManager.hpp"
 #include "Client.hpp"
 
-# include <algorithm>
-# include <stdexcept>
-# include <vector>
+#include <algorithm>
+#include <stdexcept>
+#include <vector>
 
 struct ClientNameMatcher {
   ClientNameMatcher(const std::string &n) : name(n) {}
@@ -32,15 +44,13 @@ Client &ClientManager::getClientFromUsername(std::string &name) {
 }
 
 Client &ClientManager::getClientFromSocket(int &socket) {
-  const std::vector<Client>::iterator it =
-      std::find_if(_clients.begin(), _clients.end(), ClientSocketMatcher(socket));
+  const std::vector<Client>::iterator it = std::find_if(
+      _clients.begin(), _clients.end(), ClientSocketMatcher(socket));
 
   if (it == _clients.end()) { // no result
     throw std::runtime_error("ERR_NOSUCHNICK");
   }
   return (*it);
 }
- 
-std::vector<Client> &ClientManager::getClients() {
-  return _clients;
-}
+
+std::vector<Client> &ClientManager::getClients() { return _clients; }

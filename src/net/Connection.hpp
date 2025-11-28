@@ -6,11 +6,12 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:10:50 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/10 16:30:15 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/28 17:35:41 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
+#ifndef CONNECTION_HPP
+#define CONNECTION_HPP
 
 #include <sys/types.h>
 #include <vector>
@@ -32,8 +33,11 @@ public:
   typedef void (*MessageCallback)(Connection *conn,
                                   const std::vector<char> &data);
 
+  Connection();
+  Connection(const Connection &);
   Connection(int fd, Reactor *reactor, ConnectionManager *mgr);
   virtual ~Connection();
+  Connection &operator=(const Connection &);
 
   /**
    * @brief Handle epoll events for this connection.
@@ -62,11 +66,6 @@ public:
   void close();
 
   /**
-   * @brief Get raw fd.
-   */
-  int fd() const;
-
-  /**
    * @brief Set message callback (dispatcher provided by peer).
    */
   void setMessageCallback(MessageCallback cb);
@@ -77,17 +76,24 @@ public:
   void touch();
 
   /**
+   * @brief Get raw fd.
+   */
+  int getFd() const;
+
+  /**
    * @brief Get last-activity timestamp.
    */
-  time_t lastActivity() const;
+  time_t getLastActivity() const;
 
 protected:
-  int m_fd;
-  Reactor *m_reactor;
-  ConnectionManager *m_manager;
-  std::vector<char> m_readBuf;
-  std::vector<char> m_writeBuf;
-  MessageCallback m_msgCb;
-  bool m_closed;
-  time_t m_lastActivity;
+  int _fd;
+  Reactor *_reactor;
+  ConnectionManager *_manager;
+  std::vector<char> _readBuf;
+  std::vector<char> _writeBuf;
+  MessageCallback _msgCb;
+  bool _closed;
+  time_t _lastActivity;
 };
+
+#endif // !CONNECTION_HPP

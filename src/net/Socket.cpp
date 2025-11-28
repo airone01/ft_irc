@@ -6,12 +6,11 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/16 19:22:32 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/10 15:06:23 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/13 11:45:11 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <arpa/inet.h>
-#include <errno.h>
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
@@ -22,25 +21,34 @@
 
 #include "Socket.hpp"
 
-Socket::Socket() : m_fd(-1) {}
+Socket::Socket() : _fd(-1) {}
 
-Socket::Socket(int fd) : m_fd(fd) {}
+Socket::Socket(const Socket &other) : _fd(other._fd) {}
+
+Socket::Socket(int fd) : _fd(fd) {}
 
 Socket::~Socket() {
-  if (m_fd >= 0) {
-    ::close(m_fd);
-    m_fd = -1;
+  if (_fd >= 0) {
+    ::close(_fd);
+    _fd = -1;
   }
 }
 
+Socket &Socket::operator=(const Socket &other) {
+  if (this != &other) {
+    this->_fd = other._fd;
+  }
+  return (*this);
+}
+
 bool Socket::createAndBind(const std::string &addr, unsigned short port) {
-  if (m_fd >= 0) {
-    ::close(m_fd);
-    m_fd = -1;
+  if (_fd >= 0) {
+    ::close(_fd);
+    _fd = -1;
   }
 
-  m_fd = ::socket(AF_INET, SOCK_STREAM, 0);
-  if (m_fd < 0)
+  _fd = ::socket(AF_INET, SOCK_STREAM, 0);
+  if (_fd < 0)
     return false;
 
   setReuseAddr(true);
@@ -55,26 +63,27 @@ bool Socket::createAndBind(const std::string &addr, unsigned short port) {
     inet_aton(addr.c_str(), &sin.sin_addr);
 
   // if (::bind(m_fd, (struct sockaddr *)&sin, sizeof(sin)) != 0) {
-  if (::bind(m_fd, reinterpret_cast<struct sockaddr *>(&sin), sizeof(sin)) != 0) {
-    ::close(m_fd);
-    m_fd = -1;
+  if (::bind(_fd, reinterpret_cast<struct sockaddr *>(&sin), sizeof(sin)) !=
+      0) {
+    ::close(_fd);
+    _fd = -1;
     return false;
   }
   return true;
 }
 
 bool Socket::listen(int backlog) {
-  if (m_fd < 0)
+  if (_fd < 0)
     return false;
-  if (::listen(m_fd, backlog) != 0)
+  if (::listen(_fd, backlog) != 0)
     return false;
   return true;
 }
 
 int Socket::accept() {
-  if (m_fd < 0)
+  if (_fd < 0)
     return -1;
-  int s = ::accept(m_fd, NULL, NULL);
+  int s = ::accept(_fd, NULL, NULL);
   if (s < 0)
     return -1;
   // caller should set non-blocking
@@ -82,57 +91,57 @@ int Socket::accept() {
 }
 
 void Socket::close() {
-  if (m_fd >= 0) {
-    ::close(m_fd);
-    m_fd = -1;
+  if (_fd >= 0) {
+    ::close(_fd);
+    _fd = -1;
   }
 }
 
-int Socket::fd() const { return m_fd; }
+int Socket::getFd() const { return _fd; }
 
 bool Socket::setNonBlocking(bool nonBlocking) {
-  if (m_fd < 0)
+  if (_fd < 0)
     return false;
-  int flags = ::fcntl(m_fd, F_GETFL, 0);
+  int flags = ::fcntl(_fd, F_GETFL, 0);
   if (flags < 0)
     return false;
   if (nonBlocking)
     flags |= O_NONBLOCK;
   else
     flags &= ~O_NONBLOCK;
-  if (::fcntl(m_fd, F_SETFL, flags) != 0)
+  if (::fcntl(_fd, F_SETFL, flags) != 0)
     return false;
   return true;
 }
 
 bool Socket::setReuseAddr(bool on) {
-  if (m_fd < 0)
+  if (_fd < 0)
     return false;
   int val = on ? 1 : 0;
-  if (::setsockopt(m_fd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val)) != 0)
+  if (::setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val)) != 0)
     return false;
   return true;
 }
 
 bool Socket::setNoDelay(bool on) {
-  if (m_fd < 0)
+  if (_fd < 0)
     return false;
   int val = on ? 1 : 0;
-  if (::setsockopt(m_fd, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val)) != 0)
+  if (::setsockopt(_fd, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val)) != 0)
     return false;
   return true;
 }
 
 void Socket::attach(int fd) {
-  if (m_fd >= 0)
-    ::close(m_fd);
-  m_fd = fd;
+  if (_fd >= 0)
+    ::close(_fd);
+  _fd = fd;
 }
 
 int Socket::detach() {
-  int tmp = m_fd;
-  m_fd = -1;
+  int tmp = _fd;
+  _fd = -1;
   return tmp;
 }
 
-bool Socket::valid() const { return m_fd >= 0; }
+bool Socket::valid() const { return _fd >= 0; }

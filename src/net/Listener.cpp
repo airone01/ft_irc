@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:18:31 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/10 16:20:51 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/13 11:45:13 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,22 +21,44 @@
 #include <string.h>
 #include <unistd.h>
 
+Listener::Listener()
+    : _socket(), _addr(), _port(), _reactor(NULL), _connManager(NULL),
+      _defaultMsgCb(NULL), _factory() {}
+
+Listener::Listener(const Listener &other)
+    : _socket(other._socket), _addr(other._addr), _port(other._port),
+      _reactor(other._reactor), _connManager(other._connManager),
+      _defaultMsgCb(other._defaultMsgCb), _factory(other._factory) {}
+
 Listener::Listener(const std::string &addr, unsigned short port,
                    Reactor *reactor, ConnectionManager *cm)
-    : m_socket(), m_addr(addr), m_port(port), m_reactor(reactor),
-      m_connManager(cm), m_defaultMsgCb(NULL), m_factory(NULL) {}
+    : _socket(), _addr(addr), _port(port), _reactor(reactor), _connManager(cm),
+      _defaultMsgCb(NULL), _factory(NULL) {}
 
-Listener::~Listener() { m_socket.close(); }
+Listener::~Listener() { _socket.close(); }
+
+Listener &Listener::operator=(const Listener &other) {
+  if (this != &other) {
+    this->_socket = other._socket;
+    this->_addr = other._addr;
+    this->_port = other._port;
+    this->_reactor = other._reactor;
+    this->_connManager = other._connManager;
+    this->_defaultMsgCb = other._defaultMsgCb;
+    this->_factory = other._factory;
+  }
+  return (*this);
+}
 
 bool Listener::start() {
-  if (!m_socket.createAndBind(m_addr, m_port))
+  if (!_socket.createAndBind(_addr, _port))
     return false;
-  if (!m_socket.setNonBlocking(true))
+  if (!_socket.setNonBlocking(true))
     return false;
-  if (!m_socket.listen())
+  if (!_socket.listen())
     return false;
-  if (m_reactor) {
-    if (!m_reactor->addFd(m_socket.fd(), EPOLLIN, this))
+  if (_reactor) {
+    if (!_reactor->addFd(_socket.getFd(), EPOLLIN, this))
       return false;
   }
   return true;
@@ -47,7 +69,7 @@ void Listener::handleEvent(uint32_t events) {
     return;
   // accept loop
   for (;;) {
-    int clientFd = m_socket.accept();
+    int clientFd = _socket.accept();
     if (clientFd < 0) {
       if (errno == EAGAIN || errno == EWOULDBLOCK)
         break;
@@ -64,10 +86,10 @@ void Listener::handleEvent(uint32_t events) {
 
     // create Connection or user-defined subclass via factory
     Connection *c = NULL;
-    if (m_factory) {
-      c = m_factory(clientFd, m_reactor, m_connManager);
+    if (_factory) {
+      c = _factory(clientFd, _reactor, _connManager);
     } else {
-      c = new Connection(clientFd, m_reactor, m_connManager);
+      c = new Connection(clientFd, _reactor, _connManager);
     }
 
     if (c == NULL) {
@@ -76,14 +98,14 @@ void Listener::handleEvent(uint32_t events) {
     }
 
     // install default message callback if provided
-    if (m_defaultMsgCb)
-      c->setMessageCallback(m_defaultMsgCb);
+    if (_defaultMsgCb)
+      c->setMessageCallback(_defaultMsgCb);
 
-    if (m_connManager)
-      m_connManager->add(c);
-    if (m_reactor) {
-      if (!m_reactor->addFd(clientFd,
-                            EPOLLIN | EPOLLRDHUP | EPOLLHUP | EPOLLERR, c)) {
+    if (_connManager)
+      _connManager->add(c);
+    if (_reactor) {
+      if (!_reactor->addFd(clientFd, EPOLLIN | EPOLLRDHUP | EPOLLHUP | EPOLLERR,
+                           c)) {
         // failed to add
         c->close();
         delete c;
@@ -93,7 +115,7 @@ void Listener::handleEvent(uint32_t events) {
 }
 
 void Listener::setDefaultMessageCallback(Connection::MessageCallback cb) {
-  m_defaultMsgCb = cb;
+  _defaultMsgCb = cb;
 }
 
-void Listener::setConnectionFactory(ConnectionFactory f) { m_factory = f; }
+void Listener::setConnectionFactory(ConnectionFactory f) { _factory = f; }

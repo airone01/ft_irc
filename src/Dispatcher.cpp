@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Dispatcher.cpp                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/11/19 12:30:39 by elagouch          #+#    #+#             */
+/*   Updated: 2025/11/28 17:36:27 by elagouch         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "Dispatcher.hpp"
 #include "Commands.hpp"
 #include "IRCMessage.hpp"
@@ -22,14 +34,14 @@ void Dispatcher::handleData(Connection *conn, const std::vector<char> &data) {
   client->appendToBuffer(chunk);
 
   // 3. Process complete lines
-//   while (true) {
-//     std::string line = client->extractMessage();
-//     if (line.empty())
-//       break;
+  while (true) {
+    std::string line = client->extractMessage();
+    if (line.empty())
+      break;
 
-//     logger::debug() << "Processing: " << line << std::endl;
-//     executeCommand(*client, line);
-//   }
+    logger::debug() << "Processing: " << line << std::endl;
+    executeCommand(*client, line);
+  }
 }
 
 void Dispatcher::executeCommand(Client &client, const std::string &line) {
@@ -45,13 +57,13 @@ void Dispatcher::executeCommand(Client &client, const std::string &line) {
     //   Commands::nick(msg, *_clients, client);
     // } else if (cmd == "USER") {
     //   Commands::user(msg, *_clients, client);
-    /* } */ if (cmd == "JOIN") {
-      if (client.getRegistered())
-        Commands::join(msg, *_channels, client);
+    // } else if (cmd == "JOIN") {
+    //   if (client.getRegistered())
+    //     Commands::join(msg, *_channels, client);
     // } else if (cmd == "PRIVMSG") {
     //   if (client.getRegistered())
     //     Commands::privmsg(msg, *_channels, *_clients, client);
-    } else if (cmd == "PING") {
+    if (cmd == "PING") {
       // Simple PONG response
       std::string token = msg.getParams().empty() ? "" : msg.getParams()[0];
       std::string pong = "PONG " + token + "\r\n";
