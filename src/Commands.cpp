@@ -158,3 +158,59 @@ void Commands::kick(IRCMessage const &tmp, ChannelManager channels, Client &admi
     }
 }
 
+
+/**
+ *	@Brief This is the parsing of the messages sent.
+ *	Format			:	[ ':' <prefix> <SPACE> ] <PRIVMSG> <SPACE> <params1>[ ',' <params2> ] [ <SPACE> <params2> [ ',' <params2>]] <SPACE> ':' <trailing>
+ *	Numeric Replies	:
+ *						ERR_NORECIPIENT					ERR_NOTEXTTOSEND
+ *						ERR_CANNOTSENDTOCHAN			ERR_NOTOPLEVEL
+ *						ERR_WILDTOPLEVEL				ERR_TOOMANYTARGETS
+ *						ERR_NOSUCHNICK					RPL_AWAY
+ *	Exemple			:	:Angel PRIVMSG Wiz :Hello are you receiving this message ?;
+ *						PRIVMSG Angel :yes I'm receiving it !receiving it !'u>(768u+1n) .br;
+ *						PRIVMSG jtotolsun.oulu.fi :Hello !;
+ *						PRIVMSG $*.fi :Server tolsun.oulu.fi rebooting.; Message to everyone on a server which has a name matching *.fi.
+ *						PRIVMSG #*.edu :NSFNet is undergoing work, expect interruptions; Message to all users who come from a host which has a name matching *.edu.
+ */
+void privmsg(IRCMessage const &msg, Client &sender, ClientManager &clients, ChannelManager &channels) {
+	if (msg.getCountParams() < 1) {
+		std::cerr << "411 ERROR HANDLING :No recipient given " << msg.getCommand() << std::endl;
+		return ;
+	}
+	if (msg.getTrailing().empty()) {
+		std::cerr << "412 ERR_NOTEXTTOSEND :No text to send" << std::endl;
+		return ;
+	}
+	std::string target = msg.getParams()[0];
+	std::string message = msg.getTrailing();
+	std::string formatted = ":" + sender.getNickname() + "!" + sender.getUsername() + "@" + sender.getHostname() + " PRIVMSG " + target + " :" + message + "\r\n";
+	std::vector<char> msgVec(formatted.begin(), formatted.end());
+	if (!target.empty() && (target[0] == '#' || target[0] == '&')) {
+		try {
+			Channel &chan = channels.getChannelFromName(target);
+			std::map<int, Client*> users = chan.getUsers();
+			if (users.find(sender.getSocket()) == users.end()) {
+				std::cerr << "404 ERR_CANNOTSENDTOCHAN " << msg.getParams()[0] << " :Cannot send to channel" << std::endl;
+				return;
+			}
+			for (std::map<int, Client*>::iterator it = users.begin(); it != users.end(); ++it) {
+				if (it->second->getSocket() != sender.getSocket()) {
+					it->second->send(msgVec);
+				}
+			}
+		}
+		catch (const std::exception &e) {
+			std::cerr << "403 ERR_NOSUCHCHANNEL " << msg.getParams()[0] << " :No such channel" << std::endl;
+		}
+	} else {
+		try {
+			Client &recipient = clients.getClientFromUsername(target);
+			recipient.send(msgVec);
+		}
+		catch (const std::exception &e) {
+			std::cerr << "401 ERR_NOSUCHNICK :No such nick" << std::endl;
+		}
+	}
+}
+

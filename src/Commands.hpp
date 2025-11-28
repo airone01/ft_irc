@@ -2,6 +2,7 @@
 # define COMMANDS_HPP
 
 # include "IRCMessage.hpp"
+# include "Client.hpp"
 # include "ChannelManager.hpp"
 # include <algorithm>
 
