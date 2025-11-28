@@ -40,7 +40,7 @@ Client &ClientManager::getClientFromSocket(int &socket) {
   }
   return (*it);
 }
-
-std::vector<Client> ClientManager::getClients(){
+ 
+std::vector<Client> &ClientManager::getClients() {
   return _clients;
 }

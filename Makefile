@@ -75,12 +75,14 @@ NAME			:=		ircserv
 # main and utils
 SRC_O			:=		main Logger
 # irc logic
-SRC_O			+=		Client TimerManager
+SRC_O			+=		Client TimerManager ClientManager
 # networking
 SRC_O			+=		net/Socket net/Connection net/ConnectionManager net/Listener \
 								net/Reactor
 # parser
-SRC_O			+=		Parser
+SRC_O			+=		IRCMessage Dispatcher
+#channel / commands
+SRC_O			+=		Channel ChannelManager Commands 
 SRC				:=		$(addprefix src/, $(addsuffix .cpp, $(SRC_O)))
 OBJ				:=		$(SRC:.cpp=.o)
 DEPS			:=		$(SRC:.cpp=.d)

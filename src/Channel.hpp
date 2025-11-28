@@ -3,7 +3,6 @@
 
 # include <iostream>
 # include <map>
-# include <map>
 # include <vector>
 # include <set>
 # include <algorithm>
@@ -26,15 +25,15 @@ class Channel
     std::string           _topic;
     std::string           _pswrd;
     std::string           _name;
-    int                   _maxCapacity;
+    std::size_t           _maxCapacity;
     bool                  _modeSet;
 
     Channel( void );
+    
+    public:
+    
     Channel(const Channel & );
     Channel &operator=(const Channel & );
-
-    public:
-
     // Channel( Client & );
     // Channel( Client & ,int capacity );
     Channel( Client & ,std::string name);
@@ -43,7 +42,7 @@ class Channel
     std::string getTopic() const;
     std::string getPswrd() const;
     std::string getName() const;
-    int getCapacity() const;
+    std::size_t getCapacity() const;
     bool getModeSet() const;
     std::map<int, Client*> getInvitedUsers();
     std::map<int, Client*> getUsers();

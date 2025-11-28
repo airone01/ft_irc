@@ -12,7 +12,7 @@ class ClientManager
 
     public:
 
-        std::vector<Client> getClients();
+        std::vector<Client> &getClients();
         Client &getClientFromUsername(std::string &Username);
         Client &getClientFromSocket(int &socket);
 };

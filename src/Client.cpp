@@ -17,6 +17,10 @@
 Client::Client(int fd, Reactor *reactor, ConnectionManager *mgr): Connection(fd, reactor, mgr), _socket(fd), _nickname(""), _username(""), _hostname(""), _registered(false) {
 }
 
+Client::Client(const Client &copy) : Connection(copy._socket, copy.m_reactor, copy.m_manager), _socket(copy._socket), _nickname(copy._nickname), _username(copy._username),
+ 	_hostname(copy._hostname), _buffer(copy._hostname), _auth(copy._auth), _registered(copy._registered) {}
+
+
 Client &Client::operator=(const Client &other) {
 	if (this != &other) {
 		this->_socket = other._socket;
