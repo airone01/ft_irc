@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/13 14:13:42 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/13 15:08:48 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/28 17:41:14 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,12 +15,13 @@
 #include "Client.hpp"
 
 #ifndef CLIENTMANAGER_HPP
+#define CLIENTMANAGER_HPP
 
-// This was meant to be static, but it's too much trouble.
 class ClientManager {
 public:
-  std::vector<Client> getClients();
-  Client &getClientFromNickname(std::string &nickname);
+  std::vector<Client> &getClients();
+  Client &getClientFromUsername(std::string &nickname);
+  Client &getClientFromSocket(int &socket);
 
 private:
   std::vector<Client> _clients;

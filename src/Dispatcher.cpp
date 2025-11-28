@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/19 12:30:39 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/19 13:41:07 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/28 17:36:27 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,19 +51,19 @@ void Dispatcher::executeCommand(Client &client, const std::string &line) {
     std::string cmd = msg.getCommand();
 
     // Map string command to function
-    if (cmd == "CAP") {
-      Commands::cap(msg, client);
-    } else if (cmd == "NICK") {
-      Commands::nick(msg, *_clients, client);
-    } else if (cmd == "USER") {
-      Commands::user(msg, *_clients, client);
-    } else if (cmd == "JOIN") {
-      if (client.getRegistered())
-        Commands::join(msg, *_channels, client);
-    } else if (cmd == "PRIVMSG") {
-      if (client.getRegistered())
-        Commands::privmsg(msg, *_channels, *_clients, client);
-    } else if (cmd == "PING") {
+    // if (cmd == "CAP") {
+    //   Commands::cap(msg, client);
+    // } else if (cmd == "NICK") {
+    //   Commands::nick(msg, *_clients, client);
+    // } else if (cmd == "USER") {
+    //   Commands::user(msg, *_clients, client);
+    // } else if (cmd == "JOIN") {
+    //   if (client.getRegistered())
+    //     Commands::join(msg, *_channels, client);
+    // } else if (cmd == "PRIVMSG") {
+    //   if (client.getRegistered())
+    //     Commands::privmsg(msg, *_channels, *_clients, client);
+    if (cmd == "PING") {
       // Simple PONG response
       std::string token = msg.getParams().empty() ? "" : msg.getParams()[0];
       std::string pong = "PONG " + token + "\r\n";

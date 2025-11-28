@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/12 16:21:59 by nahamida          #+#    #+#             */
-/*   Updated: 2025/11/19 13:39:54 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/28 17:19:28 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,35 +16,17 @@
 #include "ChannelManager.hpp"
 #include "Client.hpp"
 #include "IRCMessage.hpp"
-#include "net/ConnectionManager.hpp"
 
 class Commands {
 public:
-  // Auth
-  static void cap(IRCMessage const &msg, Client &user);
-  static void nick(IRCMessage const &msg, ConnectionManager &conns,
-                   Client &user);
-  static void user(IRCMessage const &msg, ConnectionManager &conns,
-                   Client &user);
-
-  // Core
-  static void join(IRCMessage const &msg, ChannelManager &channels,
-                   Client &user);
-  static void privmsg(IRCMessage const &msg, ChannelManager &channels,
-                      ConnectionManager &conns, Client &user);
-
-  // Stubs for later
-  static void part(IRCMessage const &msg);
-  static void mode(IRCMessage const &msg);
-  static void topic(IRCMessage const &msg);
-  static void invite(IRCMessage const &msg);
-  static void kick(IRCMessage const &msg, Client &admin);
-
-private:
-  // Helpers
-  static void sendWelcome(Client &user);
-  static Client *findClientByNick(ConnectionManager &conns,
-                                  const std::string &nick);
+  static void join(IRCMessage const &param, ChannelManager channels,
+                   Client user);
+  void part(IRCMessage const &param, ChannelManager channels, Client &user);
+  void mode(IRCMessage const &tmp, ChannelManager channels, Client &user);
+  void topic(IRCMessage const &tmp, ChannelManager channels, Client &user);
+  void invite(IRCMessage const &tmp, ClientManager clients,
+              ChannelManager channels, Client &user);
+  void kick(IRCMessage const &param, ChannelManager channels, Client &admin);
 };
 
-#endif //!COMMANDS_HPP
+#endif //! COMMANDS_HPP

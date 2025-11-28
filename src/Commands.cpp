@@ -6,237 +6,222 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/12 16:21:59 by nahamida          #+#    #+#             */
-/*   Updated: 2025/11/19 13:40:17 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/28 17:38:06 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Commands.hpp"
-#include "Channel.hpp"
-#include "Client.hpp"
-#include "Logger.hpp"
+#include "ChannelManager.hpp"
+#include "ClientManager.hpp"
+#include <algorithm>
 #include <iostream>
-#include <sstream>
+#include <vector> 
 
-// Helper to split string by delimiter
-static std::vector<std::string> split(const std::string &s, char delimiter) {
-  std::vector<std::string> tokens;
-  std::string token;
-  std::istringstream tokenStream(s);
-  while (std::getline(tokenStream, token, delimiter)) {
-    tokens.push_back(token);
-  }
-  return tokens;
-}
-
-// Helper to find a client by nickname in the ConnectionManager
-Client *Commands::findClientByNick(ConnectionManager &conns,
-                                   const std::string &nick) {
-  const std::map<int, Connection *> &map = conns.getMap();
-  for (std::map<int, Connection *>::const_iterator it = map.begin();
-       it != map.end(); ++it) {
-    Client *c = dynamic_cast<Client *>(it->second);
-    if (c && c->getNickname() == nick) {
-      return c;
+std::vector<std::string> paramHandler(std::string params){
+    std::vector<std::string>    newParam;
+    std::string tmp;
+    for (size_t i = 0; ;){
+        if (i == 0)
+            tmp = params.substr(i, params.find(','));
+        else
+            tmp = params.substr(i);
+        newParam.push_back(tmp);
+        i = params.find(',', i);
+        if (i == std::string::npos)
+            break ;
+        i++;
     }
-  }
-  return NULL;
+    return newParam;
 }
 
-void Commands::cap(IRCMessage const &msg, Client &user) {
-  if (msg.getParams().empty())
-    return;
+void Commands::join(IRCMessage const &tmp, ChannelManager channels, Client user){
+        
+    std::vector<std::string> param = tmp.getParams();
+    std::vector<std::string>::iterator it = param.begin();
+    std::vector<std::string>::iterator roomIt;
+    std::vector<std::string>::iterator pswrdIt;
 
-  std::string subcmd = msg.getParams()[0];
-  std::string target = user.getRegistered() ? user.getNickname() : "*";
+    std::vector<std::string> rooms = tmp.getParams();
+    std::vector<std::string> pswrd = tmp.getParams();
 
-  if (subcmd == "LS") {
-    // We support NO capabilities. Send empty list.
-    std::string reply = ":irc.local CAP " + target + " LS :\r\n";
-    std::vector<char> r(reply.begin(), reply.end());
-    user.send(r);
-  } else if (subcmd == "REQ") {
-    // We support nothing, so we reject all requests
-    std::string reply =
-        ":irc.local CAP " + target + " NAK :" + msg.getTrailing() + "\r\n";
-    std::vector<char> r(reply.begin(), reply.end());
-    user.send(r);
-  }
-  // CAP END is ignored (just allows state machine to proceed)
-}
-
-void Commands::nick(IRCMessage const &msg, ConnectionManager &conns,
-                    Client &user) {
-  if (msg.getParams().empty()) {
-    // ERR_NONICKNAMEGIVEN
-    return;
-  }
-  std::string newNick = msg.getParams()[0];
-
-  // Check collision
-  if (findClientByNick(conns, newNick) != NULL) {
-    std::string err =
-        ":irc.local 433 * " + newNick + " :Nickname is already in use\r\n";
-    std::vector<char> resp(err.begin(), err.end());
-    user.send(resp);
-    return;
-  }
-
-  user.setNickname(newNick);
-
-  // Check registration
-  if (!user.getRegistered() && !user.getUsername().empty()) {
-    sendWelcome(user);
-  }
-}
-
-void Commands::user(IRCMessage const &msg, ConnectionManager &conns,
-                    Client &user) {
-  (void)conns;
-  if (user.getRegistered()) {
-    // ERR_ALREADYREGISTRED
-    return;
-  }
-  if (msg.getParams().size() < 3) {
-    // ERR_NEEDMOREPARAMS
-    return;
-  }
-
-  user.setUsername(msg.getParams()[0]);
-  // Realname is usually in trailing
-  // user.setRealname(msg.getTrailing());
-
-  // Check registration
-  if (!user.getRegistered() && !user.getNickname().empty()) {
-    sendWelcome(user);
-  }
-}
-
-void Commands::sendWelcome(Client &user) {
-  user.setRegistered(true);
-  std::string nick = user.getNickname();
-  std::string welcome = ":irc.local 001 " + nick +
-                        " :Welcome to the Internet Relay Network " + nick +
-                        "\r\n";
-  std::vector<char> resp(welcome.begin(), welcome.end());
-  user.send(resp);
-  logger::info() << "Registered new user: " << nick << std::endl;
-}
-
-void Commands::join(IRCMessage const &msg, ChannelManager &channels,
-                    Client &user) {
-  if (msg.getParams().empty())
-    return;
-
-  std::vector<std::string> roomNames = split(msg.getParams()[0], ',');
-  std::vector<std::string> keys;
-  if (msg.getParams().size() > 1) {
-    keys = split(msg.getParams()[1], ',');
-  }
-
-  for (size_t i = 0; i < roomNames.size(); ++i) {
-    std::string name = roomNames[i];
-    std::string key = (i < keys.size()) ? keys[i] : "";
-
-    if (name.empty() || (name[0] != '#' && name[0] != '&')) {
-      // ERR_NOSUCHCHANNEL or similar, or just ignore invalid
-      continue;
+    if (std::find(it->begin(), it->end(), ',') != it->end())
+        rooms = paramHandler(*it);
+    it++;
+    if (it != param.end() && std::find(it->begin(), it->end(), ',') != it->end())
+        pswrd = paramHandler(*it);
+        
+    for (roomIt = rooms.begin(), pswrdIt = pswrd.begin(); roomIt != rooms.end() ;roomIt++){
+        try
+        {
+            Channel &actual = channels.getChannelFromName(*roomIt);
+            actual.tryJoin(user, *pswrdIt);
+            actual.newUser(user);
+            //todo: add numeric replies on succes RPL_TOPIC and RPL_NAMREPLY
+            pswrdIt++;
+        }
+        catch(const ChannelManager::noSuchChannel& e)
+        {
+            channels.addChannels(Channel(user, *roomIt));
+        }
+        catch(const std::exception& e)
+        {
+            //todo: add replies sender for error or valid commands 
+            std::cerr << e.what() << '\n';
+        }
     }
-
-    Channel *chan = channels.getChannel(name);
-    if (!chan) {
-      // Create channel
-      try {
-        chan = channels.createChannel(name, user);
-        logger::info() << user.getNickname() << " created channel " << name
-                       << std::endl;
-      } catch (std::exception &e) {
-        continue;
-      }
-    } else {
-      // Join existing
-      try {
-        chan->tryJoin(user, key); // Checks password, limit, invite
-        chan->newUser(user);
-      } catch (std::exception &e) {
-        std::string err = ":irc.local 471 " + user.getNickname() + " " + name +
-                          " :Cannot join channel (" + e.what() + ")\r\n";
-        std::vector<char> resp(err.begin(), err.end());
-        user.send(resp);
-        continue;
-      }
-    }
-
-    // Send JOIN confirmation
-    std::string joinMsg = ":" + user.getNickname() + " JOIN " + name + "\r\n";
-    std::vector<char> resp(joinMsg.begin(), joinMsg.end());
-
-    // Broadcast to EVERYONE in channel (including user)
-    const std::map<int, Client *> &members = chan->getUsers();
-    for (std::map<int, Client *>::const_iterator it = members.begin();
-         it != members.end(); ++it) {
-      it->second->send(resp);
-    }
-  }
 }
 
-void Commands::privmsg(IRCMessage const &msg, ChannelManager &channels,
-                       ConnectionManager &conns, Client &user) {
-  if (msg.getParams().empty()) {
-    // ERR_NORECIPIENT
-    return;
-  }
-  if (msg.getTrailing().empty()) {
-    // ERR_NOTEXTTOSEND
-    return;
-  }
-
-  std::string targetName = msg.getParams()[0];
-  std::string text = msg.getTrailing();
-  std::string fullMsg = ":" + user.getNickname() + " PRIVMSG " + targetName +
-                        " :" + text + "\r\n";
-  std::vector<char> payload(fullMsg.begin(), fullMsg.end());
-
-  if (targetName[0] == '#' || targetName[0] == '&') {
-    // Channel message
-    Channel *chan = channels.getChannel(targetName);
-    if (!chan) {
-      // ERR_NOSUCHCHANNEL
-      std::string err = ":irc.local 403 " + user.getNickname() + " " +
-                        targetName + " :No such channel\r\n";
-      std::vector<char> resp(err.begin(), err.end());
-      user.send(resp);
-      return;
+void Commands::part(IRCMessage const &tmp, ChannelManager channels, Client &user){
+    std::vector<std::string> param = tmp.getParams();
+    std::vector<std::string>::iterator it;
+    for (it = param.begin(); it != param.end();it++){
+        try
+        {
+            Channel &actual = channels.getChannelFromName(*it);
+            actual.leaveChannel(user);
+            if (actual.getUsers().empty()){
+                channels.rmChannels(actual);
+                actual.~Channel();
+            //todo: reply
+            }
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+        }
     }
-
-    // Broadcast to all channel members EXCEPT sender
-    const std::map<int, Client *> &members = chan->getUsers();
-    for (std::map<int, Client *>::const_iterator it = members.begin();
-         it != members.end(); ++it) {
-      if (it->second->getFd() != user.getFd()) {
-        it->second->send(payload);
-      }
-    }
-  } else {
-    // Private message
-    Client *target = findClientByNick(conns, targetName);
-    if (!target) {
-      // ERR_NOSUCHNICK
-      std::string err = ":irc.local 401 " + user.getNickname() + " " +
-                        targetName + " :No such nick/channel\r\n";
-      std::vector<char> resp(err.begin(), err.end());
-      user.send(resp);
-      return;
-    }
-    target->send(payload);
-  }
 }
 
-// Stubs
-void Commands::part(IRCMessage const &msg) { (void)msg; }
-void Commands::mode(IRCMessage const &msg) { (void)msg; }
-void Commands::topic(IRCMessage const &msg) { (void)msg; }
-void Commands::invite(IRCMessage const &msg) { (void)msg; }
-void Commands::kick(IRCMessage const &msg, Client &admin) {
-  (void)msg;
-  (void)admin;
+/*
+flags: 
+        i(set/unset invite only)
+        t(set/unset topic priv to admin)
+        k(set/unset password)
+        o(give/take admin priv)
+        l(set/unset limit size)
+
+replies :
+           ERR_NEEDMOREPARAMS              RPL_CHANNELMODEIS
+           ERR_CHANOPRIVSNEEDED            ERR_NOSUCHNICK
+           ERR_NOTONCHANNEL                ERR_KEYSET
+           RPL_BANLIST                     RPL_ENDOFBANLIST
+           ERR_UNKNOWNMODE                 ERR_NOSUCHCHANNEL
+           ERR_USERSDONTMATCH              ERR_UMODEUNKNOWNFLAG
+           RPL_UMODEIS
+*/
+void Commands::mode(IRCMessage const &param, ChannelManager channels, Client &user){
+    std::vector<std::string> tmp = param.getParams();
+    try
+    {
+        Channel &actual = channels.getChannelFromName(tmp[0]);
+        actual.updateMode(param, user);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+    
+}
+
+void Commands::topic(IRCMessage const &tmp, ChannelManager channels, Client &user){
+    if (tmp.getCountParams() != 1)
+        std::cerr << "ERR_NEEDMOREPARAMS\n";
+    std::vector<std::string> param = paramHandler(tmp.getParams()[0]);
+    std::vector<std::string>::iterator it = param.begin();
+
+    for ( ; it != param.end(); it++){
+        try
+        {
+            Channel &actual = channels.getChannelFromName(*it);
+            actual.changeTopic(tmp, user);
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+        }
+    }
+}
+
+void Commands::invite(IRCMessage const &tmp, ClientManager clients, ChannelManager channels, Client &user){
+    std::vector<std::string> param = tmp.getParams();
+    try{
+        Channel &actual = channels.getChannelFromName(param[1]);
+        actual.tryInvite(param, clients, user.getSocket(), 
+            clients.getClientFromUsername(param[0]).getSocket());
+    }
+    catch (const std::exception& e){
+        std::cerr << e.what() << std::endl;
+    }
+}
+
+void Commands::kick(IRCMessage const &tmp, ChannelManager channels, Client &admin){
+    std::vector<std::string> param = tmp.getParams();
+    try
+    {
+        Channel &actual = channels.getChannelFromName(param[0]);
+        actual.tryKick(param, tmp, admin);
+        std::map<int, Client*>::iterator victimIt;
+        for (victimIt = actual.getUsers().begin(); victimIt != actual.getUsers().end();victimIt++)
+            if (victimIt->second->getUsername() == param[1])
+                actual.setKickedUsers(victimIt->second->getSocket());
+        }
+    catch(const std::exception& e){
+        std::cerr << e.what() << '\n';
+    }
+}
+
+
+/**
+ *	@Brief This is the parsing of the messages sent.
+ *	Format			:	[ ':' <prefix> <SPACE> ] <PRIVMSG> <SPACE> <params1>[ ',' <params2> ] [ <SPACE> <params2> [ ',' <params2>]] <SPACE> ':' <trailing>
+ *	Numeric Replies	:
+ *						ERR_NORECIPIENT					ERR_NOTEXTTOSEND
+ *						ERR_CANNOTSENDTOCHAN			ERR_NOTOPLEVEL
+ *						ERR_WILDTOPLEVEL				ERR_TOOMANYTARGETS
+ *						ERR_NOSUCHNICK					RPL_AWAY
+ *	Exemple			:	:Angel PRIVMSG Wiz :Hello are you receiving this message ?;
+ *						PRIVMSG Angel :yes I'm receiving it !receiving it !'u>(768u+1n) .br;
+ *						PRIVMSG jtotolsun.oulu.fi :Hello !;
+ *						PRIVMSG $*.fi :Server tolsun.oulu.fi rebooting.; Message to everyone on a server which has a name matching *.fi.
+ *						PRIVMSG #*.edu :NSFNet is undergoing work, expect interruptions; Message to all users who come from a host which has a name matching *.edu.
+ */
+void privmsg(IRCMessage const &msg, Client &sender, ClientManager &clients, ChannelManager &channels) {
+	if (msg.getCountParams() < 1) {
+		std::cerr << "411 ERROR HANDLING :No recipient given " << msg.getCommand() << std::endl;
+		return ;
+	}
+	if (msg.getTrailing().empty()) {
+		std::cerr << "412 ERR_NOTEXTTOSEND :No text to send" << std::endl;
+		return ;
+	}
+	std::string target = msg.getParams()[0];
+	std::string message = msg.getTrailing();
+	std::string formatted = ":" + sender.getNickname() + "!" + sender.getUsername() + "@" + sender.getHostname() + " PRIVMSG " + target + " :" + message + "\r\n";
+	std::vector<char> msgVec(formatted.begin(), formatted.end());
+	if (!target.empty() && (target[0] == '#' || target[0] == '&')) {
+		try {
+			Channel &chan = channels.getChannelFromName(target);
+			std::map<int, Client*> users = chan.getUsers();
+			if (users.find(sender.getSocket()) == users.end()) {
+				std::cerr << "404 ERR_CANNOTSENDTOCHAN " << msg.getParams()[0] << " :Cannot send to channel" << std::endl;
+				return;
+			}
+			for (std::map<int, Client*>::iterator it = users.begin(); it != users.end(); ++it) {
+				if (it->second->getSocket() != sender.getSocket()) {
+					it->second->send(msgVec);
+				}
+			}
+		}
+		catch (const std::exception &e) {
+			std::cerr << "403 ERR_NOSUCHCHANNEL " << msg.getParams()[0] << " :No such channel" << std::endl;
+		}
+	} else {
+		try {
+			Client &recipient = clients.getClientFromUsername(target);
+			recipient.send(msgVec);
+		}
+		catch (const std::exception &e) {
+			std::cerr << "401 ERR_NOSUCHNICK :No such nick" << std::endl;
+		}
+	}
 }

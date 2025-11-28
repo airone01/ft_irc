@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/08 16:46:16 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/19 12:32:16 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/28 17:41:43 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,6 @@
 #include "Client.hpp"
 #include "Dispatcher.hpp"
 #include "Logger.hpp"
-#include "TimerManager.hpp"
 #include "net/Connection.hpp"
 #include "net/ConnectionManager.hpp"
 #include "net/Listener.hpp"
@@ -69,7 +68,7 @@ int main(int argc, char **argv) {
 
   ConnectionManager connMgr(&reactor);
   ChannelManager chanMgr;
-  TimerManager timerMgr;
+  // TimerManager timerMgr;
 
   // Create the Dispatcher
   Dispatcher dispatcher(&connMgr, &chanMgr);

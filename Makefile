@@ -6,7 +6,7 @@
 #    By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/10/08 15:49:16 by elagouch          #+#    #+#              #
-#    Updated: 2025/11/19 13:44:10 by elagouch         ###   ########.fr        #
+#    Updated: 2025/11/28 17:16:22 by elagouch         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -70,7 +70,6 @@ CXXFLAGS	+=	-O2						# slower comp, faster runtime
 # == dev ==
 CXXFLAGS	+=	-g3
 
-
 # **************************************************************************** #
 #                                     SRC                                      #
 # **************************************************************************** #
@@ -79,10 +78,14 @@ NAME			:=		ircserv
 # main and utils
 SRC_O			:=		main Logger
 # irc logic
-SRC_O			+=		Client Channel TimerManager ChannelManager ClientManager IRCMessage Commands Dispatcher
+SRC_O			+=		Client ClientManager
 # networking
 SRC_O			+=		net/Socket net/Connection net/ConnectionManager net/Listener \
 								net/Reactor
+# parser
+SRC_O			+=		IRCMessage Dispatcher
+#channel / commands
+SRC_O			+=		Channel ChannelManager Commands
 SRC				:=		$(addprefix src/, $(addsuffix .cpp, $(SRC_O)))
 OBJ				:=		$(SRC:.cpp=.o)
 DEPS			:=		$(SRC:.cpp=.d)

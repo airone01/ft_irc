@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 16:57:04 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/19 11:16:35 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/11/28 17:33:59 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,10 +24,20 @@
  * implement full IRC parsing — that is intended for your Dispatcher.
  */
 class Client : public Connection {
+private:
+  int _socket;
+  std::string _nickname;
+  std::string _username;
+  std::string _hostname;
+  std::string _buffer;
+  bool _auth;
+  bool _registered;
+  Client();
+  Client &operator=(const Client &other);
+
 public:
+  Client(const Client &copy);
   Client(int fd, Reactor *reactor, ConnectionManager *mgr);
-  // Client(const Client &copy); // copy constructor is too annoying to maintain
-  Client &operator=(const Client &);
   virtual ~Client();
   // getter
   int getSocket() const;
@@ -44,16 +54,6 @@ public:
   // method
   void appendToBuffer(const std::string &buffer);
   std::string extractMessage();
-  void sendMessage(const std::string &buffer);
-
-private:
-  int _socket;
-  std::string _nickname;
-  std::string _username;
-  std::string _hostname;
-  std::string _buffer;
-  bool _auth;
-  bool _registered;
 };
 
 #endif // !CLIENT_HPP
