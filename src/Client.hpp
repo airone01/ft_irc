@@ -14,9 +14,9 @@ private:
 	bool _auth;
 	bool _registered;
 	Client();
-	Client(const Client &copy);
 	Client &operator=(const Client &other);
-public:
+	public:
+	Client(const Client &copy);
 	Client(int fd, Reactor *reactor, ConnectionManager *mgr);
 	virtual ~Client();
 	// getter

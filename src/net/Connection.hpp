@@ -81,7 +81,7 @@ public:
    */
   time_t lastActivity() const;
 
-private:
+protected:
   int m_fd;
   Reactor *m_reactor;
   ConnectionManager *m_manager;
