@@ -73,169 +73,57 @@ public:
 	static void rplInviting(const std::string& arg); // "<channel> <nick>" 341
 	static void rplSummoning(const std::string& arg); // "<user> :Summoning user to IRC" 342
 	static void rplVersion(const std::string& arg); // "<version>.<debuglevel> <server> :<comments>" 351
-	/TODO
-	static void rpl(const std::string& arg); //
-	//        352     RPL_WHOREPLY
-	//                        "<channel> <user> <host> <server> <nick> \
-	//                         <H|G>[*][@|+] :<hopcount> <real name>"
-	static void rpl(const std::string& arg); //
-	//        315     RPL_ENDOFWHO
-	//                        "<name> :End of /WHO list"
-	static void rpl(const std::string& arg); //
-	//        353     RPL_NAMREPLY
-	//                        "<channel> :[[@|+]<nick> [[@|+]<nick> [...]]]"
-	static void rpl(const std::string& arg); //
-	//        366     RPL_ENDOFNAMES
-	//                        "<channel> :End of /NAMES list"
-	static void rpl(const std::string& arg); //
-	//        364     RPL_LINKS
-	//                        "<mask> <server> :<hopcount> <server info>"
-	static void rpl(const std::string& arg); //
-	//        365     RPL_ENDOFLINKS
-	//                        "<mask> :End of /LINKS list"
-	static void rpl(const std::string& arg); //
-	//        367     RPL_BANLIST
-	//                        "<channel> <banid>"
-	static void rpl(const std::string& arg); //
-	//        368     RPL_ENDOFBANLIST
-	//                        "<channel> :End of channel ban list"
-	static void rpl(const std::string& arg); //
-	//        371     RPL_INFO
-	//                        ":<string>"
-	static void rpl(const std::string& arg); //
-	//        374     RPL_ENDOFINFO
-	//                        ":End of /INFO list"
-	static void rpl(const std::string& arg); //
-	//        375     RPL_MOTDSTART
-	//                        ":- <server> Message of the day - "
-	static void rpl(const std::string& arg); //
-	//        372     RPL_MOTD
-	//                        ":- <text>"
-	static void rpl(const std::string& arg); //
-	//        376     RPL_ENDOFMOTD
-	//                        ":End of /MOTD command"
-	static void rpl(const std::string& arg); //
-	//        381     RPL_YOUREOPER
-	//                        ":You are now an IRC operator"
-	static void rpl(const std::string& arg); //
-	//        382     RPL_REHASHING
-	//                        "<config file> :Rehashing"
-	static void rpl(const std::string& arg); //
-	//        391     RPL_TIME
-	//                        "<server> :<string showing server's local time>"
-	static void rpl(const std::string& arg); //
-	//        392     RPL_USERSSTART
-	//                        ":UserID   Terminal  Host"
-	static void rpl(const std::string& arg); //
-	//        393     RPL_USERS
-	//                        ":%-8s %-9s %-8s"
-	static void rpl(const std::string& arg); //
-	//        394     RPL_ENDOFUSERS
-	//                        ":End of users"
-	static void rpl(const std::string& arg); //
-	//        395     RPL_NOUSERS
-	//                        ":Nobody logged in"
-	static void rpl(const std::string& arg); //
-	//        200     RPL_TRACELINK
-	//                        "Link <version & debug level> <destination> \
-	//                         <next server>"
-	static void rpl(const std::string& arg); //
-	//        201     RPL_TRACECONNECTING
-	//                        "Try. <class> <server>"
-	static void rpl(const std::string& arg); //
-	//        202     RPL_TRACEHANDSHAKE
-	//                        "H.S. <class> <server>"
-	static void rpl(const std::string& arg); //
-	//        203     RPL_TRACEUNKNOWN
-	//                        "???? <class> [<client IP address in dot form>]"
-	static void rpl(const std::string& arg); //
-	//        204     RPL_TRACEOPERATOR
-	//                        "Oper <class> <nick>"
-	static void rpl(const std::string& arg); //
-	//        205     RPL_TRACEUSER
-	//                        "User <class> <nick>"
-	static void rpl(const std::string& arg); //
-	//        206     RPL_TRACESERVER
-	//                        "Serv <class> <int>S <int>C <server> \
-	//                         <nick!user|*!*>@<host|server>"
-	static void rpl(const std::string& arg); //
-	//        208     RPL_TRACENEWTYPE
-	//                        "<newtype> 0 <client name>"
-	static void rpl(const std::string& arg); //
-	//        261     RPL_TRACELOG
-	//                        "File <logfile> <debug level>"
-	static void rpl(const std::string& arg); //
-	//        211     RPL_STATSLINKINFO
-	//                        "<linkname> <sendq> <sent messages> \
-	//                         <sent bytes> <received messages> \
-	//                         <received bytes> <time open>"
-	static void rpl(const std::string& arg); //
-	//        212     RPL_STATSCOMMANDS
-	//                        "<command> <count>"
-	static void rpl(const std::string& arg); //
-	//        213     RPL_STATSCLINE
-	//                        "C <host> * <name> <port> <class>"
-	static void rpl(const std::string& arg); //
-	//        214     RPL_STATSNLINE
-	//                        "N <host> * <name> <port> <class>"
-	static void rpl(const std::string& arg); //
-	//        215     RPL_STATSILINE
-	//                        "I <host> * <host> <port> <class>"
-	static void rpl(const std::string& arg); //
-	//        216     RPL_STATSKLINE
-	//                        "K <host> * <username> <port> <class>"
-	static void rpl(const std::string& arg); //
-	//        218     RPL_STATSYLINE
-	//                        "Y <class> <ping frequency> <connect \
-	//                         frequency> <max sendq>"
-	static void rpl(const std::string& arg); //
-	//        219     RPL_ENDOFSTATS
-	//                        "<stats letter> :End of /STATS report"
-	static void rpl(const std::string& arg); //
-	//        241     RPL_STATSLLINE
-	//                        "L <hostmask> * <servername> <maxdepth>"
-	static void rpl(const std::string& arg); //
-	//        242     RPL_STATSUPTIME
-	//                        ":Server Up %d days %d:%02d:%02d"
-	static void rpl(const std::string& arg); //
-	//        243     RPL_STATSOLINE
-	//                        "O <hostmask> * <name>"
-	static void rpl(const std::string& arg); //
-	//        244     RPL_STATSHLINE
-	//                        "H <hostmask> * <servername>"
-	static void rpl(const std::string& arg); //
-	//        221     RPL_UMODEIS
-	//                        "<user mode string>"
-	static void rpl(const std::string& arg); //
-	//        251     RPL_LUSERCLIENT
-	//                        ":There are <integer> users and <integer> \
-	//                         invisible on <integer> servers"
-	static void rpl(const std::string& arg); //
-	//        252     RPL_LUSEROP
-	//                        "<integer> :operator(s) online"
-	static void rpl(const std::string& arg); //
-	//        253     RPL_LUSERUNKNOWN
-	//                        "<integer> :unknown connection(s)"
-	static void rpl(const std::string& arg); //
-	//        254     RPL_LUSERCHANNELS
-	//                        "<integer> :channels formed"
-	static void rpl(const std::string& arg); //
-	//        255     RPL_LUSERME
-	//                        ":I have <integer> clients and <integer> \
-	//                          servers"
-	static void rpl(const std::string& arg); //
-	//        256     RPL_ADMINME
-	//                        "<server> :Administrative info"
-	static void rpl(const std::string& arg); //
-	//        257     RPL_ADMINLOC1
-	//                        ":<admin info>"
-	static void rpl(const std::string& arg); //
-	//        258     RPL_ADMINLOC2
-	//                        ":<admin info>"
-	static void rpl(const std::string& arg); //
-	//        259     RPL_ADMINEMAIL
-	//                        ":<admin info>"
-	static void rpl(const std::string& arg); //
+	static void rplWhoReply(const std::string& arg); // "<channel> <user> <host> <server> <nick> <H|G>[*][@|+] :<hopcount> <real name>" 352
+	static void rplEndOfWho(const std::string& arg); // "<name> :End of /WHO list" 315
+	static void rplNamReply(const std::string& arg); // "<channel> :[[@|+]<nick> [[@|+]<nick> [...]]]" 353
+	static void rplEndOfNames(const std::string& arg); // "<channel> :End of /NAMES list" 366
+	static void rplLinks(const std::string& arg); // "<mask> <server> :<hopcount> <server info>" 364
+	static void rplEndOfLinks(const std::string& arg); // "<mask> :End of /LINKS list" 365
+	static void rplBanList(const std::string& arg); // "<channel> <banid>" 367
+	static void rplEndOfBanList(const std::string& arg); // "<channel> :End of channel ban list" 368
+	static void rplInfo(const std::string& arg); // ":<string>" 371
+	static void rplEndOfInfo(const std::string& arg); // ":End of /INFO list" 374
+	static void rplMOTDStart(const std::string& arg); // ":- <server> Message of the day - " 375
+	static void rplMOTD(const std::string& arg); // ":- <text>" 372
+	static void rplEndOfMOTD(const std::string& arg); // ":End of /MOTD command" 376
+	static void rplYoureOper(const std::string& arg); // ":You are now an IRC operator" 381
+	static void rplRehashing(const std::string& arg); // "<config file> :Rehashing" 382
+	static void rplTime(const std::string& arg); // "<server> :<string showing server's local time>" 391
+	static void rplUpersStart(const std::string& arg); // ":UserID   Terminal  Host" 392
+	static void rplUsers(const std::string& arg); // ":%-8s %-9s %-8s" 393
+	static void rplEndOfUsers(const std::string& arg); // ":End of users" 394
+	static void rplNoUsers(const std::string& arg); // ":Nobody logged in" 395
+	static void rplTraceLink(const std::string& arg); // "Link <version & debug level> <destination> <next server>" 200
+	static void rplTraceConnecting(const std::string& arg); // "Try. <class> <server>" 201
+	static void rplTraceHandShake(const std::string& arg); // "H.S. <class> <server>" 202
+	static void rplTraceUnknown(const std::string& arg); // "???? <class> [<client IP address in dot form>]" 203
+	static void rplTraceOperator(const std::string& arg); // "Oper <class> <nick>" 204
+	static void rplTraceUser(const std::string& arg); // "User <class> <nick>" 205
+	static void rplTraceServer(const std::string& arg); // "Serv <class> <int>S <int>C <server> <nick!user|*!*>@<host|server>" 206
+	static void rplTraceNewType(const std::string& arg); // "<newtype> 0 <client name>" 208
+	static void rplTraceLog(const std::string& arg); // "File <logfile> <debug level>" 261
+	static void rplStatsLinkInfo(const std::string& arg); // "<linkname> <sendq> <sent messages> <sent bytes> <received messages> <received bytes> <time open>" 211
+	static void rplStatsCommands(const std::string& arg); // "<command> <count>" 212
+	static void rplStatsCLine(const std::string& arg); // "C <host> * <name> <port> <class>" 213
+	static void rplStatsNLine(const std::string& arg); // "N <host> * <name> <port> <class>" 214
+	static void rplStatsILine(const std::string& arg); // "I <host> * <host> <port> <class>" 215
+	static void rplStatsKLine(const std::string& arg); // "K <host> * <username> <port> <class>" 216
+	static void rplStatsYLine(const std::string& arg); // "Y <class> <ping frequency> <connect frequency> <max sendq>" 218
+	static void rplEndOfStats(const std::string& arg); // "<stats letter> :End of /STATS report" 219
+	static void rplStatsLLine(const std::string& arg); // "L <hostmask> * <servername> <maxdepth>" 241
+	static void rplStatsUpTime(const std::string& arg); // ":Server Up %d days %d:%02d:%02d" 242
+	static void rplStatsOLine(const std::string& arg); // "O <hostmask> * <name>" 243
+	static void rplStatsHLine(const std::string& arg); // "H <hostmask> * <servername>" 244
+	static void rplUModeIs(const std::string& arg); // "<user mode string>" 221
+	static void rplLUserClient(const std::string& arg); // ":There are <integer> users and <integer> invisible on <integer> servers" 251
+	static void rplLUserOp(const std::string& arg); // "<integer> :operator(s) online" 252
+	static void rplLUserUnknown(const std::string& arg); // "<integer> :unknown connection(s)" 253
+	static void rplLUserChannels(const std::string& arg); // "<integer> :channels formed" 254
+	static void rplLUserMe(const std::string& arg); // ":I have <integer> clients and <integer> servers" 255
+	static void rplAdminMe(const std::string& arg); // "<server> :Administrative info" 256
+	static void rplAdminLoc1(const std::string& arg); // ":<admin info>" 257
+	static void rplAdminLoc2(const std::string& arg); // ":<admin info>" 258
+	static void rplAdminMail(const std::string& arg); // ":<admin info>" 259
 };
 
 #endif
