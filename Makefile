@@ -86,6 +86,7 @@ SRC_O			+=		net/Socket net/Connection net/ConnectionManager net/Listener \
 SRC_O			+=		IRCMessage Dispatcher
 #channel / commands
 SRC_O			+=		Channel ChannelManager Commands
+SRC_O			+=		ReplyMessage
 SRC				:=		$(addprefix src/, $(addsuffix .cpp, $(SRC_O)))
 OBJ				:=		$(SRC:.cpp=.o)
 DEPS			:=		$(SRC:.cpp=.d)
