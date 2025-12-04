@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/08 16:46:16 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/28 17:41:43 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/04 15:34:32 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include <signal.h>
 #include <unistd.h>
 
+#include "Channel.hpp"
 #include "ChannelManager.hpp"
 #include "Client.hpp"
 #include "Dispatcher.hpp"
@@ -68,10 +69,11 @@ int main(int argc, char **argv) {
 
   ConnectionManager connMgr(&reactor);
   ChannelManager chanMgr;
+  ClientManager clientMgr;
   // TimerManager timerMgr;
 
   // Create the Dispatcher
-  Dispatcher dispatcher(&connMgr, &chanMgr);
+  Dispatcher dispatcher(&clientMgr, &chanMgr);
   g_dispatcher = &dispatcher;
 
   Listener listener("0.0.0.0", port, &reactor, &connMgr);

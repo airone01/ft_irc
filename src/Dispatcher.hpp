@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/19 12:30:19 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/28 17:17:57 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/04 15:33:42 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@
 
 class Dispatcher {
 public:
-  Dispatcher(ConnectionManager *clients, ChannelManager *channels);
+  Dispatcher(ClientManager *clients, ChannelManager *channels);
   ~Dispatcher();
 
   /**
@@ -31,7 +31,7 @@ public:
   void handleData(Connection *conn, const std::vector<char> &data);
 
 private:
-  ConnectionManager *_clients;
+  ClientManager *_clients;
   ChannelManager *_channels;
 
   /**
