@@ -6,13 +6,14 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/12 16:21:59 by nahamida          #+#    #+#             */
-/*   Updated: 2025/12/04 15:38:56 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/04 23:34:43 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Commands.hpp"
 #include "ChannelManager.hpp"
 #include "ClientManager.hpp"
+#include "ReplyMessage.hpp"
 #include <algorithm>
 #include <iostream>
 #include <vector>
@@ -228,4 +229,88 @@ void Commands::version(Client &sender) {
   std::vector<char> msgVec(ver.begin(), ver.end());
 
   sender.send(msgVec);
+}
+
+void checkRegistration(Client &client) {
+  if (client.getRegistered())
+    return; // already registered
+
+  // we need at least a Nickname and a Username to register
+  if (!client.getNickname().empty() && !client.getUsername().empty()) {
+    client.setRegistered(true);
+
+    // send RPL_WELCOME (001) - REQUIRED for client to finish connecting
+    std::string nick = client.getNickname();
+    std::string msg = ":localhost 001 " + nick +
+                      " :Welcome to ft_irc, " + nick + "\r\n";
+    std::vector<char> resp(msg.begin(), msg.end());
+    client.send(resp);
+
+    // usually servers also send 002, 003, 004 here, but 001 is the trigger.
+    std::cout << "Client " << nick << " is now registered!" << std::endl;
+  }
+}
+
+void Commands::pass(IRCMessage const &msg, Client &client) {
+  (void)msg;
+  (void)client;
+  // TODO: check password here
+  // if (msg.getParams()[0] != server_password) {
+  //   ReplyMessage::errPasswdMismatch();
+  //   client.close();
+  // }
+}
+
+void Commands::nick(IRCMessage const &msg, ClientManager &clients,
+                    Client &client) {
+  if (msg.getParams().empty()) {
+    ReplyMessage::errNoNickNameGiven();
+    return;
+  }
+
+  std::string newNick = msg.getParams()[0];
+
+  // nickname validation
+  if (newNick.empty()) {
+    ReplyMessage::errErroneusNuckname(newNick);
+    return;
+  }
+
+  // we check collistion
+  // eventually this will use ClientManager
+  std::vector<Client> &allClients = clients.getClients();
+  for (size_t i = 0; i < allClients.size(); i++) {
+    if (allClients[i].getSocket() !=
+        client.getSocket()) { // Don't check against self
+      if (allClients[i].getNickname() == newNick) {
+        ReplyMessage::errNicknameInUse(newNick);
+        return;
+      }
+    }
+  }
+
+  // if user was already registered, we might need to broadcast nick change
+  // i haven't done it yet bc i just want it to work
+  client.setNickname(newNick);
+
+  checkRegistration(client); // try registration
+}
+
+void Commands::user(IRCMessage const &msg, Client &client) {
+  if (client.getRegistered()) {
+    ReplyMessage::errAlreadyRegistered();
+    return;
+  }
+
+  // USER <username> <hostname> <servername> <realname>
+  if (msg.getParams().size() < 3 || msg.getTrailing().empty()) {
+    ReplyMessage::errNeedMoreParams("USER");
+    return;
+  }
+
+  client.setUsername(msg.getParams()[0]);
+  // client.setHostname(msg.getParams()[1]); // Optional: store hostname
+  // Realname is usually in the trailing part
+
+  checkRegistration(client); // try registration
 }

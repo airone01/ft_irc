@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/19 12:30:39 by elagouch          #+#    #+#             */
-/*   Updated: 2025/12/04 15:39:48 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/04 23:33:22 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include "Commands.hpp"
 #include "IRCMessage.hpp"
 #include "Logger.hpp"
+#include <ostream>
 
 Dispatcher::Dispatcher(ClientManager *clients, ChannelManager *channels)
     : _clients(clients), _channels(channels) {}
@@ -51,17 +52,26 @@ void Dispatcher::executeCommand(Client &client, const std::string &line) {
         const_cast<std::string &>(line)); // Parser modifies string temporarily?
     std::string cmd = msg.getCommand();
 
-    // if (cmd == "CAP") {
-    //   Commands::cap(msg, client);
-    // } else if (cmd == "NICK") {
-    //   Commands::nick(msg, *_clients, client);
-    // } else if (cmd == "USER") {
-    //   Commands::user(msg, *_clients, client);
-    // } else if (cmd == "JOIN") {
-    if (cmd == "VERSION") {
-      Commands::version(client);
+    if (cmd.empty()) {
+      // logger::warning() << "Caught an empty command." << std::endl;
+      return;
     }
-    if (cmd == "JOIN") {
+
+    if (cmd == "NICK") {
+      Commands::nick(msg, *_clients, client);
+    } else if (cmd == "USER") {
+      Commands::user(msg, client);
+    } else if (cmd == "QUIT") {
+      client.close();
+      return;
+    } else if (cmd == "CAP") {
+      // Modern clients send CAP LS. For a basic server, we can ignore it 
+      // or send a specific response, but processing it prevents "Unknown command" logs.
+      return; 
+    } else if (cmd == "VERSION") {
+      Commands::version(client);
+      return;
+    } else if (cmd == "JOIN") {
       if (client.getRegistered())
         Commands::join(msg, *_channels, client);
     } else if (cmd == "PRIVMSG") {

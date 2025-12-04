@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/08 16:46:16 by elagouch          #+#    #+#             */
-/*   Updated: 2025/12/04 15:34:32 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/04 15:48:13 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,9 @@
 
 static Reactor *g_reactor = NULL;
 static Dispatcher *g_dispatcher = NULL;
+static ConnectionManager *g_connMgr = NULL;
+static ChannelManager *g_chanMgr = NULL;
+static ClientManager *g_clientMgr = NULL;
 
 extern "C" void handle_sigint(int) {
   if (g_reactor)
@@ -68,8 +71,11 @@ int main(int argc, char **argv) {
   sigaction(SIGINT, &sa, NULL);
 
   ConnectionManager connMgr(&reactor);
+  g_connMgr = &connMgr;
   ChannelManager chanMgr;
+  g_chanMgr = &chanMgr;
   ClientManager clientMgr;
+  g_clientMgr = &clientMgr;
   // TimerManager timerMgr;
 
   // Create the Dispatcher

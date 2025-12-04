@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:23:02 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/13 11:18:45 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/04 15:56:26 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,32 +80,33 @@ void Connection::handleEvent(uint32_t events) {
 }
 
 ssize_t Connection::handleRead() {
+  char buf[4096];
+
   if (_fd < 0)
     return -1;
-  char buf[4096];
-  while (1) {
-    ssize_t n = ::recv(_fd, buf, sizeof(buf), 0);
-    if (n > 0) {
-      _lastActivity = std::time(NULL);
-      _readBuf.insert(_readBuf.end(), buf, buf + n);
-      // notify dispatcher if present
-      if (_msgCb) {
-        _msgCb(this, _readBuf);
-        _readBuf.clear();
-      }
-    } else if (n == 0) {
-      // orderly shutdown by peer
-      close();
-      return 0;
-    } else {
-      if (errno == EAGAIN || errno == EWOULDBLOCK) {
-        break;
-      }
-      // error
-      perror("recv");
-      close();
-      return -1;
+
+  ssize_t n = ::recv(_fd, buf, sizeof(buf), 0);
+
+  if (n > 0) {
+    _lastActivity = std::time(NULL);
+    _readBuf.insert(_readBuf.end(), buf, buf + n);
+    // notify dispatcher if present
+    if (_msgCb) {
+      _msgCb(this, _readBuf);
+      _readBuf.clear();
     }
+  } else if (n == 0) {
+    // orderly shutdown by peer
+    close();
+    return 0;
+  } else {
+    if (errno == EAGAIN || errno == EWOULDBLOCK) {
+      return 0; // no data ready
+    }
+    // error
+    perror("recv");
+    close();
+    return -1;
   }
   return static_cast<ssize_t>(_readBuf.size());
 }

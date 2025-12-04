@@ -3,14 +3,14 @@
 # --- Configuration ---
 HOST="localhost"
 PORT="6667"
-TIMEOUT=2 # Seconds to wait for server response
+TIMEOUT=1 # in sec
 
 # --- Colors for Output ---
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
 # --- Global Counters ---
 TOTAL_TESTS=0
@@ -21,12 +21,6 @@ FAILED_LIST=()
 # ==============================================================================
 # UTILITY FUNCTIONS
 # ==============================================================================
-
-# Check if netcat is installed
-if ! command -v nc &> /dev/null; then
-    echo -e "${RED}Error: 'nc' (netcat) is not installed.${NC}"
-    exit 1
-fi
 
 print_header() {
     echo -e "${BLUE}========================================${NC}"
@@ -95,7 +89,7 @@ print_header
 # Test 1: Basic Connection & Handshake
 # Explanation: Send NICK and USER. Expect a 001 (Welcome) numeric code.
 # ------------------------------------------------------------------------------
-INPUT="NICK tester1\r\nUSER tester1 0 * :Test User\r\n"
+INPUT="NICK tester1\r\nUSER tester1 0 * :Test User\r\nQUIT\r\n"
 EXPECT="001" 
 run_test "Handshake (Welcome Message)" "$INPUT" "$EXPECT"
 
@@ -103,7 +97,7 @@ run_test "Handshake (Welcome Message)" "$INPUT" "$EXPECT"
 # Test 2: PING / PONG
 # Explanation: Send a PING with a token. Expect a PONG with the same token.
 # ------------------------------------------------------------------------------
-INPUT="PING :12345ABC\r\n"
+INPUT="PING :12345ABC\r\nQUIT\r\n"
 EXPECT="PONG :12345ABC"
 run_test "Ping/Pong Response" "$INPUT" "$EXPECT"
 
@@ -111,7 +105,7 @@ run_test "Ping/Pong Response" "$INPUT" "$EXPECT"
 # Test 3: Joining a Channel
 # Explanation: Complete handshake, then JOIN. Expect JOIN confirmation or names list.
 # ------------------------------------------------------------------------------
-INPUT="NICK tester2\r\nUSER tester2 0 * :Test User\r\nJOIN #general\r\n"
+INPUT="NICK tester2\r\nUSER tester2 0 * :Test User\r\nJOIN #general\r\nQUIT\r\n"
 EXPECT="JOIN :#general"
 run_test "Join Channel #general" "$INPUT" "$EXPECT"
 
@@ -119,7 +113,7 @@ run_test "Join Channel #general" "$INPUT" "$EXPECT"
 # Test 4: Invalid Command Handling
 # Explanation: Send garbage command. Expect 421 (Unknown Command) error.
 # ------------------------------------------------------------------------------
-INPUT="NICK tester3\r\nUSER tester3 0 * :Test User\r\nBLARGWARG\r\n"
+INPUT="NICK tester3\r\nUSER tester3 0 * :Test User\r\nBLARGWARG\r\nQUIT\r\n"
 EXPECT="421"
 run_test "Error handling (Unknown Command)" "$INPUT" "$EXPECT"
 
@@ -129,7 +123,7 @@ run_test "Error handling (Unknown Command)" "$INPUT" "$EXPECT"
 # Note: Since tests run sequentially, 'tester1' might still be timed out, 
 # but let's test a generic bad handshake or just a version check.
 # ------------------------------------------------------------------------------
-INPUT="VERSION\r\n"
+INPUT="VERSION\r\nQUIT\r\n"
 EXPECT="VERSION" # Or specific server version regex
 run_test "Version Check" "$INPUT" "$EXPECT"
 
