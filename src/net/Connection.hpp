@@ -6,13 +6,14 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:10:50 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/28 17:35:41 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/05 00:29:30 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef CONNECTION_HPP
 #define CONNECTION_HPP
 
+#include <string>
 #include <sys/types.h>
 #include <vector>
 
@@ -59,6 +60,7 @@ public:
    * @brief Queue bytes for sending.
    */
   void send(const std::vector<char> &data);
+  void send(const std::string &data); // convenient overload
 
   /**
    * @brief Close connection immediately.

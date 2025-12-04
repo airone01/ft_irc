@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/12 16:21:59 by nahamida          #+#    #+#             */
-/*   Updated: 2025/12/04 23:45:44 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/05 00:33:11 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,6 @@
 #include "ClientManager.hpp"
 #include "Logger.hpp"
 #include "ReplyMessage.hpp"
-#include <algorithm>
 #include <iostream>
 #include <vector>
 
@@ -36,41 +35,101 @@ std::vector<std::string> paramHandler(std::string params) {
   return newParam;
 }
 
-void Commands::join(IRCMessage const &tmp, ChannelManager channels,
-                    Client user) {
-
+void Commands::join(IRCMessage const &tmp, ChannelManager &channels,
+                    Client &user) {
   std::vector<std::string> param = tmp.getParams();
-  std::vector<std::string>::iterator it = param.begin();
-  std::vector<std::string>::iterator roomIt;
-  std::vector<std::string>::iterator pswrdIt;
+  if (param.empty()) {
+    ReplyMessage::errNeedMoreParams("JOIN");
+    return;
+  }
 
-  std::vector<std::string> rooms = tmp.getParams();
-  std::vector<std::string> pswrd = tmp.getParams();
+  std::vector<std::string> rooms;
+  std::vector<std::string> keys;
 
-  if (std::find(it->begin(), it->end(), ',') != it->end())
-    rooms = paramHandler(*it);
-  it++;
-  if (it != param.end() && std::find(it->begin(), it->end(), ',') != it->end())
-    pswrd = paramHandler(*it);
+  if (tmp.getParams().size() >= 1)
+    rooms = paramHandler(param[0]);
+  if (tmp.getParams().size() >= 2)
+    keys = paramHandler(param[1]);
 
-  for (roomIt = rooms.begin(), pswrdIt = pswrd.begin(); roomIt != rooms.end();
-       roomIt++) {
+  for (size_t i = 0; i < rooms.size(); i++) {
+    std::string name = rooms[i];
+    std::string key = (i < keys.size()) ? keys[i] : "";
+
+    Channel *chan = NULL;
     try {
-      Channel &actual = channels.getChannelFromName(*roomIt);
-      actual.tryJoin(user, *pswrdIt);
-      actual.newUser(user);
-      // todo: add numeric replies on succes RPL_TOPIC and RPL_NAMREPLY
-      pswrdIt++;
+      // try to get existing channel
+      chan = &channels.getChannelFromName(name);
     } catch (const ChannelManager::noSuchChannel &e) {
-      channels.addChannels(Channel(user, *roomIt));
-    } catch (const std::exception &e) {
-      // todo: add replies sender for error or valid commands
-      std::cerr << e.what() << '\n';
+      // create new if it doesn't exist
+      // TODO: ensure channel doesn't duplicate the user if we call newUser()
+      // later.
+      try {
+        Channel newChan(user, name);
+        channels.addChannels(newChan);
+        chan = &channels.getChannelFromName(name);
+      } catch (const std::exception &e2) {
+        logger::error() << e2.what() << std::endl;
+        continue;
+      }
     }
+
+    // validatation (password, limit, invite)
+    try {
+      // only check constraints if it's an existing channel
+      // (if we just created it, we are the owner/first user, so we get in free)
+      bool isNew =
+          (chan->getUsers().find(user.getSocket()) != chan->getUsers().end());
+
+      if (!isNew) {
+        chan->tryJoin(user, key);
+        chan->newUser(user);
+      }
+    } catch (const std::exception &e) {
+      // send error reply (e.g. ERR_BADCHANNELKEY)
+      logger::error() << "Join Error: " << e.what() << std::endl;
+      user.send(ReplyMessage::errBadChannelKey(name));
+      continue;
+    }
+
+    // broadcasting join message
+    std::string joinMsg = ":" + user.getNickname() + "!" + user.getUsername() +
+                          "@" + user.getHostname() +
+                          " JOIN :" + chan->getName() + "\r\n";
+    std::vector<char> joinResp(joinMsg.begin(), joinMsg.end());
+    // send to everyone in the channel (including the joiner)
+    std::map<int, Client *> users = chan->getUsers();
+    for (std::map<int, Client *>::iterator it = users.begin();
+         it != users.end(); ++it) {
+      it->second->send(joinResp);
+    }
+
+    // send topic
+    if (!chan->getTopic().empty()) {
+      user.send(ReplyMessage::rplTopic(chan->getName(), chan->getTopic()));
+    }
+
+    // send names list
+    std::string namesList;
+    for (std::map<int, Client *>::iterator it = users.begin();
+         it != users.end(); ++it) {
+      // logic to check if OP (@) or Voice (+) goes here
+      // for now, just list them
+      namesList += it->second->getNickname() + " ";
+    }
+
+    std::string rplNames = ":localhost 353 " + user.getNickname() + " = " +
+                           chan->getName() + " :" + namesList + "\r\n";
+    std::vector<char> nResp(rplNames.begin(), rplNames.end());
+    user.send(nResp);
+
+    std::string rplEndNames = ":localhost 366 " + user.getNickname() + " " +
+                              chan->getName() + " :End of /NAMES list\r\n";
+    std::vector<char> enResp(rplEndNames.begin(), rplEndNames.end());
+    user.send(enResp);
   }
 }
 
-void Commands::part(IRCMessage const &tmp, ChannelManager channels,
+void Commands::part(IRCMessage const &tmp, ChannelManager &channels,
                     Client &user) {
   std::vector<std::string> param = tmp.getParams();
   std::vector<std::string>::iterator it;
@@ -106,7 +165,7 @@ replies :
            ERR_USERSDONTMATCH              ERR_UMODEUNKNOWNFLAG
            RPL_UMODEIS
 */
-void Commands::mode(IRCMessage const &param, ChannelManager channels,
+void Commands::mode(IRCMessage const &param, ChannelManager &channels,
                     Client &user) {
   std::vector<std::string> tmp = param.getParams();
   try {
@@ -117,7 +176,7 @@ void Commands::mode(IRCMessage const &param, ChannelManager channels,
   }
 }
 
-void Commands::topic(IRCMessage const &tmp, ChannelManager channels,
+void Commands::topic(IRCMessage const &tmp, ChannelManager &channels,
                      Client &user) {
   if (tmp.getCountParams() != 1)
     std::cerr << "ERR_NEEDMOREPARAMS\n";
@@ -134,8 +193,8 @@ void Commands::topic(IRCMessage const &tmp, ChannelManager channels,
   }
 }
 
-void Commands::invite(IRCMessage const &tmp, ClientManager clients,
-                      ChannelManager channels, Client &user) {
+void Commands::invite(IRCMessage const &tmp, ClientManager &clients,
+                      ChannelManager &channels, Client &user) {
   std::vector<std::string> param = tmp.getParams();
   try {
     Channel &actual = channels.getChannelFromName(param[1]);
@@ -146,7 +205,7 @@ void Commands::invite(IRCMessage const &tmp, ClientManager clients,
   }
 }
 
-void Commands::kick(IRCMessage const &tmp, ChannelManager channels,
+void Commands::kick(IRCMessage const &tmp, ChannelManager &channels,
                     Client &admin) {
   std::vector<std::string> param = tmp.getParams();
   try {
@@ -332,7 +391,8 @@ void Commands::cap(IRCMessage const &msg, Client &client) {
   // 1. CAP LS: client asks "what do you support?"
   // we reply with an empty list (":") meaning "nothing special".
   if (subcommand == "LS") {
-    logger::debug() << "Client asked to list support. Sending empty list." << std::endl;
+    logger::debug() << "Client asked to list support. Sending empty list."
+                    << std::endl;
     std::string resp = ":localhost CAP * LS :\r\n";
     std::vector<char> r(resp.begin(), resp.end());
     client.send(r);
@@ -345,7 +405,8 @@ void Commands::cap(IRCMessage const &msg, Client &client) {
   // 3. CAP REQ: client asks if we support a specific feature. we don't.
   // we deny everything with NAK.
   else if (subcommand == "REQ") {
-    logger::debug() << "Client asked for additional support. Denying." << std::endl;
+    logger::debug() << "Client asked for additional support. Denying."
+                    << std::endl;
     std::string resp = ":localhost CAP * NAK :\r\n";
     std::vector<char> r(resp.begin(), resp.end());
     client.send(r);

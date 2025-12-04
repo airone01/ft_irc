@@ -6,11 +6,12 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/12 16:21:59 by nahamida          #+#    #+#             */
-/*   Updated: 2025/11/28 17:28:47 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/05 00:02:24 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Channel.hpp"
+#include "Logger.hpp"
 #include <algorithm>
 #include <iostream>
 
@@ -50,16 +51,22 @@ Channel::~Channel(void) {}
 // }
 
 void validChannelName(std::string tmp) {
-  size_t space = tmp.find(' ');
-  size_t comma = tmp.find(',');
-  size_t ctrlG = tmp.find(7);
-  size_t size = tmp.size();
-  if (size > 200 || space != size || comma != size || ctrlG != size)
+  // RFC 1459/2812 specifies max length of 200 characters for channel names.
+  if (tmp.size() > 200) {
     throw Channel::invalidChannelName();
-  if (tmp[0] == '#' || tmp[0] == '&')
-    ;
-  else
+  }
+
+  // Must start with '#' or '&'.
+  if (tmp.empty() || (tmp[0] != '#' && tmp[0] != '&')) {
     throw Channel::invalidChannelName();
+  }
+
+  // Disallowed characters: space, comma, BELL (ASCII 7).
+  if (tmp.find(' ') != std::string::npos ||
+      tmp.find(',') != std::string::npos ||
+      tmp.find(7) != std::string::npos) { // ASCII 7 is the BELL character
+    throw Channel::invalidChannelName();
+  }
 }
 
 Channel::Channel(Client &tmp, std::string name) : _modeSet(false) {

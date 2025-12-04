@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:23:02 by elagouch          #+#    #+#             */
-/*   Updated: 2025/12/04 15:56:26 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/05 00:28:56 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
+#include <string>
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -142,6 +143,11 @@ ssize_t Connection::handleWrite() {
   return 0;
 }
 
+// overload for convenience
+void Connection::send(const std::string &data) {
+  std::vector<char> char_data(data.begin(), data.end());
+  this->send(char_data);
+}
 void Connection::send(const std::vector<char> &data) {
   if (_closed)
     return;

@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/12 16:21:59 by nahamida          #+#    #+#             */
-/*   Updated: 2025/12/04 23:39:17 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/04 23:51:18 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,17 +19,17 @@
 
 class Commands {
 public:
-  static void join(IRCMessage const &param, ChannelManager channels,
-                   Client user);
-  static void part(IRCMessage const &param, ChannelManager channels,
+  static void join(IRCMessage const &param, ChannelManager &channels,
                    Client &user);
-  static void mode(IRCMessage const &tmp, ChannelManager channels,
+  static void part(IRCMessage const &param, ChannelManager &channels,
                    Client &user);
-  static void topic(IRCMessage const &tmp, ChannelManager channels,
+  static void mode(IRCMessage const &tmp, ChannelManager &channels,
+                   Client &user);
+  static void topic(IRCMessage const &tmp, ChannelManager &channels,
                     Client &user);
-  static void invite(IRCMessage const &tmp, ClientManager clients,
-                     ChannelManager channels, Client &user);
-  static void kick(IRCMessage const &param, ChannelManager channels,
+  static void invite(IRCMessage const &tmp, ClientManager &clients,
+                     ChannelManager &channels, Client &user);
+  static void kick(IRCMessage const &param, ChannelManager &channels,
                    Client &admin);
   static void privmsg(IRCMessage const &msg, Client &sender,
                       ClientManager &clients, ChannelManager &channels);
