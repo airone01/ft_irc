@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/19 12:30:39 by elagouch          #+#    #+#             */
-/*   Updated: 2025/12/04 23:33:22 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/04 23:45:15 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,9 +65,7 @@ void Dispatcher::executeCommand(Client &client, const std::string &line) {
       client.close();
       return;
     } else if (cmd == "CAP") {
-      // Modern clients send CAP LS. For a basic server, we can ignore it 
-      // or send a specific response, but processing it prevents "Unknown command" logs.
-      return; 
+      Commands::cap(msg, client);
     } else if (cmd == "VERSION") {
       Commands::version(client);
       return;

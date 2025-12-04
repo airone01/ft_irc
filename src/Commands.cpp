@@ -6,13 +6,14 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/12 16:21:59 by nahamida          #+#    #+#             */
-/*   Updated: 2025/12/04 23:34:43 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/04 23:45:44 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Commands.hpp"
 #include "ChannelManager.hpp"
 #include "ClientManager.hpp"
+#include "Logger.hpp"
 #include "ReplyMessage.hpp"
 #include <algorithm>
 #include <iostream>
@@ -241,13 +242,13 @@ void checkRegistration(Client &client) {
 
     // send RPL_WELCOME (001) - REQUIRED for client to finish connecting
     std::string nick = client.getNickname();
-    std::string msg = ":localhost 001 " + nick +
-                      " :Welcome to ft_irc, " + nick + "\r\n";
+    std::string msg =
+        ":localhost 001 " + nick + " :Welcome to ft_irc, " + nick + "\r\n";
     std::vector<char> resp(msg.begin(), msg.end());
     client.send(resp);
 
     // usually servers also send 002, 003, 004 here, but 001 is the trigger.
-    std::cout << "Client " << nick << " is now registered!" << std::endl;
+    logger::info() << "Client " << nick << " is now registered!" << std::endl;
   }
 }
 
@@ -313,4 +314,40 @@ void Commands::user(IRCMessage const &msg, Client &client) {
   // Realname is usually in the trailing part
 
   checkRegistration(client); // try registration
+}
+
+/**
+ * CAP is needed for advanced clients such as IRSSI or HexChat which do not
+ * limit their support to the classic RFC.
+ * We have to tell them that out server does not, in fact, implement advanced
+ * stuff.
+ */
+void Commands::cap(IRCMessage const &msg, Client &client) {
+  // we expect 1 param at least for CAP (LS, REQ, END, etc.)
+  if (msg.getParams().empty())
+    return;
+
+  std::string subcommand = msg.getParams()[0];
+
+  // 1. CAP LS: client asks "what do you support?"
+  // we reply with an empty list (":") meaning "nothing special".
+  if (subcommand == "LS") {
+    logger::debug() << "Client asked to list support. Sending empty list." << std::endl;
+    std::string resp = ":localhost CAP * LS :\r\n";
+    std::vector<char> r(resp.begin(), resp.end());
+    client.send(r);
+  }
+  // CAP END: the server says "okay, I understand".
+  // we do nothing and wait for more requests.
+  else if (subcommand == "END") {
+    return;
+  }
+  // 3. CAP REQ: client asks if we support a specific feature. we don't.
+  // we deny everything with NAK.
+  else if (subcommand == "REQ") {
+    logger::debug() << "Client asked for additional support. Denying." << std::endl;
+    std::string resp = ":localhost CAP * NAK :\r\n";
+    std::vector<char> r(resp.begin(), resp.end());
+    client.send(r);
+  }
 }
