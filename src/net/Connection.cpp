@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:23:02 by elagouch          #+#    #+#             */
-/*   Updated: 2025/12/05 01:07:24 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/05 02:33:37 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,60 +82,76 @@ void Connection::handleEvent(uint32_t events) {
 
 ssize_t Connection::handleRead() {
   char buf[4096];
+  bool keepReading = true;
+  ssize_t totalRead = 0;
 
   if (_fd < 0)
     return -1;
 
-  ssize_t n = ::recv(_fd, buf, sizeof(buf), 0);
+  // read everything available in the kernel buffer
+  while (keepReading) {
+    ssize_t n = ::recv(_fd, buf, sizeof(buf), 0);
 
-  if (n > 0) {
-    _lastActivity = std::time(NULL);
-    _readBuf.insert(_readBuf.end(), buf, buf + n);
-    // notify dispatcher if present
-    if (_msgCb) {
-      bool alive = _msgCb(this, _readBuf);
-      if (!alive) {
+    if (n > 0) {
+      _lastActivity = std::time(NULL);
+      _readBuf.insert(_readBuf.end(), buf, buf + n);
+      totalRead += n;
+
+      // notify dispatcher if present
+      if (_msgCb) {
+        // FIX: Check return value. If false, object was deleted.
+        bool alive = _msgCb(this, _readBuf);
+        if (!alive) {
+          return -1; // Stop processing immediately
+        }
+        _readBuf.clear();
+      }
+
+      // If we read less than full buffer, socket is likely empty
+      if (static_cast<size_t>(n) < sizeof(buf)) {
+        keepReading = false;
+      }
+    } else if (n == 0) {
+      // orderly shutdown by peer
+      close();
+      return 0;
+    } else {
+      if (errno == EAGAIN || errno == EWOULDBLOCK) {
+        keepReading = false; // No more data
+      } else {
+        // real error
+        perror("recv");
+        close();
         return -1;
       }
-      _readBuf.clear();
     }
-  } else if (n == 0) {
-    // orderly shutdown by peer
-    close();
-    return 0;
-  } else {
-    if (errno == EAGAIN || errno == EWOULDBLOCK) {
-      return 0; // no data ready
-    }
-    // error
-    perror("recv");
-    close();
-    return -1;
   }
-  return static_cast<ssize_t>(_readBuf.size());
+  return totalRead;
 }
 
 ssize_t Connection::handleWrite() {
   if (_fd < 0)
     return -1;
+
   while (!_writeBuf.empty()) {
     ssize_t n = ::send(_fd, &_writeBuf[0], _writeBuf.size(), MSG_NOSIGNAL);
     if (n > 0) {
       _lastActivity = std::time(NULL);
-      // if ((size_t)n >= m_writeBuf.size()) {
+
       if (static_cast<size_t>(n) >= _writeBuf.size()) {
         _writeBuf.clear();
-        // remove EPOLLOUT interest
+        // Buffer empty: remove EPOLLOUT interest
         if (_reactor)
           _reactor->modFd(_fd, EPOLLIN | EPOLLRDHUP | EPOLLHUP | EPOLLERR,
                           this);
         return n;
       } else {
+        // partial write: remove sent bytes
         _writeBuf.erase(_writeBuf.begin(), _writeBuf.begin() + n);
       }
     } else {
       if (errno == EAGAIN || errno == EWOULDBLOCK) {
-        // cannot write now
+        // cannot write more right now
         return 0;
       }
       perror("send");
@@ -152,15 +168,39 @@ void Connection::send(const std::string &data) {
   this->send(char_data);
 }
 void Connection::send(const std::vector<char> &data) {
-  if (_closed)
+  if (_closed || data.empty())
     return;
-  if (data.empty())
-    return;
-  bool wasEmpty = _writeBuf.empty();
-  _writeBuf.insert(_writeBuf.end(), data.begin(), data.end());
-  if (wasEmpty && _reactor) {
-    _reactor->modFd(_fd, EPOLLIN | EPOLLOUT | EPOLLRDHUP | EPOLLHUP | EPOLLERR,
-                    this);
+
+  ssize_t sent = 0;
+
+  // optimistic write:
+  // if buffer empty, try to send directly to socket
+  if (_writeBuf.empty()) {
+    sent = ::send(_fd, &data[0], data.size(), MSG_NOSIGNAL);
+
+    if (sent < 0) {
+      if (errno == EAGAIN || errno == EWOULDBLOCK) {
+        sent = 0; // kernel buffer full, must buffer all
+      } else {
+        perror("send"); // Real error
+        close();
+        return;
+      }
+    } else {
+      _lastActivity = std::time(NULL);
+    }
+  }
+
+  // if we couldn't send everything (or anything), buffer the rest
+  // it will be sent at the next event loop cycle
+  if (static_cast<size_t>(sent) < data.size()) {
+    _writeBuf.insert(_writeBuf.end(), data.begin() + sent, data.end());
+
+    // we have data pending, ensure EPOLLOUT is set
+    if (_reactor) {
+      _reactor->modFd(
+          _fd, EPOLLIN | EPOLLOUT | EPOLLRDHUP | EPOLLHUP | EPOLLERR, this);
+    }
   }
 }
 

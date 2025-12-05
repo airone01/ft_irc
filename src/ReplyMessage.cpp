@@ -558,13 +558,13 @@ std::string ReplyMessage::rplSummoning(const std::string &arg) {
   return v;
 }
 
-std::string ReplyMessage::rplVersion(const std::string &arg,
-                                     const std::string &arg2,
-                                     const std::string &arg3) {
+std::string ReplyMessage::rplVersion(const std::string &version,
+                                     const std::string &server_name,
+                                     const std::string &comment) {
   std::ostringstream oss;
-  oss << "351 RPL_VERSION " << arg << " " << arg2 << " :" << arg3;
+  oss << "351 RPL_VERSION " << version << " " << server_name << " :" << comment
+      << "\r\n";
   std::string v = oss.str();
-  logger::error() << v;
   return v;
 }
 

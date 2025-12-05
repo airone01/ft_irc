@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/12 16:21:59 by nahamida          #+#    #+#             */
-/*   Updated: 2025/12/05 01:05:03 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/05 02:05:02 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -285,10 +285,7 @@ void Commands::privmsg(IRCMessage const &msg, Client &sender,
 }
 
 void Commands::version(Client &sender) {
-  std::string ver = "1.0.0";
-  std::vector<char> msgVec(ver.begin(), ver.end());
-
-  sender.send(msgVec);
+  sender.send(ReplyMessage::rplVersion("1.0.0", "ft_irc", "com"));
 }
 
 void checkRegistration(Client &client) {

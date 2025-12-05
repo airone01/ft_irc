@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/19 12:30:39 by elagouch          #+#    #+#             */
-/*   Updated: 2025/12/05 01:09:30 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/05 02:09:07 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,7 +83,10 @@ bool Dispatcher::executeCommand(Client &client, const std::string &line) {
     } else if (cmd == "MODE") {
       Commands::mode(msg, *_channels, client);
     } else if (cmd == "PING") {
-      Commands::version(client);
+      std::string token = msg.getParams().empty() ? "" : msg.getParams()[0];
+      std::string pong = "PONG " + token + "\r\n";
+      std::vector<char> r(pong.begin(), pong.end());
+      client.send(r);
     } else {
       logger::warning() << "Unknown command: " << cmd << std::endl;
     }
