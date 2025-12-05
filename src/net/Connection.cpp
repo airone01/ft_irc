@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:23:02 by elagouch          #+#    #+#             */
-/*   Updated: 2025/12/05 02:33:37 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/05 03:35:50 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,11 +15,24 @@
 #include "Reactor.hpp"
 
 #include <errno.h>
+#include <iostream>
+#include <ostream>
 #include <stdio.h>
 #include <string.h>
 #include <string>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <unistd.h>
+
+static long current_timestamp() {
+  struct timeval te;
+  gettimeofday(&te, NULL);
+  return te.tv_sec * 1000 + te.tv_usec / 1000;
+}
+
+#define LOG_DEBUG(msg)                                                         \
+  std::cerr << "[" << current_timestamp() << "] [FD " << _fd << "] " << msg    \
+            << std::endl
 
 Connection::Connection()
     : _fd(-1), _reactor(NULL), _manager(NULL), _readBuf(), _writeBuf(),
@@ -65,16 +78,22 @@ std::time_t Connection::getLastActivity() const { return _lastActivity; }
 void Connection::handleEvent(uint32_t events) {
   if (_closed)
     return;
+
   if (events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP)) {
-    // remote closed or error
+    LOG_DEBUG("Event: ERROR/HUP. Closing.");
     close();
     return;
   }
+
   if (events & EPOLLIN) {
+    LOG_DEBUG("Event: EPOLLIN triggered.");
     ssize_t r = handleRead();
     (void)r;
   }
-  if (events & EPOLLOUT) {
+
+  // Note: If connection closed in handleRead, _closed might be true now.
+  if (!_closed && (events & EPOLLOUT)) {
+    LOG_DEBUG("Event: EPOLLOUT triggered.");
     ssize_t r = handleWrite();
     (void)r;
   }
@@ -84,12 +103,15 @@ ssize_t Connection::handleRead() {
   char buf[4096];
   bool keepReading = true;
   ssize_t totalRead = 0;
+  int loopCount = 0;
 
   if (_fd < 0)
     return -1;
 
-  // read everything available in the kernel buffer
+  LOG_DEBUG("Entering handleRead loop...");
+
   while (keepReading) {
+    loopCount++;
     ssize_t n = ::recv(_fd, buf, sizeof(buf), 0);
 
     if (n > 0) {
@@ -97,35 +119,51 @@ ssize_t Connection::handleRead() {
       _readBuf.insert(_readBuf.end(), buf, buf + n);
       totalRead += n;
 
-      // notify dispatcher if present
+      LOG_DEBUG("handleRead loop #" << loopCount << ": read " << n
+                                    << " bytes. Invoking Callback.");
+
+      // notify dispatcher
       if (_msgCb) {
-        // FIX: Check return value. If false, object was deleted.
         bool alive = _msgCb(this, _readBuf);
         if (!alive) {
-          return -1; // Stop processing immediately
+          LOG_DEBUG("Callback returned false (Connection died via QUIT). "
+                    "Returning -1.");
+          return -1;
         }
         _readBuf.clear();
       }
 
-      // If we read less than full buffer, socket is likely empty
       if (static_cast<size_t>(n) < sizeof(buf)) {
+        LOG_DEBUG("Read less than buffer size (" << n
+                                                 << " < 4096). Socket empty.");
         keepReading = false;
       }
+
+      // Safety break to prevent starvation if client spams faster than we
+      // process
+      if (loopCount > 50) {
+        LOG_DEBUG("STARVATION WARNING: Broke read loop after 50 iterations to "
+                  "yield to other clients.");
+        keepReading = false;
+      }
+
     } else if (n == 0) {
-      // orderly shutdown by peer
+      LOG_DEBUG("Recv returned 0 (Peer closed).");
       close();
       return 0;
     } else {
       if (errno == EAGAIN || errno == EWOULDBLOCK) {
-        keepReading = false; // No more data
+        LOG_DEBUG("Recv EAGAIN. Done reading.");
+        keepReading = false;
       } else {
-        // real error
         perror("recv");
         close();
         return -1;
       }
     }
   }
+
+  LOG_DEBUG("Exiting handleRead. Total read: " << totalRead);
   return totalRead;
 }
 
@@ -133,25 +171,28 @@ ssize_t Connection::handleWrite() {
   if (_fd < 0)
     return -1;
 
+  LOG_DEBUG("Entering handleWrite. Buffer size: " << _writeBuf.size());
+
   while (!_writeBuf.empty()) {
     ssize_t n = ::send(_fd, &_writeBuf[0], _writeBuf.size(), MSG_NOSIGNAL);
     if (n > 0) {
       _lastActivity = std::time(NULL);
+      LOG_DEBUG("handleWrite: Sent " << n << " bytes.");
 
       if (static_cast<size_t>(n) >= _writeBuf.size()) {
         _writeBuf.clear();
-        // Buffer empty: remove EPOLLOUT interest
+        LOG_DEBUG("Write buffer drained. Removing EPOLLOUT.");
         if (_reactor)
           _reactor->modFd(_fd, EPOLLIN | EPOLLRDHUP | EPOLLHUP | EPOLLERR,
                           this);
         return n;
       } else {
-        // partial write: remove sent bytes
         _writeBuf.erase(_writeBuf.begin(), _writeBuf.begin() + n);
+        LOG_DEBUG("Partial write. Remaining: " << _writeBuf.size());
       }
     } else {
       if (errno == EAGAIN || errno == EWOULDBLOCK) {
-        // cannot write more right now
+        LOG_DEBUG("send EAGAIN. Buffer full.");
         return 0;
       }
       perror("send");
@@ -173,30 +214,31 @@ void Connection::send(const std::vector<char> &data) {
 
   ssize_t sent = 0;
 
-  // optimistic write:
-  // if buffer empty, try to send directly to socket
   if (_writeBuf.empty()) {
     sent = ::send(_fd, &data[0], data.size(), MSG_NOSIGNAL);
 
     if (sent < 0) {
       if (errno == EAGAIN || errno == EWOULDBLOCK) {
-        sent = 0; // kernel buffer full, must buffer all
+        LOG_DEBUG("Optimistic send: EAGAIN. Buffering all " << data.size()
+                                                            << " bytes.");
+        sent = 0;
       } else {
-        perror("send"); // Real error
+        perror("send");
         close();
         return;
       }
     } else {
       _lastActivity = std::time(NULL);
+      LOG_DEBUG("Optimistic send: Directly sent " << sent << "/" << data.size()
+                                                  << " bytes.");
     }
   }
 
-  // if we couldn't send everything (or anything), buffer the rest
-  // it will be sent at the next event loop cycle
   if (static_cast<size_t>(sent) < data.size()) {
     _writeBuf.insert(_writeBuf.end(), data.begin() + sent, data.end());
+    LOG_DEBUG("Buffering " << (data.size() - sent)
+                           << " bytes. Total WriteBuf: " << _writeBuf.size());
 
-    // we have data pending, ensure EPOLLOUT is set
     if (_reactor) {
       _reactor->modFd(
           _fd, EPOLLIN | EPOLLOUT | EPOLLRDHUP | EPOLLHUP | EPOLLERR, this);
@@ -207,6 +249,7 @@ void Connection::send(const std::vector<char> &data) {
 void Connection::close() {
   if (_closed)
     return;
+  LOG_DEBUG("Closing connection.");
   _closed = true;
   if (_reactor)
     _reactor->delFd(_fd);
