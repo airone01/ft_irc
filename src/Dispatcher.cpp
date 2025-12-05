@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/19 12:30:39 by elagouch          #+#    #+#             */
-/*   Updated: 2025/12/04 23:53:25 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/05 01:09:30 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,31 +22,36 @@ Dispatcher::Dispatcher(ClientManager *clients, ChannelManager *channels)
 
 Dispatcher::~Dispatcher() {}
 
-void Dispatcher::handleData(Connection *conn, const std::vector<char> &data) {
+bool Dispatcher::handleData(Connection *conn, const std::vector<char> &data) {
   if (!conn)
-    return;
+    return true;
 
-  // 1. Safe cast to Client
   Client *client = dynamic_cast<Client *>(conn);
   if (!client)
-    return;
+    return true;
 
-  // 2. Buffer the data
   std::string chunk(data.begin(), data.end());
   client->appendToBuffer(chunk);
 
-  // 3. Process complete lines
   while (true) {
     std::string line = client->extractMessage();
     if (line.empty())
       break;
 
     logger::debug() << "Processing: " << line << std::endl;
-    executeCommand(*client, line);
+
+    if (executeCommand(*client, line)) { // if cleanup is needed
+      delete client;
+      return false; // signal death
+    }
   }
+  return true;
 }
 
-void Dispatcher::executeCommand(Client &client, const std::string &line) {
+/**
+ * Return true if client was closed/deleted
+ */
+bool Dispatcher::executeCommand(Client &client, const std::string &line) {
   try {
     IRCMessage msg(
         const_cast<std::string &>(line)); // Parser modifies string temporarily?
@@ -54,7 +59,7 @@ void Dispatcher::executeCommand(Client &client, const std::string &line) {
 
     if (cmd.empty()) {
       // logger::warning() << "Caught an empty command." << std::endl;
-      return;
+      return false;
     }
 
     if (cmd == "NICK") {
@@ -63,12 +68,11 @@ void Dispatcher::executeCommand(Client &client, const std::string &line) {
       Commands::user(msg, client);
     } else if (cmd == "QUIT") {
       client.close();
-      return;
+      return true; // cleanup
     } else if (cmd == "CAP") {
       Commands::cap(msg, client);
     } else if (cmd == "VERSION") {
       Commands::version(client);
-      return;
     } else if (cmd == "JOIN") {
       if (client.getRegistered())
         Commands::join(msg, *_channels, client);
@@ -87,4 +91,6 @@ void Dispatcher::executeCommand(Client &client, const std::string &line) {
   } catch (std::exception &e) {
     logger::warning() << "Parser/Exec error: " << e.what() << std::endl;
   }
+
+  return false;
 }

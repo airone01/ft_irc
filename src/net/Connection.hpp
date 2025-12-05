@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:10:50 by elagouch          #+#    #+#             */
-/*   Updated: 2025/12/05 00:29:30 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/05 01:06:25 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ public:
    * @param conn Connection pointer
    * @param data Received bytes (not nul-terminated)
    */
-  typedef void (*MessageCallback)(Connection *conn,
+  typedef bool (*MessageCallback)(Connection *conn,
                                   const std::vector<char> &data);
 
   Connection();

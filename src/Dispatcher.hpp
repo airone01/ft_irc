@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/19 12:30:19 by elagouch          #+#    #+#             */
-/*   Updated: 2025/12/04 15:33:42 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/05 01:08:54 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ public:
    * @brief Entry point for new data from a connection.
    * Buffers data, extracts lines, parses, and executes commands.
    */
-  void handleData(Connection *conn, const std::vector<char> &data);
+  bool handleData(Connection *conn, const std::vector<char> &data);
 
 private:
   ClientManager *_clients;
@@ -37,7 +37,7 @@ private:
   /**
    * @brief Execute a single parsed command.
    */
-  void executeCommand(Client &client, const std::string &line);
+  bool executeCommand(Client &client, const std::string &line);
 };
 
 #endif //! DISPATCHER_HPP

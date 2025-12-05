@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:23:02 by elagouch          #+#    #+#             */
-/*   Updated: 2025/12/05 00:28:56 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/05 01:07:24 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,7 +93,10 @@ ssize_t Connection::handleRead() {
     _readBuf.insert(_readBuf.end(), buf, buf + n);
     // notify dispatcher if present
     if (_msgCb) {
-      _msgCb(this, _readBuf);
+      bool alive = _msgCb(this, _readBuf);
+      if (!alive) {
+        return -1;
+      }
       _readBuf.clear();
     }
   } else if (n == 0) {

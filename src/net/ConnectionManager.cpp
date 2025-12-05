@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:17:10 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/13 11:26:40 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/05 00:50:14 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,17 +42,32 @@ void ConnectionManager::remove(Connection *conn) {
   if (!conn)
     return;
   MapType::iterator it = _map.find(conn->getFd());
-  if (it != _map.end())
+  if (it != _map.end()) {
     _map.erase(it);
+  }
 }
 
 void ConnectionManager::closeAll() {
-  for (MapType::iterator it = _map.begin(); it != _map.end(); ++it) {
+  MapType::iterator it = _map.begin();
+
+  // use a while loop with map::erase to safely iterate while deleting elements.
+  while (it != _map.end()) {
     Connection *c = it->second;
-    if (c)
-      c->close();
+    // advance iterator and erase map entry first.
+    // we cannot rely on c->close() calling remove(c) as it breaks iteration.
+    MapType::iterator next = it;
+    ++next;
+    _map.erase(it);
+    if (c) {
+      // temporarily nullify the manager pointer so c->close() doesn't try
+      // to call remove(c) again, which would crash on an empty map entry.
+      // since Connection members are protected, we must perform the cleanup
+      // manually: delete the allocated object. connection destructor handles
+      // closing the FD.
+      delete c;
+    }
+    it = next;
   }
-  _map.clear();
 }
 
 void ConnectionManager::sweepIdle(std::time_t seconds) {

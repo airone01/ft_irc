@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/08 16:46:16 by elagouch          #+#    #+#             */
-/*   Updated: 2025/12/04 15:48:13 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/05 01:08:19 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,10 +43,11 @@ static Connection *userFactory(int fd, Reactor *reactor,
 }
 
 // Bridge function: C-style callback -> Class method
-static void bridgeCallback(Connection *conn, const std::vector<char> &data) {
+static bool bridgeCallback(Connection *conn, const std::vector<char> &data) {
   if (g_dispatcher) {
-    g_dispatcher->handleData(conn, data);
+    return g_dispatcher->handleData(conn, data);
   }
+  return true;
 }
 
 int main(int argc, char **argv) {

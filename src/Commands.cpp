@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/12 16:21:59 by nahamida          #+#    #+#             */
-/*   Updated: 2025/12/05 00:33:11 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/05 01:05:03 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -143,7 +143,7 @@ void Commands::part(IRCMessage const &tmp, ChannelManager &channels,
         // todo: reply
       }
     } catch (const std::exception &e) {
-      std::cerr << e.what() << '\n';
+      logger::error() << e.what() << '\n';
     }
   }
 }
@@ -172,14 +172,14 @@ void Commands::mode(IRCMessage const &param, ChannelManager &channels,
     Channel &actual = channels.getChannelFromName(tmp[0]);
     actual.updateMode(param, user);
   } catch (const std::exception &e) {
-    std::cerr << e.what() << '\n';
+    logger::error() << e.what() << '\n';
   }
 }
 
 void Commands::topic(IRCMessage const &tmp, ChannelManager &channels,
                      Client &user) {
   if (tmp.getCountParams() != 1)
-    std::cerr << "ERR_NEEDMOREPARAMS\n";
+    logger::error() << "ERR_NEEDMOREPARAMS\n";
   std::vector<std::string> param = paramHandler(tmp.getParams()[0]);
   std::vector<std::string>::iterator it = param.begin();
 
@@ -188,7 +188,7 @@ void Commands::topic(IRCMessage const &tmp, ChannelManager &channels,
       Channel &actual = channels.getChannelFromName(*it);
       actual.changeTopic(tmp, user);
     } catch (const std::exception &e) {
-      std::cerr << e.what() << '\n';
+      logger::error() << e.what() << '\n';
     }
   }
 }
@@ -201,7 +201,7 @@ void Commands::invite(IRCMessage const &tmp, ClientManager &clients,
     actual.tryInvite(param, clients, user.getSocket(),
                      clients.getClientFromUsername(param[0]).getSocket());
   } catch (const std::exception &e) {
-    std::cerr << e.what() << std::endl;
+    logger::error() << e.what() << std::endl;
   }
 }
 
@@ -217,7 +217,7 @@ void Commands::kick(IRCMessage const &tmp, ChannelManager &channels,
       if (victimIt->second->getUsername() == param[1])
         actual.setKickedUsers(victimIt->second->getSocket());
   } catch (const std::exception &e) {
-    std::cerr << e.what() << '\n';
+    logger::error() << e.what() << '\n';
   }
 }
 
@@ -241,12 +241,12 @@ void Commands::kick(IRCMessage const &tmp, ChannelManager &channels,
 void Commands::privmsg(IRCMessage const &msg, Client &sender,
                        ClientManager &clients, ChannelManager &channels) {
   if (msg.getCountParams() < 1) {
-    std::cerr << "411 ERROR HANDLING :No recipient given " << msg.getCommand()
-              << std::endl;
+    logger::error() << "411 ERROR HANDLING :No recipient given "
+                    << msg.getCommand() << std::endl;
     return;
   }
   if (msg.getTrailing().empty()) {
-    std::cerr << "412 ERR_NOTEXTTOSEND :No text to send" << std::endl;
+    logger::error() << "412 ERR_NOTEXTTOSEND :No text to send" << std::endl;
     return;
   }
   std::string target = msg.getParams()[0];
@@ -260,8 +260,8 @@ void Commands::privmsg(IRCMessage const &msg, Client &sender,
       Channel &chan = channels.getChannelFromName(target);
       std::map<int, Client *> users = chan.getUsers();
       if (users.find(sender.getSocket()) == users.end()) {
-        std::cerr << "404 ERR_CANNOTSENDTOCHAN " << msg.getParams()[0]
-                  << " :Cannot send to channel" << std::endl;
+        logger::error() << "404 ERR_CANNOTSENDTOCHAN " << msg.getParams()[0]
+                        << " :Cannot send to channel" << std::endl;
         return;
       }
       for (std::map<int, Client *>::iterator it = users.begin();
@@ -271,15 +271,15 @@ void Commands::privmsg(IRCMessage const &msg, Client &sender,
         }
       }
     } catch (const std::exception &e) {
-      std::cerr << "403 ERR_NOSUCHCHANNEL " << msg.getParams()[0]
-                << " :No such channel" << std::endl;
+      logger::error() << "403 ERR_NOSUCHCHANNEL " << msg.getParams()[0]
+                      << " :No such channel" << std::endl;
     }
   } else {
     try {
       Client &recipient = clients.getClientFromUsername(target);
       recipient.send(msgVec);
     } catch (const std::exception &e) {
-      std::cerr << "401 ERR_NOSUCHNICK :No such nick" << std::endl;
+      logger::error() << "401 ERR_NOSUCHNICK :No such nick" << std::endl;
     }
   }
 }
@@ -391,8 +391,7 @@ void Commands::cap(IRCMessage const &msg, Client &client) {
   // 1. CAP LS: client asks "what do you support?"
   // we reply with an empty list (":") meaning "nothing special".
   if (subcommand == "LS") {
-    logger::debug() << "Client asked to list support. Sending empty list."
-                    << std::endl;
+    logger::debug() << "CAP LIST asked. Sending empty list." << std::endl;
     std::string resp = ":localhost CAP * LS :\r\n";
     std::vector<char> r(resp.begin(), resp.end());
     client.send(r);
@@ -405,8 +404,7 @@ void Commands::cap(IRCMessage const &msg, Client &client) {
   // 3. CAP REQ: client asks if we support a specific feature. we don't.
   // we deny everything with NAK.
   else if (subcommand == "REQ") {
-    logger::debug() << "Client asked for additional support. Denying."
-                    << std::endl;
+    logger::debug() << "CAP REQ asked. Denying." << std::endl;
     std::string resp = ":localhost CAP * NAK :\r\n";
     std::vector<char> r(resp.begin(), resp.end());
     client.send(r);
