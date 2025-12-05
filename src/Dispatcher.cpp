@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/19 12:30:39 by elagouch          #+#    #+#             */
-/*   Updated: 2025/12/05 03:41:23 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/05 03:42:05 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,8 +41,7 @@ bool Dispatcher::handleData(Connection *conn, const std::vector<char> &data) {
     logger::debug() << "Processing: " << line << std::endl;
 
     if (executeCommand(*client, line)) { // if cleanup is needed
-      delete client;
-      return false; // signal death
+      return false;
     }
   }
   return true;
@@ -68,7 +67,7 @@ bool Dispatcher::executeCommand(Client &client, const std::string &line) {
       Commands::user(msg, client);
     } else if (cmd == "QUIT") {
       client.close();
-      return true; // cleanup
+      return true; // client is dead
     } else if (cmd == "CAP") {
       Commands::cap(msg, client);
     } else if (cmd == "VERSION") {

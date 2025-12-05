@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/12 16:21:59 by nahamida          #+#    #+#             */
-/*   Updated: 2025/12/05 02:05:02 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/05 04:31:42 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -167,12 +167,62 @@ replies :
 */
 void Commands::mode(IRCMessage const &param, ChannelManager &channels,
                     Client &user) {
-  std::vector<std::string> tmp = param.getParams();
-  try {
-    Channel &actual = channels.getChannelFromName(tmp[0]);
-    actual.updateMode(param, user);
-  } catch (const std::exception &e) {
-    logger::error() << e.what() << '\n';
+  std::vector<std::string> params = param.getParams();
+  if (params.size() < 1) {
+    ReplyMessage::errNeedMoreParams("MODE");
+    return;
+  }
+
+  std::string target = params[0];
+
+  if (target[0] == '#' || target[0] == '&') {
+    Channel *actual = NULL;
+
+    // find channel.
+    try {
+      actual = &channels.getChannelFromName(target);
+    } catch (const ChannelManager::noSuchChannel &e) {
+      ReplyMessage::errNoSuckChannel(target);
+      return;
+    }
+
+    // MODE QUERY (no flags given)
+    if (params.size() == 1) {
+      // construct the mode string from the set of active modes.
+      std::string modeStr = "+";
+      std::set<char> modes = actual->getMode();
+      for (std::set<char>::iterator it = modes.begin(); it != modes.end();
+           ++it) {
+        modeStr += *it;
+      }
+
+      // RPL_CHANNELMODEIS (324): :<server> 324 <nick> <channel> <mode> <mode
+      // params> Note: for simplicity we dc about mode parameters here.
+      std::string response = ":localhost 324 " + user.getNickname() + " " +
+                             target + " " + modeStr + "\r\n";
+      std::vector<char> respVec(response.begin(), response.end());
+      user.send(respVec);
+      return;
+    }
+
+    // MODE CHANGE (flags given)
+    try {
+      if (actual)
+        actual->updateMode(param, user);
+
+      // TODO: if updateMode succeeds, broadcast the new mode change to the
+      // channel.
+    } catch (const std::exception &e) {
+      std::cerr << "MODE Error: " << e.what() << std::endl;
+      // if the error is related to parameters (e.g., ERR_UNKNOWNMODE),
+      // the error should be sent to the client.
+    }
+  } else {
+    if (target == user.getNickname()) {
+      return;
+    } else {
+      ReplyMessage::errUsersDontMatch();
+    }
   }
 }
 

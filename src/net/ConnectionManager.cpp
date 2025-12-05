@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:17:10 by elagouch          #+#    #+#             */
-/*   Updated: 2025/12/05 00:50:14 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/05 03:44:07 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,7 @@ void ConnectionManager::remove(Connection *conn) {
   MapType::iterator it = _map.find(conn->getFd());
   if (it != _map.end()) {
     _map.erase(it);
+    delete conn; // this is essential to avoid leaks.
   }
 }
 
@@ -72,6 +73,8 @@ void ConnectionManager::closeAll() {
 
 void ConnectionManager::sweepIdle(std::time_t seconds) {
   std::time_t now = std::time(NULL);
+  // we cannot delete while iterating here easily in C++98 without careful
+  // steps, so we collect first.
   std::vector<Connection *> toClose;
   for (MapType::iterator it = _map.begin(); it != _map.end(); ++it) {
     Connection *c = it->second;
@@ -82,8 +85,7 @@ void ConnectionManager::sweepIdle(std::time_t seconds) {
   }
   for (size_t i = 0; i < toClose.size(); ++i) {
     Connection *c = toClose[i];
-    c->close();
-    _map.erase(c->getFd());
+    c->close(); // close() calls remove(), which deletes.
   }
 }
 

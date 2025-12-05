@@ -22,7 +22,7 @@ std::string ReplyMessage::errNoSuchServer(const std::string &arg) {
 
 std::string ReplyMessage::errNoSuckChannel(const std::string &arg) {
   std::ostringstream oss;
-  oss << "403 ERR_NOSUCHCHANNEL " << arg << " :No such channel";
+  oss << "403 ERR_NOSUCHCHANNEL " << arg << " :No such channel\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -355,7 +355,7 @@ std::string ReplyMessage::errUModeUnknownFlag() {
   return v;
 }
 
-std::string ReplyMessage::errUserDontMatch() {
+std::string ReplyMessage::errUsersDontMatch() {
   std::ostringstream oss;
   oss << "502 ERR_USERSDONTMATCH :Cant change mode for other users";
   std::string v = oss.str();
@@ -518,7 +518,8 @@ std::string ReplyMessage::rplChannelModeIs(const std::string &arg,
                                            const std::string &arg2,
                                            const std::string &arg3) {
   std::ostringstream oss;
-  oss << "324 RPL_CHANNELMODEIS " << arg << " " << arg2 << " " << arg3;
+  oss << "324 RPL_CHANNELMODEIS " << arg << " " << arg2 << " " << arg3
+      << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;

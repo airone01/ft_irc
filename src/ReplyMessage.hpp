@@ -87,7 +87,7 @@ public:
   static std::string errNoOPerHost();       // ":No O-lines for your host" 491
   static std::string errUModeUnknownFlag(); // ":Unknown MODE flag" 501
   static std::string
-  errUserDontMatch(); //  ":Cant change mode for other users" 502
+  errUsersDontMatch(); //  ":Cant change mode for other users" 502
   static std::string
   rplNone(const std::string &arg); // Dummy reply number. Not used. 300
   static std::string
