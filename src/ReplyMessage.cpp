@@ -223,7 +223,7 @@ std::string ReplyMessage::errUserDisabled() {
 
 std::string ReplyMessage::errNotRegistered() {
   std::ostringstream oss;
-  oss << "451 ERR_NOTREGISTERED :You have not registered\r\n";
+  oss << "451 ERR_NOTREGISTERED :User not logged in\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;

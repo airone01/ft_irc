@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 16:57:04 by elagouch          #+#    #+#             */
-/*   Updated: 2025/12/08 14:26:53 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/08 15:06:42 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,6 @@
 class Client : public Connection {
 private:
   int _socket;
-  bool _passwordValid;
   std::string _nickname;
   std::string _username;
   std::string _hostname;
@@ -47,13 +46,11 @@ public:
   std::string getHostname() const;
   bool getAuth() const;
   bool getRegistered() const;
-  bool getPasswordValid() const;
   // setter
   void setNickname(const std::string &nick);
   void setUsername(const std::string &user);
   void setAuth(bool auth);
   void setRegistered(bool reg);
-  void setPasswordValid(bool valid);
   // method
   void appendToBuffer(const std::string &buffer);
   std::string extractMessage();

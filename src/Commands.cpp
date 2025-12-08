@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/12 16:21:59 by nahamida          #+#    #+#             */
-/*   Updated: 2025/12/08 14:46:22 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/08 15:07:06 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -343,7 +343,8 @@ void checkRegistration(Client &client) {
     return; // already registered
 
   // we need at least a Nickname and a Username to register
-  if (!client.getNickname().empty() && !client.getUsername().empty()) {
+  if (client.getAuth() && !client.getNickname().empty() &&
+      !client.getUsername().empty()) {
     client.setRegistered(true);
 
     // send RPL_WELCOME (001) - REQUIRED for client to finish connecting
@@ -372,14 +373,13 @@ void Commands::pass(IRCMessage const &msg, Client &client,
   std::string providedPass = msg.getParams()[0];
   if (providedPass != serverPass) {
     client.send(ReplyMessage::errPasswdMismatch());
-    client.setPasswordValid(false);
     // Note: idk about closing the connection right after a wrong password, but
     // many implementations do that
     client.close();
     return;
   }
 
-  client.setPasswordValid(true);
+  client.setAuth(true);
   logger::debug() << "Client " << client.getSocket() << " password verified."
                   << std::endl;
 }
@@ -388,6 +388,10 @@ void Commands::nick(IRCMessage const &msg, ClientManager &clients,
                     Client &client) {
   if (msg.getParams().empty()) {
     ReplyMessage::errNoNickNameGiven();
+    return;
+  }
+  if (!client.getAuth()) {
+    client.send(ReplyMessage::errNotRegistered());
     return;
   }
 
@@ -422,6 +426,10 @@ void Commands::nick(IRCMessage const &msg, ClientManager &clients,
 void Commands::user(IRCMessage const &msg, Client &client) {
   if (client.getRegistered()) {
     ReplyMessage::errAlreadyRegistered();
+    return;
+  }
+  if (!client.getAuth()) {
+    client.send(ReplyMessage::errNotRegistered());
     return;
   }
 

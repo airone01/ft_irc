@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 17:31:51 by elagouch          #+#    #+#             */
-/*   Updated: 2025/12/08 14:27:51 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/08 15:07:38 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,20 +15,17 @@
 #include <unistd.h>
 
 Client::Client(int fd, Reactor *reactor, ConnectionManager *mgr)
-    : Connection(fd, reactor, mgr), _socket(fd), _passwordValid(false),
-      _nickname(""), _username(""), _hostname(""), _buffer(""), _auth(false),
-      _registered(false) {}
+    : Connection(fd, reactor, mgr), _socket(fd), _nickname(""), _username(""),
+      _hostname(""), _buffer(""), _auth(false), _registered(false) {}
 
 Client::Client(const Client &copy)
     : Connection(copy._socket, copy._reactor, copy._manager),
-      _socket(copy._socket), _passwordValid(copy._passwordValid),
-      _nickname(copy._nickname), _username(copy._username),
-      _hostname(copy._hostname), _buffer(copy._buffer), _auth(copy._auth),
-      _registered(copy._registered) {}
+      _socket(copy._socket), _nickname(copy._nickname),
+      _username(copy._username), _hostname(copy._hostname),
+      _buffer(copy._buffer), _auth(copy._auth), _registered(copy._registered) {}
 
 Client &Client::operator=(const Client &other) {
   if (this != &other) {
-    this->_passwordValid = other._passwordValid;
     this->_socket = other._socket;
     this->_nickname = other._nickname;
     this->_username = other._username;
@@ -54,8 +51,6 @@ bool Client::getAuth() const { return (this->_auth); }
 
 bool Client::getRegistered() const { return (this->_registered); }
 
-bool Client::getPasswordValid() const { return _passwordValid; }
-
 void Client::setNickname(const std::string &nick) { this->_nickname = nick; }
 
 void Client::setUsername(const std::string &user) { this->_username = user; }
@@ -63,8 +58,6 @@ void Client::setUsername(const std::string &user) { this->_username = user; }
 void Client::setAuth(bool auth) { this->_auth = auth; }
 
 void Client::setRegistered(bool reg) { this->_registered = reg; }
-
-void Client::setPasswordValid(bool valid) { _passwordValid = valid; }
 
 void Client::appendToBuffer(const std::string &buffer) {
   this->_buffer += buffer;
