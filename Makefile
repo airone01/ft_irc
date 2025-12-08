@@ -6,7 +6,7 @@
 #    By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/10/08 15:49:16 by elagouch          #+#    #+#              #
-#    Updated: 2025/12/08 11:44:45 by elagouch         ###   ########.fr        #
+#    Updated: 2025/12/08 12:09:22 by elagouch         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -101,7 +101,8 @@ TEST_DIR		:= test
 TEST_SRC		:=	$(TEST_DIR)/test_main.cpp \
 								$(TEST_DIR)/test_IRCMessage.cpp \
 								$(TEST_DIR)/test_Client.cpp \
-								$(TEST_DIR)/test_Channel.cpp
+								$(TEST_DIR)/test_Channel.cpp \
+								$(TEST_DIR)/test_ChannelModes.cpp
 TEST_OBJ		:= $(TEST_SRC:.cpp=.o)
 CORE_OBJ		:= $(filter-out src/main.o, $(OBJ))
 

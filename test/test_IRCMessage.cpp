@@ -64,3 +64,42 @@ TEST_CASE("Edge Cases") {
     CHECK(msg.getTrailing() == "spaced   out   message");
   }
 }
+
+TEST_CASE("IRCMessage hard tests") {
+  SUBCASE("Colon as a parameter (not trailing)") {
+    // "RESTART" command often looks like: RESTART :
+    // but also: PRIVMSG #chan : :D
+    std::string raw = "PRIVMSG #chan ::D\r\n";
+    IRCMessage msg(raw);
+
+    CHECK(msg.getCommand() == "PRIVMSG");
+    CHECK(msg.getParams().size() == 1);
+    CHECK(msg.getParams()[0] == "#chan");
+    CHECK(msg.getTrailing() == ":D"); // should capture the smiley
+  }
+
+  SUBCASE("Only Command") {
+    std::string raw = "QUIT\r\n";
+    IRCMessage msg(raw);
+
+    CHECK(msg.getCommand() == "QUIT");
+    CHECK(msg.getParams().empty());
+    CHECK(msg.getTrailing().empty());
+  }
+
+  SUBCASE("Prefix with no parameters") {
+    std::string raw = ":prefix COMMAND\r\n";
+    IRCMessage msg(raw);
+
+    CHECK(msg.getPrefix() == "prefix");
+    CHECK(msg.getCommand() == "COMMAND");
+  }
+
+  SUBCASE("Multiple Spaces in Trailing") {
+    // Trailing should PRESERVE spaces
+    std::string raw = "PRIVMSG #chan :   keep   these   spaces   \r\n";
+    IRCMessage msg(raw);
+
+    CHECK(msg.getTrailing() == "   keep   these   spaces   ");
+  }
+}
