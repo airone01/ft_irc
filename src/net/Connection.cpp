@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:23:02 by elagouch          #+#    #+#             */
-/*   Updated: 2025/12/05 04:10:22 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/08 10:20:18 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,14 +64,16 @@ void Connection::touch() { _lastActivity = std::time(NULL); }
 
 std::time_t Connection::getLastActivity() const { return _lastActivity; }
 
+/**
+ * @note the conditions in this function need to be executed in the specific
+ * order they are as of this commit, otherwise what could happen is if the
+ * function catches EPOLLRDHUP upon entering the function, the fd is destroyed
+ * immediately, discarding the receive buffer and never processing the rest of
+ * the packages.
+ */
 void Connection::handleEvent(uint32_t events) {
   if (_closed)
     return;
-
-  if (events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP)) {
-    close();
-    return;
-  }
 
   if (events & EPOLLIN) {
     // If handleRead returns <= 0, it means the connection is closed or broken.
@@ -83,6 +85,11 @@ void Connection::handleEvent(uint32_t events) {
   // Only check EPOLLOUT if we are still alive (implicit check via return above)
   if (events & EPOLLOUT) {
     handleWrite();
+  }
+
+  if (events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP)) {
+    close();
+    return;
   }
 }
 
