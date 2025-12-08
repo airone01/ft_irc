@@ -6,16 +6,18 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/08 16:46:16 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/28 17:41:43 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/08 10:26:35 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
 #include <signal.h>
 #include <unistd.h>
 
+#include "Channel.hpp"
 #include "ChannelManager.hpp"
 #include "Client.hpp"
 #include "Dispatcher.hpp"
@@ -27,6 +29,9 @@
 
 static Reactor *g_reactor = NULL;
 static Dispatcher *g_dispatcher = NULL;
+static ConnectionManager *g_connMgr = NULL;
+static ChannelManager *g_chanMgr = NULL;
+static ClientManager *g_clientMgr = NULL;
 
 extern "C" void handle_sigint(int) {
   if (g_reactor)
@@ -39,19 +44,25 @@ static Connection *userFactory(int fd, Reactor *reactor,
 }
 
 // Bridge function: C-style callback -> Class method
-static void bridgeCallback(Connection *conn, const std::vector<char> &data) {
+static bool bridgeCallback(Connection *conn, const std::vector<char> &data) {
   if (g_dispatcher) {
-    g_dispatcher->handleData(conn, data);
+    return g_dispatcher->handleData(conn, data);
   }
+  return true;
 }
 
 int main(int argc, char **argv) {
-  unsigned short port = 6667;
-  if (argc > 1) {
-    int p = atoi(argv[1]);
-    if (p > 0)
-      port = static_cast<unsigned short>(p);
+  unsigned short port;
+
+  if (argc != 2) {
+    // TODO: implement password as second arg
+    std::cerr << "Usage: " << argv[0] << " <port> <password>" << std::endl;
+    return 1;
   }
+
+  int p = atoi(argv[1]);
+  if (p > 0)
+    port = static_cast<unsigned short>(p);
 
   // Set log level (optional)
   logger::Logger::getInstance().setMinLevel(logger::DEBUG);
@@ -67,11 +78,15 @@ int main(int argc, char **argv) {
   sigaction(SIGINT, &sa, NULL);
 
   ConnectionManager connMgr(&reactor);
+  g_connMgr = &connMgr;
   ChannelManager chanMgr;
+  g_chanMgr = &chanMgr;
+  ClientManager clientMgr;
+  g_clientMgr = &clientMgr;
   // TimerManager timerMgr;
 
   // Create the Dispatcher
-  Dispatcher dispatcher(&connMgr, &chanMgr);
+  Dispatcher dispatcher(&clientMgr, &chanMgr);
   g_dispatcher = &dispatcher;
 
   Listener listener("0.0.0.0", port, &reactor, &connMgr);

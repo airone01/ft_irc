@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 17:31:51 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/28 17:35:01 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/08 11:51:34 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,11 +16,13 @@
 
 Client::Client(int fd, Reactor *reactor, ConnectionManager *mgr)
     : Connection(fd, reactor, mgr), _socket(fd), _nickname(""), _username(""),
-      _hostname(""), _registered(false) {}
+      _hostname(""), _buffer(""), _auth(false), _registered(false) {}
 
-Client::Client(const Client &copy) : Connection(copy._socket, copy._reactor, copy._manager), _socket(copy._socket), _nickname(copy._nickname), _username(copy._username),
- 	_hostname(copy._hostname), _buffer(copy._hostname), _auth(copy._auth), _registered(copy._registered) {}
-
+Client::Client(const Client &copy)
+    : Connection(copy._socket, copy._reactor, copy._manager),
+      _socket(copy._socket), _nickname(copy._nickname),
+      _username(copy._username), _hostname(copy._hostname),
+      _buffer(copy._buffer), _auth(copy._auth), _registered(copy._registered) {}
 
 Client &Client::operator=(const Client &other) {
   if (this != &other) {

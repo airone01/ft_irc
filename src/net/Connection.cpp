@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:23:02 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/13 11:18:45 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/08 10:32:43 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,9 @@
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
+#include <string>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <unistd.h>
 
 Connection::Connection()
@@ -35,6 +37,7 @@ Connection::Connection(int fd, Reactor *reactor, ConnectionManager *mgr)
       _msgCb(NULL), _closed(false), _lastActivity(std::time(NULL)) {}
 
 Connection::~Connection() {
+  // this should be safe even if closed previously
   if (_fd >= 0)
     ::close(_fd);
 }
@@ -61,66 +64,98 @@ void Connection::touch() { _lastActivity = std::time(NULL); }
 
 std::time_t Connection::getLastActivity() const { return _lastActivity; }
 
+/**
+ * @note the conditions in this function need to be executed in the specific
+ * order they are as of this commit, otherwise what could happen is if the
+ * function catches EPOLLRDHUP upon entering the function, the fd is destroyed
+ * immediately, discarding the receive buffer and never processing the rest of
+ * the packages.
+ */
 void Connection::handleEvent(uint32_t events) {
   if (_closed)
     return;
-  if (events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP)) {
-    // remote closed or error
-    close();
-    return;
-  }
+
   if (events & EPOLLIN) {
-    ssize_t r = handleRead();
-    (void)r;
+    if (handleRead() <= 0)
+      // handleRead calls close(), which now sets _disconnecting if writeBuf is
+      // not empty. We should return here to stop processing this event loop
+      // iteration.
+      return;
   }
+
   if (events & EPOLLOUT) {
-    ssize_t r = handleWrite();
-    (void)r;
+    handleWrite(); // this will close() if buffer becomes empty and
+                   // _disconnecting is true
+  }
+
+  if (events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP)) {
+    close(); // if it's a hard error (HUP/ERR), we might want to force close,
+             // but standard RDHUP (half-close) should be graceful.
+    return;
   }
 }
 
 ssize_t Connection::handleRead() {
+  char buf[4096];
+  bool keepReading = true;
+  ssize_t totalRead = 0;
+  int loopCount = 0;
+
   if (_fd < 0)
     return -1;
-  char buf[4096];
-  while (1) {
+
+  while (keepReading) {
+    loopCount++;
     ssize_t n = ::recv(_fd, buf, sizeof(buf), 0);
+
     if (n > 0) {
       _lastActivity = std::time(NULL);
       _readBuf.insert(_readBuf.end(), buf, buf + n);
-      // notify dispatcher if present
+      totalRead += n;
+
       if (_msgCb) {
-        _msgCb(this, _readBuf);
+        bool alive = _msgCb(this, _readBuf);
+        if (!alive) {
+          return -1; // signals handleEvent to stop
+        }
         _readBuf.clear();
       }
+
+      if (static_cast<size_t>(n) < sizeof(buf)) {
+        keepReading = false;
+      }
+
+      if (loopCount > 50) {
+        keepReading = false;
+      }
+
     } else if (n == 0) {
-      // orderly shutdown by peer
       close();
-      return 0;
+      return 0; // Signals handleEvent to stop
     } else {
       if (errno == EAGAIN || errno == EWOULDBLOCK) {
-        break;
+        keepReading = false;
+      } else {
+        perror("recv");
+        close();
+        return -1; // Signals handleEvent to stop
       }
-      // error
-      perror("recv");
-      close();
-      return -1;
     }
   }
-  return static_cast<ssize_t>(_readBuf.size());
+
+  return totalRead;
 }
 
 ssize_t Connection::handleWrite() {
   if (_fd < 0)
     return -1;
+
   while (!_writeBuf.empty()) {
     ssize_t n = ::send(_fd, &_writeBuf[0], _writeBuf.size(), MSG_NOSIGNAL);
     if (n > 0) {
       _lastActivity = std::time(NULL);
-      // if ((size_t)n >= m_writeBuf.size()) {
       if (static_cast<size_t>(n) >= _writeBuf.size()) {
         _writeBuf.clear();
-        // remove EPOLLOUT interest
         if (_reactor)
           _reactor->modFd(_fd, EPOLLIN | EPOLLRDHUP | EPOLLHUP | EPOLLERR,
                           this);
@@ -130,7 +165,6 @@ ssize_t Connection::handleWrite() {
       }
     } else {
       if (errno == EAGAIN || errno == EWOULDBLOCK) {
-        // cannot write now
         return 0;
       }
       perror("send");
@@ -138,31 +172,67 @@ ssize_t Connection::handleWrite() {
       return -1;
     }
   }
+  if (_writeBuf.empty() && _disconnecting) {
+    close();
+  }
   return 0;
 }
 
+// overload for convenience
+void Connection::send(const std::string &data) {
+  std::vector<char> char_data(data.begin(), data.end());
+  this->send(char_data);
+}
 void Connection::send(const std::vector<char> &data) {
-  if (_closed)
+  if (_closed || data.empty())
     return;
-  if (data.empty())
-    return;
-  bool wasEmpty = _writeBuf.empty();
-  _writeBuf.insert(_writeBuf.end(), data.begin(), data.end());
-  if (wasEmpty && _reactor) {
-    _reactor->modFd(_fd, EPOLLIN | EPOLLOUT | EPOLLRDHUP | EPOLLHUP | EPOLLERR,
-                    this);
+
+  ssize_t sent = 0;
+
+  if (_writeBuf.empty()) {
+    sent = ::send(_fd, &data[0], data.size(), MSG_NOSIGNAL);
+
+    if (sent < 0) {
+      if (errno == EAGAIN || errno == EWOULDBLOCK) {
+        sent = 0;
+      } else {
+        perror("send");
+        close();
+        return;
+      }
+    } else {
+      _lastActivity = std::time(NULL);
+    }
+  }
+
+  if (static_cast<size_t>(sent) < data.size()) {
+    _writeBuf.insert(_writeBuf.end(), data.begin() + sent, data.end());
+
+    if (_reactor) {
+      _reactor->modFd(
+          _fd, EPOLLIN | EPOLLOUT | EPOLLRDHUP | EPOLLHUP | EPOLLERR, this);
+    }
   }
 }
 
 void Connection::close() {
   if (_closed)
     return;
+  // if we have data available, mark as dc'ing but don't close yet
+  if (!_writeBuf.empty()) {
+    _disconnecting = true;
+    return;
+  }
   _closed = true;
+  // release system resources first
   if (_reactor)
     _reactor->delFd(_fd);
-  if (_manager)
-    _manager->remove(this);
   if (_fd >= 0)
     ::close(_fd);
   _fd = -1;
+  // remove from manager last
+  // this triggers 'delete this', so we must not touch any member variables
+  // after this line.
+  if (_manager)
+    _manager->remove(this);
 }

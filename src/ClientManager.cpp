@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/13 14:21:18 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/28 17:41:00 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/04 23:32:01 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@
 struct ClientNameMatcher {
   ClientNameMatcher(const std::string &n) : name(n) {}
   bool operator()(const Client &chan) const {
-    return chan.getUsername() == name;
+    return chan.getNickname() == name;
   }
   std::string name;
 };
