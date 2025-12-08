@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:23:02 by elagouch          #+#    #+#             */
-/*   Updated: 2025/12/08 10:20:18 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/08 10:32:43 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,19 +76,21 @@ void Connection::handleEvent(uint32_t events) {
     return;
 
   if (events & EPOLLIN) {
-    // If handleRead returns <= 0, it means the connection is closed or broken.
-    // We must return immediately because 'this' might be deleted.
     if (handleRead() <= 0)
+      // handleRead calls close(), which now sets _disconnecting if writeBuf is
+      // not empty. We should return here to stop processing this event loop
+      // iteration.
       return;
   }
 
-  // Only check EPOLLOUT if we are still alive (implicit check via return above)
   if (events & EPOLLOUT) {
-    handleWrite();
+    handleWrite(); // this will close() if buffer becomes empty and
+                   // _disconnecting is true
   }
 
   if (events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP)) {
-    close();
+    close(); // if it's a hard error (HUP/ERR), we might want to force close,
+             // but standard RDHUP (half-close) should be graceful.
     return;
   }
 }
@@ -170,6 +172,9 @@ ssize_t Connection::handleWrite() {
       return -1;
     }
   }
+  if (_writeBuf.empty() && _disconnecting) {
+    close();
+  }
   return 0;
 }
 
@@ -213,6 +218,11 @@ void Connection::send(const std::vector<char> &data) {
 void Connection::close() {
   if (_closed)
     return;
+  // if we have data available, mark as dc'ing but don't close yet
+  if (!_writeBuf.empty()) {
+    _disconnecting = true;
+    return;
+  }
   _closed = true;
   // release system resources first
   if (_reactor)

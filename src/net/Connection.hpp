@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/10 14:10:50 by elagouch          #+#    #+#             */
-/*   Updated: 2025/12/05 01:06:25 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/08 10:29:10 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,6 +88,7 @@ public:
   time_t getLastActivity() const;
 
 protected:
+  bool _disconnecting;
   int _fd;
   Reactor *_reactor;
   ConnectionManager *_manager;
