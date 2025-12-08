@@ -6,13 +6,14 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/08 16:46:16 by elagouch          #+#    #+#             */
-/*   Updated: 2025/12/05 01:08:19 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/08 10:26:35 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
 #include <signal.h>
 #include <unistd.h>
 
@@ -51,12 +52,17 @@ static bool bridgeCallback(Connection *conn, const std::vector<char> &data) {
 }
 
 int main(int argc, char **argv) {
-  unsigned short port = 6667;
-  if (argc > 1) {
-    int p = atoi(argv[1]);
-    if (p > 0)
-      port = static_cast<unsigned short>(p);
+  unsigned short port;
+
+  if (argc != 2) {
+    // TODO: implement password as second arg
+    std::cerr << "Usage: " << argv[0] << " <port> <password>" << std::endl;
+    return 1;
   }
+
+  int p = atoi(argv[1]);
+  if (p > 0)
+    port = static_cast<unsigned short>(p);
 
   // Set log level (optional)
   logger::Logger::getInstance().setMinLevel(logger::DEBUG);

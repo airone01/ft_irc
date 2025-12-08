@@ -58,7 +58,8 @@ echo -e "${BLUE}[INFO] Starting test...${NC}"
 START_TIME=$(date +%s.%N)
 
 # Pipe all input data to netcat. Netcat will terminate after the timeout or QUIT.
-RESPONSE=$(echo "$INPUT_DATA" | nc -w "$TIMEOUT" "$HOST" "$PORT" 2>&1)
+# RESPONSE=$(echo "$INPUT_DATA" | nc -w "$TIMEOUT" "$HOST" "$PORT" 2>&1)
+RESPONSE=$(echo "$INPUT_DATA" | nc "$HOST" "$PORT" 2>&1)
 
 END_TIME=$(date +%s.%N)
 
