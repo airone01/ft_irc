@@ -6,7 +6,7 @@
 
 std::string ReplyMessage::errNoSuchNick(const std::string &arg) {
   std::ostringstream oss;
-  oss << "401 ERR_NOSUCHNICK " << arg << " :No such nick/channel";
+  oss << "401 ERR_NOSUCHNICK " << arg << " :No such nick/channel\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -14,7 +14,7 @@ std::string ReplyMessage::errNoSuchNick(const std::string &arg) {
 
 std::string ReplyMessage::errNoSuchServer(const std::string &arg) {
   std::ostringstream oss;
-  oss << "402 ERR_NOSUCHSERVER " << arg << " :No such server";
+  oss << "402 ERR_NOSUCHSERVER " << arg << " :No such server\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -30,7 +30,7 @@ std::string ReplyMessage::errNoSuckChannel(const std::string &arg) {
 
 std::string ReplyMessage::errCannotSendToChannel(const std::string &arg) {
   std::ostringstream oss;
-  oss << "404 ERR_CANNOTSENDTOCHAN " << arg << " :Cannot send to channel";
+  oss << "404 ERR_CANNOTSENDTOCHAN " << arg << " :Cannot send to channel\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -39,7 +39,7 @@ std::string ReplyMessage::errCannotSendToChannel(const std::string &arg) {
 std::string ReplyMessage::errTooManyChannels(const std::string &arg) {
   std::ostringstream oss;
   oss << "405 ERR_TOOMANYCHANNELS " << arg
-      << " :You have joined too many channels";
+      << " :You have joined too many channels\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -47,7 +47,7 @@ std::string ReplyMessage::errTooManyChannels(const std::string &arg) {
 
 std::string ReplyMessage::errWasNoSuckNick(const std::string &arg) {
   std::ostringstream oss;
-  oss << "406 ERR_WASNOSUCHNICK " << arg << " :There was no such nickname";
+  oss << "406 ERR_WASNOSUCHNICK " << arg << " :There was no such nickname\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -56,7 +56,7 @@ std::string ReplyMessage::errWasNoSuckNick(const std::string &arg) {
 std::string ReplyMessage::errTooManyTargets(const std::string &arg) {
   std::ostringstream oss;
   oss << "407 ERR_TOOMANYTARGETS " << arg
-      << " :Duplicate recipients. No message delivered";
+      << " :Duplicate recipients. No message delivered\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -64,7 +64,7 @@ std::string ReplyMessage::errTooManyTargets(const std::string &arg) {
 
 std::string ReplyMessage::errNoOrigin() {
   std::ostringstream oss;
-  oss << "409 ERR_NOORIGIN :No origin specified";
+  oss << "409 ERR_NOORIGIN :No origin specified\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -72,7 +72,7 @@ std::string ReplyMessage::errNoOrigin() {
 
 std::string ReplyMessage::errNoRecipient(const std::string &arg) {
   std::ostringstream oss;
-  oss << "411 ERR_NORECIPIENT :No recipient given " << arg;
+  oss << "411 ERR_NORECIPIENT :No recipient given " << arg << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -80,7 +80,7 @@ std::string ReplyMessage::errNoRecipient(const std::string &arg) {
 
 std::string ReplyMessage::errNoTextToSend() {
   std::ostringstream oss;
-  oss << "412 ERR_NORECIPIENT :No text to send";
+  oss << "412 ERR_NORECIPIENT :No text to send\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -88,7 +88,7 @@ std::string ReplyMessage::errNoTextToSend() {
 
 std::string ReplyMessage::errNoTopLevel(const std::string &arg) {
   std::ostringstream oss;
-  oss << "413 ERR_NOTOPLEVEL " << arg << " :No toplevel domain specified";
+  oss << "413 ERR_NOTOPLEVEL " << arg << " :No toplevel domain specified\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -96,7 +96,7 @@ std::string ReplyMessage::errNoTopLevel(const std::string &arg) {
 
 std::string ReplyMessage::errWildTopLevel(const std::string &arg) {
   std::ostringstream oss;
-  oss << "414 ERR_WILDTOPLEVEL " << arg << " :Wildcard in toplevel domain";
+  oss << "414 ERR_WILDTOPLEVEL " << arg << " :Wildcard in toplevel domain\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -104,7 +104,7 @@ std::string ReplyMessage::errWildTopLevel(const std::string &arg) {
 
 std::string ReplyMessage::errUnknownCommand(const std::string &arg) {
   std::ostringstream oss;
-  oss << "421 ERR_UNKNOWNCOMMAND " << arg << " :Unknown command";
+  oss << "421 ERR_UNKNOWNCOMMAND " << arg << " :Unknown command\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -112,7 +112,7 @@ std::string ReplyMessage::errUnknownCommand(const std::string &arg) {
 
 std::string ReplyMessage::errNoMOTD() {
   std::ostringstream oss;
-  oss << "422 ERR_NOMOTD :MOTD File is missing";
+  oss << "422 ERR_NOMOTD :MOTD File is missing\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -120,7 +120,8 @@ std::string ReplyMessage::errNoMOTD() {
 
 std::string ReplyMessage::errNoAdminInfo(const std::string &arg) {
   std::ostringstream oss;
-  oss << "423 ERR_NOADMININFO " << arg << " :No administrative info available";
+  oss << "423 ERR_NOADMININFO " << arg
+      << " :No administrative info available\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -129,7 +130,8 @@ std::string ReplyMessage::errNoAdminInfo(const std::string &arg) {
 std::string ReplyMessage::errFileError(const std::string &arg,
                                        const std::string &arg2) {
   std::ostringstream oss;
-  oss << "424 ERR_FILEERROR :File error doing" << arg << " on " << arg2;
+  oss << "424 ERR_FILEERROR :File error doing" << arg << " on " << arg2
+      << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -137,7 +139,7 @@ std::string ReplyMessage::errFileError(const std::string &arg,
 
 std::string ReplyMessage::errNoNickNameGiven() {
   std::ostringstream oss;
-  oss << "431 ERR_NONICKNAMEGIVEN :No nickname given";
+  oss << "431 ERR_NONICKNAMEGIVEN :No nickname given\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -145,7 +147,7 @@ std::string ReplyMessage::errNoNickNameGiven() {
 
 std::string ReplyMessage::errErroneusNuckname(const std::string &arg) {
   std::ostringstream oss;
-  oss << "432 ERR_ERRONEUSNICKNAME " << arg << " :Erroneus nickname";
+  oss << "432 ERR_ERRONEUSNICKNAME " << arg << " :Erroneus nickname\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -153,7 +155,7 @@ std::string ReplyMessage::errErroneusNuckname(const std::string &arg) {
 
 std::string ReplyMessage::errNicknameInUse(const std::string &arg) {
   std::ostringstream oss;
-  oss << "433 ERR_NICKNAMEINUSE " << arg << " :Nickname is already in use";
+  oss << "433 ERR_NICKNAMEINUSE " << arg << " :Nickname is already in use\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -171,7 +173,7 @@ std::string ReplyMessage::errUserNotInChannel(const std::string &arg,
                                               const std::string &arg2) {
   std::ostringstream oss;
   oss << "441 ERR_USERNOTINCHANNEL " << arg << " " << arg2
-      << " :They aren't on that channel";
+      << " :They aren't on that channel\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -179,7 +181,7 @@ std::string ReplyMessage::errUserNotInChannel(const std::string &arg,
 
 std::string ReplyMessage::errNotOnChannel(const std::string &arg) {
   std::ostringstream oss;
-  oss << "442 ERR_NOTONCHANNEL " << arg << " :You're not on that channel";
+  oss << "442 ERR_NOTONCHANNEL " << arg << " :You're not on that channel\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -189,7 +191,7 @@ std::string ReplyMessage::errUserOnChannel(const std::string &arg,
                                            const std::string &arg2) {
   std::ostringstream oss;
   oss << "443 ERR_USERONCHANNEL " << arg << " " << arg2
-      << " :is already on channel";
+      << " :is already on channel\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -197,7 +199,7 @@ std::string ReplyMessage::errUserOnChannel(const std::string &arg,
 
 std::string ReplyMessage::errNoLogin(const std::string &arg) {
   std::ostringstream oss;
-  oss << "444 ERR_NOLOGIN " << arg << " :User not logged in";
+  oss << "444 ERR_NOLOGIN " << arg << " :User not logged in\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -205,7 +207,7 @@ std::string ReplyMessage::errNoLogin(const std::string &arg) {
 
 std::string ReplyMessage::errSummonDisabled() {
   std::ostringstream oss;
-  oss << "445 ERR_SUMMONDISABLED :SUMMON has been disabled";
+  oss << "445 ERR_SUMMONDISABLED :SUMMON has been disabled\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -213,7 +215,7 @@ std::string ReplyMessage::errSummonDisabled() {
 
 std::string ReplyMessage::errUserDisabled() {
   std::ostringstream oss;
-  oss << "446 ERR_USERSDISABLED :USERS has been disabled";
+  oss << "446 ERR_USERSDISABLED :USERS has been disabled\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -221,7 +223,7 @@ std::string ReplyMessage::errUserDisabled() {
 
 std::string ReplyMessage::errNotRegistered() {
   std::ostringstream oss;
-  oss << "451 ERR_NOTREGISTERED :You have not registered";
+  oss << "451 ERR_NOTREGISTERED :User not logged in\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -229,7 +231,7 @@ std::string ReplyMessage::errNotRegistered() {
 
 std::string ReplyMessage::errNeedMoreParams(const std::string &arg) {
   std::ostringstream oss;
-  oss << "461 ERR_NEEDMOREPARAMS " << arg << " :Not enough parameters";
+  oss << "461 ERR_NEEDMOREPARAMS " << arg << " :Not enough parameters\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -237,7 +239,7 @@ std::string ReplyMessage::errNeedMoreParams(const std::string &arg) {
 
 std::string ReplyMessage::errAlreadyRegistered() {
   std::ostringstream oss;
-  oss << "462 ERR_ALREADYREGISTRED :You may not reregister";
+  oss << "462 ERR_ALREADYREGISTRED :You may not reregister\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -245,7 +247,7 @@ std::string ReplyMessage::errAlreadyRegistered() {
 
 std::string ReplyMessage::errNoPermForHost() {
   std::ostringstream oss;
-  oss << "463 ERR_NOPERMFORHOST :Your host isn't among the privileged";
+  oss << "463 ERR_NOPERMFORHOST :Your host isn't among the privileged\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -253,7 +255,7 @@ std::string ReplyMessage::errNoPermForHost() {
 
 std::string ReplyMessage::errPasswdMismatch() {
   std::ostringstream oss;
-  oss << "464 ERR_PASSWDMISMATCH :Password incorrect";
+  oss << "464 ERR_PASSWDMISMATCH :Password incorrect\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -261,7 +263,7 @@ std::string ReplyMessage::errPasswdMismatch() {
 
 std::string ReplyMessage::errYoureBannedCreep() {
   std::ostringstream oss;
-  oss << "465 ERR_YOUREBANNEDCREEP :You are banned from this server";
+  oss << "465 ERR_YOUREBANNEDCREEP :You are banned from this server\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -269,7 +271,7 @@ std::string ReplyMessage::errYoureBannedCreep() {
 
 std::string ReplyMessage::errKeySet(const std::string &arg) {
   std::ostringstream oss;
-  oss << "467 ERR_KEYSET " << arg << " :Channel key already set";
+  oss << "467 ERR_KEYSET " << arg << " :Channel key already set\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -277,7 +279,7 @@ std::string ReplyMessage::errKeySet(const std::string &arg) {
 
 std::string ReplyMessage::errChannelIsFull(const std::string &arg) {
   std::ostringstream oss;
-  oss << "471 ERR_CHANNELISFULL " << arg << " :Cannot join channel (+l)";
+  oss << "471 ERR_CHANNELISFULL " << arg << " :Cannot join channel (+l)\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -285,7 +287,7 @@ std::string ReplyMessage::errChannelIsFull(const std::string &arg) {
 
 std::string ReplyMessage::errUnknownMode(const std::string &arg) {
   std::ostringstream oss;
-  oss << "472 ERR_UNKNOWNMODE " << arg << " :is unknown mode char to me";
+  oss << "472 ERR_UNKNOWNMODE " << arg << " :is unknown mode char to me\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -293,7 +295,7 @@ std::string ReplyMessage::errUnknownMode(const std::string &arg) {
 
 std::string ReplyMessage::errInviteOnlyChan(const std::string &arg) {
   std::ostringstream oss;
-  oss << "473 ERR_INVITEONLYCHAN " << arg << " :Cannot join channel (+i)";
+  oss << "473 ERR_INVITEONLYCHAN " << arg << " :Cannot join channel (+i)\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -301,7 +303,7 @@ std::string ReplyMessage::errInviteOnlyChan(const std::string &arg) {
 
 std::string ReplyMessage::errBannedFromChan(const std::string &arg) {
   std::ostringstream oss;
-  oss << "474 ERR_BANNEDFROMCHAN " << arg << " :Cannot join channel (+b)";
+  oss << "474 ERR_BANNEDFROMCHAN " << arg << " :Cannot join channel (+b)\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -309,7 +311,7 @@ std::string ReplyMessage::errBannedFromChan(const std::string &arg) {
 
 std::string ReplyMessage::errBadChannelKey(const std::string &arg) {
   std::ostringstream oss;
-  oss << "475 ERR_BADCHANNELKEY " << arg << " :Cannot join channel (+k)";
+  oss << "475 ERR_BADCHANNELKEY " << arg << " :Cannot join channel (+k)\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -317,7 +319,8 @@ std::string ReplyMessage::errBadChannelKey(const std::string &arg) {
 
 std::string ReplyMessage::errNoPrivileges() {
   std::ostringstream oss;
-  oss << "481 ERR_NOPRIVILEGES :Permission Denied- You're not an IRC operator";
+  oss << "481 ERR_NOPRIVILEGES :Permission Denied- You're not an IRC "
+         "operator\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -325,7 +328,8 @@ std::string ReplyMessage::errNoPrivileges() {
 
 std::string ReplyMessage::errChaNoPrivsNeeded(const std::string &arg) {
   std::ostringstream oss;
-  oss << "482 ERR_CHANOPRIVSNEEDED " << arg << " :You're not channel operator";
+  oss << "482 ERR_CHANOPRIVSNEEDED " << arg
+      << " :You're not channel operator\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -333,7 +337,7 @@ std::string ReplyMessage::errChaNoPrivsNeeded(const std::string &arg) {
 
 std::string ReplyMessage::errCantKillServer() {
   std::ostringstream oss;
-  oss << "483 ERR_CANTKILLSERVER :You cant kill a server!";
+  oss << "483 ERR_CANTKILLSERVER :You cant kill a server!\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -341,7 +345,7 @@ std::string ReplyMessage::errCantKillServer() {
 
 std::string ReplyMessage::errNoOPerHost() {
   std::ostringstream oss;
-  oss << "491 ERR_NOOPERHOST :No O-lines for your host";
+  oss << "491 ERR_NOOPERHOST :No O-lines for your host\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -349,7 +353,7 @@ std::string ReplyMessage::errNoOPerHost() {
 
 std::string ReplyMessage::errUModeUnknownFlag() {
   std::ostringstream oss;
-  oss << "501 ERR_UMODEUNKNOWNFLAG :Unknown MODE flag";
+  oss << "501 ERR_UMODEUNKNOWNFLAG :Unknown MODE flag\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -357,7 +361,7 @@ std::string ReplyMessage::errUModeUnknownFlag() {
 
 std::string ReplyMessage::errUsersDontMatch() {
   std::ostringstream oss;
-  oss << "502 ERR_USERSDONTMATCH :Cant change mode for other users";
+  oss << "502 ERR_USERSDONTMATCH :Cant change mode for other users\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -365,7 +369,7 @@ std::string ReplyMessage::errUsersDontMatch() {
 
 std::string ReplyMessage::rplNone(const std::string &arg) {
   std::ostringstream oss;
-  oss << "300 RPL_NONE :Dummy reply number. Not used. " << arg;
+  oss << "300 RPL_NONE :Dummy reply number. Not used. " << arg << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -373,7 +377,7 @@ std::string ReplyMessage::rplNone(const std::string &arg) {
 
 std::string ReplyMessage::rplUserHost(const std::string &arg) {
   std::ostringstream oss;
-  oss << "302 RPL_USERHOST :" << arg;
+  oss << "302 RPL_USERHOST :" << arg << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -381,7 +385,7 @@ std::string ReplyMessage::rplUserHost(const std::string &arg) {
 
 std::string ReplyMessage::rplIsOn(const std::string &arg) {
   std::ostringstream oss;
-  oss << "303 RPL_ISON :" << arg;
+  oss << "303 RPL_ISON :" << arg << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -390,7 +394,7 @@ std::string ReplyMessage::rplIsOn(const std::string &arg) {
 std::string ReplyMessage::rplAway(const std::string &arg,
                                   const std::string &arg2) {
   std::ostringstream oss;
-  oss << "301 RPL_AWAY " << arg << " :" << arg2;
+  oss << "301 RPL_AWAY " << arg << " :" << arg2 << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -398,7 +402,7 @@ std::string ReplyMessage::rplAway(const std::string &arg,
 
 std::string ReplyMessage::rplUnAway() {
   std::ostringstream oss;
-  oss << "305 RPL_UNAWAY :You are no longer marked as being away";
+  oss << "305 RPL_UNAWAY :You are no longer marked as being away\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -406,7 +410,7 @@ std::string ReplyMessage::rplUnAway() {
 
 std::string ReplyMessage::rplNoAway() {
   std::ostringstream oss;
-  oss << "306 RPL_NOWAY :You have been marked as being away";
+  oss << "306 RPL_NOWAY :You have been marked as being away\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -418,7 +422,7 @@ std::string ReplyMessage::rplWhoIsUser(const std::string &arg,
                                        const std::string &arg4) {
   std::ostringstream oss;
   oss << "311 RPL_WHOISUSER " << arg << " " << arg2 << " " << arg3
-      << " * :" << arg4;
+      << " * :" << arg4 << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -428,7 +432,7 @@ std::string ReplyMessage::rplWhoIsServer(const std::string &arg,
                                          const std::string &arg2,
                                          const std::string &arg3) {
   std::ostringstream oss;
-  oss << "312 RPL_WHOISSERVER " << arg << " " << arg2 << " :" << arg3;
+  oss << "312 RPL_WHOISSERVER " << arg << " " << arg2 << " :" << arg3 << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -436,7 +440,7 @@ std::string ReplyMessage::rplWhoIsServer(const std::string &arg,
 
 std::string ReplyMessage::rplWhoIsOperator(const std::string &arg) {
   std::ostringstream oss;
-  oss << "313 RPL_WHOISOPERATOR " << arg << " :is an IRC operator";
+  oss << "313 RPL_WHOISOPERATOR " << arg << " :is an IRC operator\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -445,7 +449,7 @@ std::string ReplyMessage::rplWhoIsOperator(const std::string &arg) {
 std::string ReplyMessage::rplWhoIsIdle(const std::string &arg,
                                        const std::string &arg2) {
   std::ostringstream oss;
-  oss << "317 RPL_WHOISIDLE " << arg << " " << arg2 << " :seconds idle";
+  oss << "317 RPL_WHOISIDLE " << arg << " " << arg2 << " :seconds idle\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -453,7 +457,7 @@ std::string ReplyMessage::rplWhoIsIdle(const std::string &arg,
 
 std::string ReplyMessage::rplEndOfWhoIs(const std::string &arg) {
   std::ostringstream oss;
-  oss << "318 RPL_ENDOFWHOIS " << arg << " :End of /WHOIS list";
+  oss << "318 RPL_ENDOFWHOIS " << arg << " :End of /WHOIS list\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -462,7 +466,7 @@ std::string ReplyMessage::rplEndOfWhoIs(const std::string &arg) {
 std::string ReplyMessage::rplWhoIsChannels(const std::string &arg,
                                            const std::string &arg2) {
   std::ostringstream oss;
-  oss << "319 RPL_WHOISCHANNELS " << arg << " :" << arg2;
+  oss << "319 RPL_WHOISCHANNELS " << arg << " :" << arg2 << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -474,7 +478,7 @@ std::string ReplyMessage::rplWhoAsUser(const std::string &arg,
                                        const std::string &arg4) {
   std::ostringstream oss;
   oss << "314 RPL_WHOASUSER " << arg << " " << arg2 << " " << arg3
-      << " * :" << arg4;
+      << " * :" << arg4 << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -482,7 +486,7 @@ std::string ReplyMessage::rplWhoAsUser(const std::string &arg,
 
 std::string ReplyMessage::rplEndOfWhoWas(const std::string &arg) {
   std::ostringstream oss;
-  oss << "369 RPL_ENDOFWHOWAS " << arg << " :End of WHOWAS";
+  oss << "369 RPL_ENDOFWHOWAS " << arg << " :End of WHOWAS\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -490,7 +494,7 @@ std::string ReplyMessage::rplEndOfWhoWas(const std::string &arg) {
 
 std::string ReplyMessage::rplListStart() {
   std::ostringstream oss;
-  oss << "321 RPL_LISTSTART Channel :Users  Name";
+  oss << "321 RPL_LISTSTART Channel :Users  Name\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -500,7 +504,7 @@ std::string ReplyMessage::rplList(const std::string &arg,
                                   const std::string &arg2,
                                   const std::string &arg3) {
   std::ostringstream oss;
-  oss << "322 RPL_LIST " << arg << " " << arg2 << " :" << arg3;
+  oss << "322 RPL_LIST " << arg << " " << arg2 << " :" << arg3 << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -508,7 +512,7 @@ std::string ReplyMessage::rplList(const std::string &arg,
 
 std::string ReplyMessage::rplListEnd(const std::string &arg) {
   std::ostringstream oss;
-  oss << "323 RPL_LISTEND " << arg << " :End of /LIST";
+  oss << "323 RPL_LISTEND " << arg << " :End of /LIST\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -527,7 +531,7 @@ std::string ReplyMessage::rplChannelModeIs(const std::string &arg,
 
 std::string ReplyMessage::rplNoTopic(const std::string &arg) {
   std::ostringstream oss;
-  oss << "331 RPL_NOTOPIC " << arg << " :No topic is set";
+  oss << "331 RPL_NOTOPIC " << arg << " :No topic is set\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -536,7 +540,7 @@ std::string ReplyMessage::rplNoTopic(const std::string &arg) {
 std::string ReplyMessage::rplTopic(const std::string &arg,
                                    const std::string &arg2) {
   std::ostringstream oss;
-  oss << "332 RPL_TOPIC " << arg << " :" << arg2;
+  oss << "332 RPL_TOPIC " << arg << " :" << arg2 << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -545,7 +549,7 @@ std::string ReplyMessage::rplTopic(const std::string &arg,
 std::string ReplyMessage::rplInviting(const std::string &arg,
                                       const std::string &arg2) {
   std::ostringstream oss;
-  oss << "341 RPL_INVITING " << arg << " " << arg2;
+  oss << "341 RPL_INVITING " << arg << " " << arg2 << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -553,7 +557,7 @@ std::string ReplyMessage::rplInviting(const std::string &arg,
 
 std::string ReplyMessage::rplSummoning(const std::string &arg) {
   std::ostringstream oss;
-  oss << "342 RPL_SUMMONING " << arg << " :Summoning user to IRC";
+  oss << "342 RPL_SUMMONING " << arg << " :Summoning user to IRC\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -576,7 +580,7 @@ ReplyMessage::rplWhoReply(const std::string &arg, const std::string &arg2,
                           const std::string &arg7, const std::string &arg8) {
   std::ostringstream oss;
   oss << "352 RPL_WHOREPLY " << arg << " " << arg2 << " " << arg3 << " " << arg4
-      << " " << arg5 << " " << arg6 << " :" << arg7 << " " << arg8;
+      << " " << arg5 << " " << arg6 << " :" << arg7 << " " << arg8 << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -584,7 +588,7 @@ ReplyMessage::rplWhoReply(const std::string &arg, const std::string &arg2,
 
 std::string ReplyMessage::rplEndOfWho(const std::string &arg) {
   std::ostringstream oss;
-  oss << "315 RPL_ENDOFWHO " << arg << " :End of /WHO list";
+  oss << "315 RPL_ENDOFWHO " << arg << " :End of /WHO list\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -593,7 +597,7 @@ std::string ReplyMessage::rplEndOfWho(const std::string &arg) {
 std::string ReplyMessage::rplNamReply(const std::string &arg,
                                       const std::string &arg2) {
   std::ostringstream oss;
-  oss << "353 RPL_NAMREPLY " << arg << " :" << arg2;
+  oss << "353 RPL_NAMREPLY " << arg << " :" << arg2 << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -601,7 +605,7 @@ std::string ReplyMessage::rplNamReply(const std::string &arg,
 
 std::string ReplyMessage::rplEndOfNames(const std::string &arg) {
   std::ostringstream oss;
-  oss << "366 RPL_ENDOFNAMES " << arg << " :End of /NAMES list";
+  oss << "366 RPL_ENDOFNAMES " << arg << " :End of /NAMES list\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -612,7 +616,8 @@ std::string ReplyMessage::rplLinks(const std::string &arg,
                                    const std::string &arg3,
                                    const std::string &arg4) {
   std::ostringstream oss;
-  oss << "364 RPL_LINKS " << arg << " " << arg2 << " :" << arg3 << " " << arg4;
+  oss << "364 RPL_LINKS " << arg << " " << arg2 << " :" << arg3 << " " << arg4
+      << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -620,7 +625,7 @@ std::string ReplyMessage::rplLinks(const std::string &arg,
 
 std::string ReplyMessage::rplEndOfLinks(const std::string &arg) {
   std::ostringstream oss;
-  oss << "365 RPL_ENDOFLINKS " << arg << " :End of /LINKS list";
+  oss << "365 RPL_ENDOFLINKS " << arg << " :End of /LINKS list\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -629,7 +634,7 @@ std::string ReplyMessage::rplEndOfLinks(const std::string &arg) {
 std::string ReplyMessage::rplBanList(const std::string &arg,
                                      const std::string &arg2) {
   std::ostringstream oss;
-  oss << "367 RPL_BANLIST " << arg << " " << arg2;
+  oss << "367 RPL_BANLIST " << arg << " " << arg2 << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -637,7 +642,7 @@ std::string ReplyMessage::rplBanList(const std::string &arg,
 
 std::string ReplyMessage::rplEndOfBanList(const std::string &arg) {
   std::ostringstream oss;
-  oss << "368 RPL_ENDOFBANLIST " << arg << " :End of channel ban list";
+  oss << "368 RPL_ENDOFBANLIST " << arg << " :End of channel ban list\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -645,7 +650,7 @@ std::string ReplyMessage::rplEndOfBanList(const std::string &arg) {
 
 std::string ReplyMessage::rplInfo(const std::string &arg) {
   std::ostringstream oss;
-  oss << "371 RPL_INFO :" << arg;
+  oss << "371 RPL_INFO :" << arg << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -653,7 +658,7 @@ std::string ReplyMessage::rplInfo(const std::string &arg) {
 
 std::string ReplyMessage::rplEndOfInfo(const std::string &arg) {
   std::ostringstream oss;
-  oss << "374 RPL_ENDOFINFO " << arg << " :End of /INFO list";
+  oss << "374 RPL_ENDOFINFO " << arg << " :End of /INFO list\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -661,7 +666,7 @@ std::string ReplyMessage::rplEndOfInfo(const std::string &arg) {
 
 std::string ReplyMessage::rplMOTDStart(const std::string &arg) {
   std::ostringstream oss;
-  oss << "375 RPL_MOTDSTART :- " << arg << " Message of the day - ";
+  oss << "375 RPL_MOTDSTART :- " << arg << " Message of the day - \r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -669,7 +674,7 @@ std::string ReplyMessage::rplMOTDStart(const std::string &arg) {
 
 std::string ReplyMessage::rplMOTD(const std::string &arg) {
   std::ostringstream oss;
-  oss << "372 RPL_MOTD :- " << arg;
+  oss << "372 RPL_MOTD :- " << arg << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -677,7 +682,7 @@ std::string ReplyMessage::rplMOTD(const std::string &arg) {
 
 std::string ReplyMessage::rplEndOfMOTD(const std::string &arg) {
   std::ostringstream oss;
-  oss << "376 RPL_ENDOFMOTD " << arg << " :End of /MOTD command";
+  oss << "376 RPL_ENDOFMOTD " << arg << " :End of /MOTD command\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -685,7 +690,7 @@ std::string ReplyMessage::rplEndOfMOTD(const std::string &arg) {
 
 std::string ReplyMessage::rplYoureOper(const std::string &arg) {
   std::ostringstream oss;
-  oss << "381 RPL_YOUREOPER " << arg << " :You are now an IRC operator";
+  oss << "381 RPL_YOUREOPER " << arg << " :You are now an IRC operator\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -693,7 +698,7 @@ std::string ReplyMessage::rplYoureOper(const std::string &arg) {
 
 std::string ReplyMessage::rplRehashing(const std::string &arg) {
   std::ostringstream oss;
-  oss << "382 RPL_REHASHING " << arg << " :Rehashing";
+  oss << "382 RPL_REHASHING " << arg << " :Rehashing\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -702,7 +707,7 @@ std::string ReplyMessage::rplRehashing(const std::string &arg) {
 std::string ReplyMessage::rplTime(const std::string &arg,
                                   const std::string &arg2) {
   std::ostringstream oss;
-  oss << "391 RPL_TIME " << arg << " :" << arg2;
+  oss << "391 RPL_TIME " << arg << " :" << arg2 << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -710,7 +715,7 @@ std::string ReplyMessage::rplTime(const std::string &arg,
 
 std::string ReplyMessage::rplUpersStart(const std::string &arg) {
   std::ostringstream oss;
-  oss << "392 RPL_USERSSTART " << arg << " :UserID   Terminal  Host";
+  oss << "392 RPL_USERSSTART " << arg << " :UserID   Terminal  Host\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -718,7 +723,7 @@ std::string ReplyMessage::rplUpersStart(const std::string &arg) {
 
 std::string ReplyMessage::rplUsers(const std::string &arg) {
   std::ostringstream oss;
-  oss << "393 RPL_USERS :" << arg;
+  oss << "393 RPL_USERS :" << arg << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -726,7 +731,7 @@ std::string ReplyMessage::rplUsers(const std::string &arg) {
 
 std::string ReplyMessage::rplEndOfUsers(const std::string &arg) {
   std::ostringstream oss;
-  oss << "394 RPL_ENDOFUSERS " << arg << " :End of users";
+  oss << "394 RPL_ENDOFUSERS " << arg << " :End of users\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -734,7 +739,7 @@ std::string ReplyMessage::rplEndOfUsers(const std::string &arg) {
 
 std::string ReplyMessage::rplNoUsers(const std::string &arg) {
   std::ostringstream oss;
-  oss << "395 RPL_NOUSERS " << arg << " :Nobody logged in";
+  oss << "395 RPL_NOUSERS " << arg << " :Nobody logged in\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -744,7 +749,8 @@ std::string ReplyMessage::rplTraceLink(const std::string &arg,
                                        const std::string &arg2,
                                        const std::string &arg3) {
   std::ostringstream oss;
-  oss << "200 RPL_TRACELINK Link " << arg << " " << arg2 << " " << arg3;
+  oss << "200 RPL_TRACELINK Link " << arg << " " << arg2 << " " << arg3
+      << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -753,7 +759,7 @@ std::string ReplyMessage::rplTraceLink(const std::string &arg,
 std::string ReplyMessage::rplTraceConnecting(const std::string &arg,
                                              const std::string &arg2) {
   std::ostringstream oss;
-  oss << "201 RPL_TRACECONNECTING Try. " << arg << " " << arg2;
+  oss << "201 RPL_TRACECONNECTING Try. " << arg << " " << arg2 << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -762,7 +768,7 @@ std::string ReplyMessage::rplTraceConnecting(const std::string &arg,
 std::string ReplyMessage::rplTraceHandShake(const std::string &arg,
                                             const std::string &arg2) {
   std::ostringstream oss;
-  oss << "202 RPL_TRACEHANDSHAKE H.S. " << arg << " " << arg2;
+  oss << "202 RPL_TRACEHANDSHAKE H.S. " << arg << " " << arg2 << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -771,7 +777,7 @@ std::string ReplyMessage::rplTraceHandShake(const std::string &arg,
 std::string ReplyMessage::rplTraceUnknown(const std::string &arg,
                                           const std::string &arg2) {
   std::ostringstream oss;
-  oss << "203 RPL_TRACEUNKNOWN ???? " << arg << " " << arg2;
+  oss << "203 RPL_TRACEUNKNOWN ???? " << arg << " " << arg2 << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -780,7 +786,7 @@ std::string ReplyMessage::rplTraceUnknown(const std::string &arg,
 std::string ReplyMessage::rplTraceOperator(const std::string &arg,
                                            const std::string &arg2) {
   std::ostringstream oss;
-  oss << "204 RPL_TRACEOPERATOR Oper " << arg << " " << arg2;
+  oss << "204 RPL_TRACEOPERATOR Oper " << arg << " " << arg2 << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -789,7 +795,7 @@ std::string ReplyMessage::rplTraceOperator(const std::string &arg,
 std::string ReplyMessage::rplTraceUser(const std::string &arg,
                                        const std::string &arg2) {
   std::ostringstream oss;
-  oss << "205 RPL_TRACEUSER User " << arg << " " << arg2;
+  oss << "205 RPL_TRACEUSER User " << arg << " " << arg2 << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -802,7 +808,7 @@ std::string ReplyMessage::rplTraceServer(const std::string &arg,
                                          const std::string &arg5) {
   std::ostringstream oss;
   oss << "206 RPL_TRACESERVER Serv " << arg << " " << arg2 << "S " << arg3
-      << "C " << arg4 << " " << arg5;
+      << "C " << arg4 << " " << arg5 << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -811,7 +817,7 @@ std::string ReplyMessage::rplTraceServer(const std::string &arg,
 std::string ReplyMessage::rplTraceNewType(const std::string &arg,
                                           const std::string &arg2) {
   std::ostringstream oss;
-  oss << "208 RPL_TRACENEWTYPE " << arg << " 0 " << arg2;
+  oss << "208 RPL_TRACENEWTYPE " << arg << " 0 " << arg2 << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -820,7 +826,7 @@ std::string ReplyMessage::rplTraceNewType(const std::string &arg,
 std::string ReplyMessage::rplTraceLog(const std::string &arg,
                                       const std::string &arg2) {
   std::ostringstream oss;
-  oss << "261 RPL_TRACELOG File " << arg << " " << arg2;
+  oss << "261 RPL_TRACELOG File " << arg << " " << arg2 << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -833,7 +839,7 @@ ReplyMessage::rplStatsLinkInfo(const std::string &arg, const std::string &arg2,
                                const std::string &arg7) {
   std::ostringstream oss;
   oss << "211 RPL_STATSLINKINFO " << arg << " " << arg2 << " " << arg3 << " "
-      << arg4 << " " << arg5 << " " << arg6 << " " << arg7;
+      << arg4 << " " << arg5 << " " << arg6 << " " << arg7 << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -842,7 +848,7 @@ ReplyMessage::rplStatsLinkInfo(const std::string &arg, const std::string &arg2,
 std::string ReplyMessage::rplStatsCommands(const std::string &arg,
                                            const std::string &arg2) {
   std::ostringstream oss;
-  oss << "212 RPL_STATSCOMMANDS " << arg << " " << arg2;
+  oss << "212 RPL_STATSCOMMANDS " << arg << " " << arg2 << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -854,7 +860,7 @@ std::string ReplyMessage::rplStatsCLine(const std::string &arg,
                                         const std::string &arg4) {
   std::ostringstream oss;
   oss << "213 RPL_STATSCLINE C " << arg << " * " << arg2 << " " << arg3 << " "
-      << arg4;
+      << arg4 << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -866,7 +872,7 @@ std::string ReplyMessage::rplStatsNLine(const std::string &arg,
                                         const std::string &arg4) {
   std::ostringstream oss;
   oss << "214 RPL_STATSNLINE N " << arg << " * " << arg2 << " " << arg3 << " "
-      << arg4;
+      << arg4 << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -878,7 +884,7 @@ std::string ReplyMessage::rplStatsILine(const std::string &arg,
                                         const std::string &arg4) {
   std::ostringstream oss;
   oss << "215 RPL_STATSILINE I " << arg << " * " << arg2 << " " << arg3 << " "
-      << arg4;
+      << arg4 << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -890,7 +896,7 @@ std::string ReplyMessage::rplStatsKLine(const std::string &arg,
                                         const std::string &arg4) {
   std::ostringstream oss;
   oss << "216 RPL_STATSKLINE K " << arg << " * " << arg2 << " " << arg3 << " "
-      << arg4;
+      << arg4 << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -902,7 +908,7 @@ std::string ReplyMessage::rplStatsYLine(const std::string &arg,
                                         const std::string &arg4) {
   std::ostringstream oss;
   oss << "218 RPL_STATSYLINE Y " << arg << " " << arg2 << " " << arg3 << " "
-      << arg4;
+      << arg4 << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -910,7 +916,7 @@ std::string ReplyMessage::rplStatsYLine(const std::string &arg,
 
 std::string ReplyMessage::rplEndOfStats(const std::string &arg) {
   std::ostringstream oss;
-  oss << "219 RPL_ENDOFSTATS " << arg << " :End of /STATS report";
+  oss << "219 RPL_ENDOFSTATS " << arg << " :End of /STATS report\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -920,7 +926,8 @@ std::string ReplyMessage::rplStatsLLine(const std::string &arg,
                                         const std::string &arg2,
                                         const std::string &arg3) {
   std::ostringstream oss;
-  oss << "241 RPL_STATSLLINE L " << arg << " * " << arg2 << " " << arg3;
+  oss << "241 RPL_STATSLLINE L " << arg << " * " << arg2 << " " << arg3
+      << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -928,7 +935,7 @@ std::string ReplyMessage::rplStatsLLine(const std::string &arg,
 
 std::string ReplyMessage::rplStatsUpTime(const std::string &arg) {
   std::ostringstream oss;
-  oss << "242 RPL_STATSUPTIME :Server Up " << arg;
+  oss << "242 RPL_STATSUPTIME :Server Up " << arg << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -937,7 +944,7 @@ std::string ReplyMessage::rplStatsUpTime(const std::string &arg) {
 std::string ReplyMessage::rplStatsOLine(const std::string &arg,
                                         const std::string &arg2) {
   std::ostringstream oss;
-  oss << "243 RPL_STATSOLINE O " << arg << " * " << arg2;
+  oss << "243 RPL_STATSOLINE O " << arg << " * " << arg2 << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -946,7 +953,7 @@ std::string ReplyMessage::rplStatsOLine(const std::string &arg,
 std::string ReplyMessage::rplStatsHLine(const std::string &arg,
                                         const std::string &arg2) {
   std::ostringstream oss;
-  oss << "244 RPL_STATSHLINE H " << arg << " * " << arg2;
+  oss << "244 RPL_STATSHLINE H " << arg << " * " << arg2 << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -954,7 +961,7 @@ std::string ReplyMessage::rplStatsHLine(const std::string &arg,
 
 std::string ReplyMessage::rplUModeIs(const std::string &arg) {
   std::ostringstream oss;
-  oss << "221 RPL_UMODEIS " << arg;
+  oss << "221 RPL_UMODEIS " << arg << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -965,7 +972,7 @@ std::string ReplyMessage::rplLUserClient(const std::string &arg,
                                          const std::string &arg3) {
   std::ostringstream oss;
   oss << "251 RPL_LUSERCLIENT :There are " << arg << " users and " << arg2
-      << " invisible on " << arg3 << " servers";
+      << " invisible on " << arg3 << " servers\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -973,7 +980,7 @@ std::string ReplyMessage::rplLUserClient(const std::string &arg,
 
 std::string ReplyMessage::rplLUserOp(const std::string &arg) {
   std::ostringstream oss;
-  oss << "252 RPL_LUSEROP " << arg << " :operator(s) online";
+  oss << "252 RPL_LUSEROP " << arg << " :operator(s) online\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -981,7 +988,7 @@ std::string ReplyMessage::rplLUserOp(const std::string &arg) {
 
 std::string ReplyMessage::rplLUserUnknown(const std::string &arg) {
   std::ostringstream oss;
-  oss << "253 RPL_LUSERUNKNOWN " << arg << " :unknown connection(s)";
+  oss << "253 RPL_LUSERUNKNOWN " << arg << " :unknown connection(s)\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -989,7 +996,7 @@ std::string ReplyMessage::rplLUserUnknown(const std::string &arg) {
 
 std::string ReplyMessage::rplLUserChannels(const std::string &arg) {
   std::ostringstream oss;
-  oss << "254 RPL_LUSERCHANNELS " << arg << " :channels formed";
+  oss << "254 RPL_LUSERCHANNELS " << arg << " :channels formed\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -999,7 +1006,7 @@ std::string ReplyMessage::rplLUserMe(const std::string &arg,
                                      const std::string &arg2) {
   std::ostringstream oss;
   oss << "255 RPL_LUSERME :I have " << arg << " clients and " << arg2
-      << " servers";
+      << " servers\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -1007,7 +1014,7 @@ std::string ReplyMessage::rplLUserMe(const std::string &arg,
 
 std::string ReplyMessage::rplAdminMe(const std::string &arg) {
   std::ostringstream oss;
-  oss << "256 RPL_ADMINME " << arg << " :Administrative info";
+  oss << "256 RPL_ADMINME " << arg << " :Administrative info\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -1015,7 +1022,7 @@ std::string ReplyMessage::rplAdminMe(const std::string &arg) {
 
 std::string ReplyMessage::rplAdminLoc1(const std::string &arg) {
   std::ostringstream oss;
-  oss << "257 RPL_ADMINLOC1 :" << arg;
+  oss << "257 RPL_ADMINLOC1 :" << arg << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -1023,7 +1030,7 @@ std::string ReplyMessage::rplAdminLoc1(const std::string &arg) {
 
 std::string ReplyMessage::rplAdminLoc2(const std::string &arg) {
   std::ostringstream oss;
-  oss << "258 RPL_ADMINLOC2 :" << arg;
+  oss << "258 RPL_ADMINLOC2 :" << arg << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;
@@ -1031,7 +1038,7 @@ std::string ReplyMessage::rplAdminLoc2(const std::string &arg) {
 
 std::string ReplyMessage::rplAdminMail(const std::string &arg) {
   std::ostringstream oss;
-  oss << "259 RPL_ADMINEMAIL :" << arg;
+  oss << "259 RPL_ADMINEMAIL :" << arg << "\r\n";
   std::string v = oss.str();
   logger::error() << v;
   return v;

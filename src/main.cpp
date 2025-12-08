@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/08 16:46:16 by elagouch          #+#    #+#             */
-/*   Updated: 2025/12/08 10:26:35 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/08 14:43:24 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,8 +54,7 @@ static bool bridgeCallback(Connection *conn, const std::vector<char> &data) {
 int main(int argc, char **argv) {
   unsigned short port;
 
-  if (argc != 2) {
-    // TODO: implement password as second arg
+  if (argc != 3) {
     std::cerr << "Usage: " << argv[0] << " <port> <password>" << std::endl;
     return 1;
   }
@@ -63,6 +62,7 @@ int main(int argc, char **argv) {
   int p = atoi(argv[1]);
   if (p > 0)
     port = static_cast<unsigned short>(p);
+  std::string password = argv[2];
 
   // Set log level (optional)
   logger::Logger::getInstance().setMinLevel(logger::DEBUG);
@@ -86,7 +86,7 @@ int main(int argc, char **argv) {
   // TimerManager timerMgr;
 
   // Create the Dispatcher
-  Dispatcher dispatcher(&clientMgr, &chanMgr);
+  Dispatcher dispatcher(&clientMgr, &chanMgr, password);
   g_dispatcher = &dispatcher;
 
   Listener listener("0.0.0.0", port, &reactor, &connMgr);

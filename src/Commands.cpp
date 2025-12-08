@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/12 16:21:59 by nahamida          #+#    #+#             */
-/*   Updated: 2025/12/05 04:31:42 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/08 15:11:15 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -343,7 +343,8 @@ void checkRegistration(Client &client) {
     return; // already registered
 
   // we need at least a Nickname and a Username to register
-  if (!client.getNickname().empty() && !client.getUsername().empty()) {
+  if (client.getAuth() && !client.getNickname().empty() &&
+      !client.getUsername().empty()) {
     client.setRegistered(true);
 
     // send RPL_WELCOME (001) - REQUIRED for client to finish connecting
@@ -358,14 +359,29 @@ void checkRegistration(Client &client) {
   }
 }
 
-void Commands::pass(IRCMessage const &msg, Client &client) {
-  (void)msg;
-  (void)client;
-  // TODO: check password here
-  // if (msg.getParams()[0] != server_password) {
-  //   ReplyMessage::errPasswdMismatch();
-  //   client.close();
-  // }
+void Commands::pass(IRCMessage const &msg, Client &client,
+                    const std::string &serverPass) {
+  if (client.getRegistered()) {
+    client.send(ReplyMessage::errAlreadyRegistered());
+    return;
+  }
+  if (msg.getParams().empty()) {
+    client.send(ReplyMessage::errNeedMoreParams("PASS"));
+    return;
+  }
+
+  std::string providedPass = msg.getParams()[0];
+  if (providedPass != serverPass) {
+    client.send(ReplyMessage::errPasswdMismatch());
+    // Note: idk about closing the connection right after a wrong password, but
+    // many implementations do that
+    client.close();
+    return;
+  }
+
+  client.setAuth(true);
+  logger::debug() << "Client " << client.getSocket() << " password verified."
+                  << std::endl;
 }
 
 void Commands::nick(IRCMessage const &msg, ClientManager &clients,

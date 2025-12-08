@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/19 12:30:19 by elagouch          #+#    #+#             */
-/*   Updated: 2025/12/05 01:08:54 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/08 14:44:59 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,8 @@
 
 class Dispatcher {
 public:
-  Dispatcher(ClientManager *clients, ChannelManager *channels);
+  Dispatcher(ClientManager *clients, ChannelManager *channels,
+             const std::string &password);
   ~Dispatcher();
 
   /**
@@ -33,6 +34,7 @@ public:
 private:
   ClientManager *_clients;
   ChannelManager *_channels;
+  std::string _password;
 
   /**
    * @brief Execute a single parsed command.
