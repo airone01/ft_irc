@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/12 16:21:59 by nahamida          #+#    #+#             */
-/*   Updated: 2025/11/28 17:28:06 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/08 17:21:41 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,11 +51,13 @@ public:
   std::string getName() const;
   std::size_t getCapacity() const;
   bool getModeSet() const;
-  std::map<int, Client *> getInvitedUsers();
-  std::map<int, Client *> getUsers();
+  std::map<int, Client *> &getInvitedUsers();
+  std::map<int, Client *> &getUsers();
 
   std::set<char> getMode() const;
   std::set<int> getKickedUsers() const;
+  bool isOperator(const Client &user) const;
+  Client *getClientInChannel(std::string nick);
 
   void setTopic(const std::string newTopic);
   void setPswrd(const std::string newPswrd);
@@ -75,7 +77,7 @@ public:
   void updatePriv(const Client &admin, Client &user);
   void leaveChannel(Client const &user);
   void changeTopic(IRCMessage const &tmp, Client const &user);
-  void updateMode(IRCMessage const &tmp, Client const &user);
+  std::string updateMode(IRCMessage const &tmp, Client const &sender);
 
   class insufficientPrivilege : public std::exception {
     const char *what() const throw();

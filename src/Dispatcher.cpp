@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/19 12:30:39 by elagouch          #+#    #+#             */
-/*   Updated: 2025/12/08 15:10:40 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/08 15:59:12 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,6 +88,10 @@ bool Dispatcher::executeCommand(Client &client, const std::string &line) {
       if (client.getRegistered()) {
         Commands::privmsg(msg, client, *_clients, *_channels);
       }
+    } else if (cmd == "KICK") {
+      Commands::kick(msg, *_channels, client);
+    } else if (cmd == "INVITE") {
+      Commands::invite(msg, *_clients, *_channels, client);
     } else if (cmd == "MODE") {
       Commands::mode(msg, *_channels, client);
     } else if (cmd == "PING") {

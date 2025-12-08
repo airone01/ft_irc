@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/12 16:21:59 by nahamida          #+#    #+#             */
-/*   Updated: 2025/12/08 15:11:15 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/08 17:24:44 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -176,52 +176,49 @@ void Commands::mode(IRCMessage const &param, ChannelManager &channels,
   std::string target = params[0];
 
   if (target[0] == '#' || target[0] == '&') {
-    Channel *actual = NULL;
-
-    // find channel.
     try {
-      actual = &channels.getChannelFromName(target);
-    } catch (const ChannelManager::noSuchChannel &e) {
-      ReplyMessage::errNoSuckChannel(target);
-      return;
-    }
+      Channel &chan = channels.getChannelFromName(target);
 
-    // MODE QUERY (no flags given)
-    if (params.size() == 1) {
-      // construct the mode string from the set of active modes.
-      std::string modeStr = "+";
-      std::set<char> modes = actual->getMode();
-      for (std::set<char>::iterator it = modes.begin(); it != modes.end();
-           ++it) {
-        modeStr += *it;
+      // query mode
+      if (params.size() == 1) {
+        std::string modeStr = "+";
+        std::set<char> modes = chan.getMode();
+        for (std::set<char>::iterator it = modes.begin(); it != modes.end();
+             ++it) {
+          modeStr += *it;
+        }
+        // also append args for k and l if they exist
+        // (usually sending args in trailing works)
+        std::string rpl = ":localhost 324 " + user.getNickname() + " " +
+                          target + " " + modeStr + "\r\n";
+        user.send(rpl);
+        return;
       }
 
-      // RPL_CHANNELMODEIS (324): :<server> 324 <nick> <channel> <mode> <mode
-      // params> Note: for simplicity we dc about mode parameters here.
-      std::string response = ":localhost 324 " + user.getNickname() + " " +
-                             target + " " + modeStr + "\r\n";
-      std::vector<char> respVec(response.begin(), response.end());
-      user.send(respVec);
-      return;
-    }
-
-    // MODE CHANGE (flags given)
-    try {
-      if (actual)
-        actual->updateMode(param, user);
-
-      // TODO: if updateMode succeeds, broadcast the new mode change to the
-      // channel.
+      // change mode
+      std::string changes = chan.updateMode(param, user);
+      if (!changes.empty()) {
+        // boradcast
+        std::string msg = ":" + user.getNickname() + "!" + user.getUsername() +
+                          "@" + user.getHostname() + " MODE " + target + " :" +
+                          changes + "\r\n";
+        std::vector<char> raw(msg.begin(), msg.end());
+        std::map<int, Client *> users = chan.getUsers();
+        for (std::map<int, Client *>::iterator it = users.begin();
+             it != users.end(); ++it) {
+          it->second->send(raw);
+        }
+      }
+    } catch (const Channel::errorMode &e) {
+      // Handle specific errors like ERR_CHANOPRIVSNEEDED (482)
+      if (std::string(e.what()) == "ERR_CHANOPRIVSNEEDED") {
+        user.send(ReplyMessage::errChaNoPrivsNeeded(target));
+      } else {
+        user.send(ReplyMessage::errUnknownMode(e.what()));
+      }
     } catch (const std::exception &e) {
-      std::cerr << "MODE Error: " << e.what() << std::endl;
-      // if the error is related to parameters (e.g., ERR_UNKNOWNMODE),
-      // the error should be sent to the client.
-    }
-  } else {
-    if (target == user.getNickname()) {
-      return;
-    } else {
-      ReplyMessage::errUsersDontMatch();
+      // Fallback
+      logger::error() << "Mode error: " << e.what() << std::endl;
     }
   }
 }
@@ -232,6 +229,17 @@ void Commands::topic(IRCMessage const &tmp, ChannelManager &channels,
     logger::error() << "ERR_NEEDMOREPARAMS\n";
   std::vector<std::string> param = paramHandler(tmp.getParams()[0]);
   std::vector<std::string>::iterator it = param.begin();
+  Channel &chan = channels.getChannelFromName(param[0]);
+
+  if (!tmp.getTrailing().empty()) {
+    // CHECK +t and +o
+    if (chan.getMode().find('t') != chan.getMode().end()) {
+      if (!chan.isOperator(user)) {
+        user.send(ReplyMessage::errChaNoPrivsNeeded(param[0]));
+        return;
+      }
+    }
+  }
 
   for (; it != param.end(); it++) {
     try {
@@ -246,7 +254,15 @@ void Commands::topic(IRCMessage const &tmp, ChannelManager &channels,
 void Commands::invite(IRCMessage const &tmp, ClientManager &clients,
                       ChannelManager &channels, Client &user) {
   std::vector<std::string> param = tmp.getParams();
+  Channel &chan = channels.getChannelFromName(param[1]);
+
   try {
+    if (chan.getMode().find('i') != chan.getMode().end()) {
+      if (!chan.isOperator(user)) {
+        user.send(ReplyMessage::errChaNoPrivsNeeded(param[1]));
+        return;
+      }
+    }
     Channel &actual = channels.getChannelFromName(param[1]);
     actual.tryInvite(param, clients, user.getSocket(),
                      clients.getClientFromUsername(param[0]).getSocket());
@@ -258,14 +274,42 @@ void Commands::invite(IRCMessage const &tmp, ClientManager &clients,
 void Commands::kick(IRCMessage const &tmp, ChannelManager &channels,
                     Client &admin) {
   std::vector<std::string> param = tmp.getParams();
+  if (param.size() < 2) {
+    // TODO: handle error
+    return;
+  }
+
   try {
     Channel &actual = channels.getChannelFromName(param[0]);
+    std::string targetNick = param[1];
     actual.tryKick(param, tmp, admin);
-    std::map<int, Client *>::iterator victimIt;
-    for (victimIt = actual.getUsers().begin();
-         victimIt != actual.getUsers().end(); victimIt++)
-      if (victimIt->second->getUsername() == param[1])
-        actual.setKickedUsers(victimIt->second->getSocket());
+
+    Client *victim = NULL;
+    std::map<int, Client *> &users = actual.getUsers();
+
+    for (std::map<int, Client *>::iterator it = users.begin();
+         it != users.end(); ++it) {
+      if (it->second->getNickname() == targetNick) {
+        victim = it->second;
+        break;
+      }
+    }
+
+    if (victim) {
+      // kicking the user
+      // sending the message BEFORE removing the user so they receive
+      // it.
+
+      actual.setKickedUsers(victim->getSocket());
+      actual.leaveChannel(*victim);
+
+      logger::info() << admin.getNickname() << " kicked " << targetNick
+                     << std::endl;
+    } else {
+      admin.send(
+          ReplyMessage::errUserNotInChannel(targetNick, actual.getName()));
+    }
+
   } catch (const std::exception &e) {
     logger::error() << e.what() << '\n';
   }
@@ -280,13 +324,12 @@ void Commands::kick(IRCMessage const &tmp, ChannelManager &channels,
  *	ERR_NOTOPLEVEL ERR_WILDTOPLEVEL 	ERR_TOOMANYTARGETS
  *						ERR_NOSUCHNICK
  *		RPL_AWAY Exemple			:	:Angel PRIVMSG
- * Wiz :Hello are you receiving this message ?; PRIVMSG Angel :yes I'm receiving
- * it !receiving it !'u>(768u+1n) .br; PRIVMSG jtotolsun.oulu.fi :Hello !;
- *						PRIVMSG $*.fi :Server
- * tolsun.oulu.fi rebooting.; Message to everyone on a server which has a name
- * matching *.fi. PRIVMSG #*.edu :NSFNet is undergoing work, expect
- * interruptions; Message to all users who come from a host which has a name
- * matching *.edu.
+ * Wiz :Hello are you receiving this message ?; PRIVMSG Angel :yes I'm
+ * receiving it !receiving it !'u>(768u+1n) .br; PRIVMSG jtotolsun.oulu.fi
+ * :Hello !; PRIVMSG $*.fi :Server tolsun.oulu.fi rebooting.; Message to
+ * everyone on a server which has a name matching *.fi. PRIVMSG #*.edu :NSFNet
+ * is undergoing work, expect interruptions; Message to all users who come
+ * from a host which has a name matching *.edu.
  */
 void Commands::privmsg(IRCMessage const &msg, Client &sender,
                        ClientManager &clients, ChannelManager &channels) {
@@ -373,8 +416,8 @@ void Commands::pass(IRCMessage const &msg, Client &client,
   std::string providedPass = msg.getParams()[0];
   if (providedPass != serverPass) {
     client.send(ReplyMessage::errPasswdMismatch());
-    // Note: idk about closing the connection right after a wrong password, but
-    // many implementations do that
+    // Note: idk about closing the connection right after a wrong password,
+    // but many implementations do that
     client.close();
     return;
   }
