@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/19 12:30:39 by elagouch          #+#    #+#             */
-/*   Updated: 2025/12/05 03:42:05 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/08 14:44:28 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,8 +17,8 @@
 #include "Logger.hpp"
 #include <ostream>
 
-Dispatcher::Dispatcher(ClientManager *clients, ChannelManager *channels)
-    : _clients(clients), _channels(channels) {}
+Dispatcher::Dispatcher(ClientManager *clients, ChannelManager *channels, const std::string &password)
+    : _clients(clients), _channels(channels), _password(password) {}
 
 Dispatcher::~Dispatcher() {}
 
@@ -61,7 +61,9 @@ bool Dispatcher::executeCommand(Client &client, const std::string &line) {
       return false;
     }
 
-    if (cmd == "NICK") {
+    if (cmd == "PASS") {
+      Commands::pass(msg, client, _password);
+    } else if (cmd == "NICK") {
       Commands::nick(msg, *_clients, client);
     } else if (cmd == "USER") {
       Commands::user(msg, client);

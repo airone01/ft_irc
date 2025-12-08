@@ -6,7 +6,7 @@
 #    By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/10/08 15:49:16 by elagouch          #+#    #+#              #
-#    Updated: 2025/12/08 13:10:12 by elagouch         ###   ########.fr        #
+#    Updated: 2025/12/08 14:56:46 by elagouch         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -139,10 +139,10 @@ title:
 	@$(ECHO) "\n"
 
 val: all
-	@$(VALGRIND) ./$(NAME) 6667
+	@$(VALGRIND) ./$(NAME) 6667 pass123
 
 run: all
-	@./$(NAME) 6667
+	@./$(NAME) 6667 pass123
 
 re: fclean all
 

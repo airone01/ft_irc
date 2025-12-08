@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/12 16:21:59 by nahamida          #+#    #+#             */
-/*   Updated: 2025/12/08 12:57:43 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/08 14:30:38 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,8 @@ public:
   static void privmsg(IRCMessage const &msg, Client &sender,
                       ClientManager &clients, ChannelManager &channels);
   static void version(Client &sender);
-  static void pass(IRCMessage const &msg, Client &client);
+  static void pass(IRCMessage const &msg, Client &client,
+                   const std::string &serverPass);
   static void nick(IRCMessage const &msg, ClientManager &clients,
                    Client &client);
   static void user(IRCMessage const &msg, Client &client);
