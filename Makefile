@@ -6,7 +6,7 @@
 #    By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/10/08 15:49:16 by elagouch          #+#    #+#              #
-#    Updated: 2025/12/08 10:27:25 by elagouch         ###   ########.fr        #
+#    Updated: 2025/12/08 11:44:45 by elagouch         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -70,27 +70,40 @@ CXXFLAGS	+=	-O2						# slower comp, faster runtime
 # == dev ==
 CXXFLAGS	+=	-g3
 
+# == test ==
+TESTFLAGS	:= $(CXXFLAGS)
+
 # **************************************************************************** #
 #                                     SRC                                      #
 # **************************************************************************** #
 
-NAME			:=		ircserv
+NAME				:=	ircserv
 # main and utils
-SRC_O			:=		main Logger
+SRC_O				:=	main Logger
 # irc logic
-SRC_O			+=		Client ClientManager
-# networking
-SRC_O			+=		net/Socket net/Connection net/ConnectionManager net/Listener \
+SRC_O				+=	Client ClientManager
+# networki	ng
+SRC_O				+=	net/Socket net/Connection net/ConnectionManager net/Listener \
 								net/Reactor
 # parser
-SRC_O			+=		IRCMessage Dispatcher
+SRC_O				+=	IRCMessage Dispatcher
 #channel / commands
-SRC_O			+=		Channel ChannelManager Commands
-SRC_O			+=		ReplyMessage
-SRC				:=		$(addprefix src/, $(addsuffix .cpp, $(SRC_O)))
-OBJ				:=		$(SRC:.cpp=.o)
-DEPS			:=		$(SRC:.cpp=.d)
-RM_LIST		:=		"$(OBJ) $(SRC:.cpp=.d)"
+SRC_O				+=	Channel ChannelManager Commands
+SRC_O				+=	ReplyMessage
+SRC					:=	$(addprefix src/, $(addsuffix .cpp, $(SRC_O)))
+OBJ					:=	$(SRC:.cpp=.o)
+DEPS				:=	$(SRC:.cpp=.d)
+RM_LIST			:=	"$(OBJ) $(SRC:.cpp=.d)"
+
+# testing w/ doctest.h
+TEST_NAME		:= tester
+TEST_DIR		:= test
+TEST_SRC		:=	$(TEST_DIR)/test_main.cpp \
+								$(TEST_DIR)/test_IRCMessage.cpp \
+								$(TEST_DIR)/test_Client.cpp \
+								$(TEST_DIR)/test_Channel.cpp
+TEST_OBJ		:= $(TEST_SRC:.cpp=.o)
+CORE_OBJ		:= $(filter-out src/main.o, $(OBJ))
 
 # **************************************************************************** #
 #                                   TARGETS                                    #
@@ -129,6 +142,23 @@ run: all
 	@./$(NAME) 6667
 
 re: fclean all
+
+tests: $(TEST_NAME)
+
+$(TEST_NAME): $(CORE_OBJ) $(TEST_OBJ)
+	@$(ECHO) "$(BLUE)$(BOLD) CC $(RESET)$(FGGRAY) $(TEST_NAME)$(RESET)\n"
+	@$(CXX) $(TESTFLAGS) -o $(TEST_NAME) $(CORE_OBJ) $(TEST_OBJ)
+
+$(TEST_DIR)/%.o: $(TEST_DIR)/%.cpp
+	@$(ECHO) "$(BLUE)$(BOLD) CC $(RESET)$(FGGRAY) $@$(RESET)\n"
+	@$(CXX) $(TESTFLAGS) -c $< -o $@
+
+# The actual job to run tests
+check: tests
+	@$(VALGRIND) ./$(TEST_NAME)
+
+clean_tests:
+	@$(RM) $(TEST_OBJ) $(TEST_NAME)
 
 -include $(DEPS)
 

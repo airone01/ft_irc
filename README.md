@@ -81,3 +81,7 @@ This concerns files in the `src/net/` directory.
 - Call `reactor.run()` to start the event loop.
 - When you need to stop: `reactor.stop()` then close connections and cleanup.
 
+## Tests
+
+Unit testing is done with doctest. You can download the STD98 version at the following link: [https://github.com/doctest/doctest/raw/cd1d7474374c8cebed5c609564cdaa2f5184be25/doctest/doctest.h](https://github.com/doctest/doctest/raw/cd1d7474374c8cebed5c609564cdaa2f5184be25/doctest/doctest.h)
+

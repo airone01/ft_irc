@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/12 16:21:59 by nahamida          #+#    #+#             */
-/*   Updated: 2025/12/05 04:27:49 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/08 11:48:05 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -171,7 +171,7 @@ void Channel::tryKick(std::vector<std::string> param, IRCMessage const &tmp,
 }
 
 void Channel::leaveChannel(Client const &user) {
-  std::map<int, Client *>::iterator it;
+  std::map<int, Client *>::iterator it = _users.find(user.getSocket());
 
   if (_users.find(user.getSocket()) != _users.end())
     _users.erase(it);
