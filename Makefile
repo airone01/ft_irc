@@ -6,7 +6,7 @@
 #    By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/10/08 15:49:16 by elagouch          #+#    #+#              #
-#    Updated: 2025/12/08 12:09:22 by elagouch         ###   ########.fr        #
+#    Updated: 2025/12/08 13:10:12 by elagouch         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -96,15 +96,17 @@ DEPS				:=	$(SRC:.cpp=.d)
 RM_LIST			:=	"$(OBJ) $(SRC:.cpp=.d)"
 
 # testing w/ doctest.h
-TEST_NAME		:= tester
-TEST_DIR		:= test
+TEST_NAME		:=	tester
+TEST_DIR		:=	test
 TEST_SRC		:=	$(TEST_DIR)/test_main.cpp \
 								$(TEST_DIR)/test_IRCMessage.cpp \
 								$(TEST_DIR)/test_Client.cpp \
 								$(TEST_DIR)/test_Channel.cpp \
-								$(TEST_DIR)/test_ChannelModes.cpp
-TEST_OBJ		:= $(TEST_SRC:.cpp=.o)
-CORE_OBJ		:= $(filter-out src/main.o, $(OBJ))
+								$(TEST_DIR)/test_ChannelModes.cpp \
+								$(TEST_DIR)/test_Commands_Integration.cpp
+TEST_OBJ		:=	$(TEST_SRC:.cpp=.o)
+TEST_DEPS		:=	$(TEST_SRC:.cpp=.d)
+CORE_OBJ		:=	$(filter-out src/main.o, $(OBJ))
 
 # **************************************************************************** #
 #                                   TARGETS                                    #
@@ -150,7 +152,7 @@ $(TEST_NAME): $(CORE_OBJ) $(TEST_OBJ)
 	@$(ECHO) "$(BLUE)$(BOLD) CC $(RESET)$(FGGRAY) $(TEST_NAME)$(RESET)\n"
 	@$(CXX) $(TESTFLAGS) -o $(TEST_NAME) $(CORE_OBJ) $(TEST_OBJ)
 
-$(TEST_DIR)/%.o: $(TEST_DIR)/%.cpp
+$(TEST_DIR)/%.o: $(TEST_DIR)/%.cpp Makefile
 	@$(ECHO) "$(BLUE)$(BOLD) CC $(RESET)$(FGGRAY) $@$(RESET)\n"
 	@$(CXX) $(TESTFLAGS) -c $< -o $@
 
@@ -161,7 +163,7 @@ check: tests
 clean_tests:
 	@$(RM) $(TEST_OBJ) $(TEST_NAME)
 
--include $(DEPS)
+-include $(DEPS) $(TEST_DEPS)
 
 MAKEFLAGS	+= --no-print-directory
 .PHONY: all clean fclean re

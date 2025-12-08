@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/12 16:21:59 by nahamida          #+#    #+#             */
-/*   Updated: 2025/12/04 23:51:18 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/08 12:57:43 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,13 @@ public:
                    Client &client);
   static void user(IRCMessage const &msg, Client &client);
   static void cap(IRCMessage const &msg, Client &client);
+  static void oper(IRCMessage const &msg, Client &client);
+  static void names(IRCMessage const &msg, ChannelManager &channels,
+                    Client &client);
+  static void who(IRCMessage const &msg, ChannelManager &channels,
+                  ClientManager &clients, Client &client);
+  static void kill(IRCMessage const &msg, ClientManager &clients,
+                   Client &admin);
 };
 
 #endif //! COMMANDS_HPP
