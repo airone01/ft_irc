@@ -6,7 +6,7 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/12 16:21:59 by nahamida          #+#    #+#             */
-/*   Updated: 2025/12/08 15:07:06 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/08 15:11:15 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -390,10 +390,6 @@ void Commands::nick(IRCMessage const &msg, ClientManager &clients,
     ReplyMessage::errNoNickNameGiven();
     return;
   }
-  if (!client.getAuth()) {
-    client.send(ReplyMessage::errNotRegistered());
-    return;
-  }
 
   std::string newNick = msg.getParams()[0];
 
@@ -426,10 +422,6 @@ void Commands::nick(IRCMessage const &msg, ClientManager &clients,
 void Commands::user(IRCMessage const &msg, Client &client) {
   if (client.getRegistered()) {
     ReplyMessage::errAlreadyRegistered();
-    return;
-  }
-  if (!client.getAuth()) {
-    client.send(ReplyMessage::errNotRegistered());
     return;
   }
 
