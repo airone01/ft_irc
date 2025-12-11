@@ -23,10 +23,6 @@
  * Format: [ ':' <prefix> <SPACE> ] <command> <SPACE> <params1>[ ','
  * <params1> ] [ <SPACE> <params2> [ ',' <params2>]] <SPACE> ':' <trailing>
  *
- * Numeric Replies :
- *   ERR_NORECIPIENT ERR_NOTEXTTOSEND ERR_CANNOTSENDTOCHAN ERR_NOTOPLEVEL
- *   ERR_WILDTOPLEVEL ERR_TOOMANYTARGETS ERR_NOSUCHNICK RPL_AWAY
- *
  * @exemple
  *   :Angel PRIVMSG Wiz :Hello are you receiving this message ?;
  *   PRIVMSG Angel :yes I'm receiving it !receiving it!'u>(768u+1n) .br;
@@ -52,7 +48,7 @@ private:
   IRCMessage &operator=(const IRCMessage &other);
 
 public:
-  IRCMessage(std::string &line);
+  IRCMessage(const std::string &line);
   ~IRCMessage();
   // exception
   class MsgEmptyException : public std::exception {

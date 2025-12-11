@@ -31,21 +31,20 @@ bool Dispatcher::handleData(Connection *conn, const std::vector<char> &data) {
   Client *client = dynamic_cast<Client *>(conn);
   if (!client)
     return true;
-
   std::string chunk(data.begin(), data.end());
   client->appendToBuffer(chunk);
-
+  
   while (true) {
     std::string line = client->extractMessage();
     if (line.empty())
-      break;
-
-    logger::debug() << "Processing: " << line << std::endl;
-
-    if (executeCommand(*client, line)) { // if cleanup is needed
-      return false;
-    }
+    break;
+  
+  logger::debug() << "Processing: " << line << std::endl;
+  
+  if (executeCommand(*client, line)) { // if cleanup is needed
+    return false;
   }
+}
   return true;
 }
 
@@ -54,8 +53,7 @@ bool Dispatcher::handleData(Connection *conn, const std::vector<char> &data) {
  */
 bool Dispatcher::executeCommand(Client &client, const std::string &line) {
   try {
-    IRCMessage msg(
-        const_cast<std::string &>(line)); // Parser modifies string temporarily?
+    IRCMessage msg(line);
     std::string cmd = msg.getCommand();
 
     if (cmd.empty())
@@ -67,7 +65,6 @@ bool Dispatcher::executeCommand(Client &client, const std::string &line) {
       client.send(ReplyMessage::errNotRegistered());
       return false;
     }
-
     if (cmd == "PASS") {
       Commands::pass(msg, client, _password);
     } else if (cmd == "NICK") {
