@@ -4,6 +4,10 @@
 
 //NE PLUS TOUCHER CE FICHIER SAUF POUR METTRE DES METHODS UTILES
 
+Client::Client()
+	: _socket(-1), _nickname(""), _username(""),
+	_hostname(""), _buffer(""), _auth(false), _registered(false) {}
+
 Client::Client(int fd)
 	: _socket(fd), _nickname(""), _username(""),
 	_hostname(""), _buffer(""), _auth(false), _registered(false) {}

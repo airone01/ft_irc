@@ -12,9 +12,19 @@
  * implement full IRC parsing — that is intended for your Dispatcher.
  */
 class Client {
+private:
+	int _socket;
+	std::string _nickname;
+	std::string _username;
+	std::string _hostname;
+	std::string _buffer;
+	bool _auth;
+	bool _registered;
 public:
+	Client();
 	Client(int fd);
 	Client(const Client& copy);
+	Client& operator=(const Client &other);
 	~Client();
 	// getter
 	int getSocket() const;
@@ -34,16 +44,6 @@ public:
 	void clearBuffer();
 	std::string extractMessage();
 	void sendMessage(const std::string& buffer) const;
-private:
-	int _socket;
-	std::string _nickname;
-	std::string _username;
-	std::string _hostname;
-	std::string _buffer;
-	bool _auth;
-	bool _registered;
-	Client();
-	Client& operator=(const Client &other);
 };
 
 #endif // !CLIENT_HPP
