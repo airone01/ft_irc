@@ -13,11 +13,12 @@
 #include "IRCMessage.hpp"
 
 static std::string trimCRLF(std::string &line) {
-  if (!line.empty() && line[line.size() - 1] == '\n')
-    line.erase(line.size() - 1);
-  if (!line.empty() && line[line.size() - 1] == '\r')
-    line.erase(line.size() - 1);
-  return (line);
+  std::string result = line;
+  if (!result.empty() && result[result.size() - 1] == '\n')
+    result.erase(result.size() - 1);
+  if (!result.empty() && result[result.size() - 1] == '\r')
+    result.erase(result.size() - 1);
+  return (result);
 }
 
 static std::string extractPrefix(std::string &line, size_t &pos) {
@@ -80,8 +81,9 @@ static std::vector<std::string> extractParams(const std::string &line) {
   return params;
 }
 
-IRCMessage::IRCMessage(std::string &line) {
-  std::string cleanLine = trimCRLF(line);
+IRCMessage::IRCMessage(const std::string &line) {
+  std::string trimLine = line;
+  std::string cleanLine = trimCRLF(trimLine);
   if (cleanLine.empty())
     throw MsgEmptyException();
   size_t pos = 0;
