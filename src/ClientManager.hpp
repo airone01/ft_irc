@@ -1,30 +1,32 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   ClientManager.hpp                                  :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/11/13 14:13:42 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/28 17:41:14 by elagouch         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-#include <vector>
-
-#include "Client.hpp"
-
 #ifndef CLIENTMANAGER_HPP
 #define CLIENTMANAGER_HPP
 
-class ClientManager {
-public:
-  std::vector<Client> &getClients();
-  Client &getClientFromUsername(std::string &nickname);
-  Client &getClientFromSocket(int &socket);
+#include "Client.hpp"
+#include <map>
+#include <stdexcept>
 
+class ClientManager {
 private:
-  std::vector<Client> _clients;
+	std::map<int, Client> _clients;
+public:
+	// exception
+	class ClientNotFound: public std::runtime_error {
+	public:
+		ClientNotFound(const std::string& msg)
+		: std::runtime_error(msg) {}
+	};
+	// getter
+	Client& getClientFromUsername(const std::string& username);
+	Client& getClientFromNickname(const std::string& nickname);
+	Client& getClientFromSocket(const int& socket);
+	size_t getClientCount() const;
+	// setter
+	void addClient(const Client& client);
+	void removeClient(int socket);
+	// utility
+	bool isNicknameUsed(const std::string& nickname);
+	bool isUsernameUsed(const std::string& username);
+
 };
 
 #endif // !CLIENTMANAGER_HPP
