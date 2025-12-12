@@ -1,6 +1,5 @@
 #include "Client.hpp"
 #include <sys/socket.h>
-#include <unistd.h>
 
 //NE PLUS TOUCHER CE FICHIER SAUF POUR METTRE DES METHODS UTILES
 

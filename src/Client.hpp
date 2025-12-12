@@ -5,12 +5,6 @@
 
 //NE PLUS TOUCHER CE FICHIER SAUF POUR METTRE DES METHODS UTILES
 
-/**
- * @brief A light subclass of Connection that stores basic IRC user fields.
- *
- * The class adds pass/nick/user/realname and registration state. It does not
- * implement full IRC parsing — that is intended for your Dispatcher.
- */
 class Client {
 private:
 	int			_socket;
