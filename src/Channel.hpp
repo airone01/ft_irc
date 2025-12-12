@@ -59,11 +59,11 @@ public:
 	bool	isInvited(int socket) const;
 	bool	isKicked(int socket) const;
 	// mode
-	void		addMode(char mode);
-	void		removeMode(char mode);
-	std::string	updateMode(const IRCMessage& msg, int sender, ClientManager& clients);
+	void	addMode(char mode);
+	void	removeMode(char mode);
+	void	updateMode(const IRCMessage& msg, int sender, ClientManager& clients);
 	// user
-	void	tryJoin(int socket, const std::string& password);
+	bool	tryJoin(int socket, const std::string& password) const;
 	void	addUser(int socket);
 	void	removeUser(int socket);
 	void	inviteUser(int socket);
@@ -72,7 +72,7 @@ public:
 	void	removeAdmin(int socket);
 	void	kickUser(int socket);
 	// topic
-	void	changeTopic(const std::string& topicName, int sender);
+	bool	changeTopic(const std::string& topicName, int sender);
 	// validation for all channels
 	static bool	isValidName(const std::string& name);
 };

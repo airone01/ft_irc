@@ -2,6 +2,13 @@
 #include <algorithm>
 #include <sstream>
 
+bool	Channel::checkPassword(const std::string& password) const {
+	return !password.empty();
+}
+bool	Channel::checkCapacity() const {
+	return _maxCapacity != 0;
+}
+
 Channel::Channel()
 	: _name(""), _topic(""), _password(""), _maxCapacity(0) {}
 
@@ -159,55 +166,48 @@ CHNGMODE applyMode(const std::string &tmp) {
 	return DEFAULT;
 }
 
-std::string Channel::updateMode(const IRCMessage &msg, int senderSocket, ClientManager &clients) {
+void Channel::updateMode(const IRCMessage &msg, int senderSocket, ClientManager &clients) {
 	std::vector<std::string> params = msg.getParams();
 	if(msg.getCountParams() < 2)
 		throw std::runtime_error("ERR_NEEDMOREPARAMS");
-	if (!isAdmin(senderSocket)) {
+	if (!isAdmin(senderSocket))
 		throw std::runtime_error("ERR_CHANOPRIVSNEEDED");
-	}
 	std::string modeString = params[1];
 	std::string changes = "";
 	std::string currentMode = "";
 	std::string temp = "+";
 	size_t argIndex = 2;
 	for (size_t i = 0; i < modeString.size(); i++) {
-		temp[1] = modeString[i];
 		if (modeString[i] == '+' || modeString[i] == '-') {
 			temp[0] = modeString[i];
 			continue;
 		}
+		temp[1] = modeString[i];
 		currentMode = temp[0];
 		currentMode += temp[1];
 		CHNGMODE mode = applyMode(currentMode);
 		switch (mode) {
 			case SINVITE:
 				addMode('i');
-				changes += "+i ";
 				break;
 			case UINVITE:
 				removeMode('i');
-				changes += "-i ";
 				break;
 			case STOPIC:
 				addMode('t');
-				changes += "+t ";
 				break;
 			case UTOPIC:
 				removeMode('t');
-				changes += "-t ";
 				break;
 			case SPASSWORD:
 				if (argIndex >= params.size())
 					throw std::runtime_error("ERR_NEEDMOREPARAMS");
 				_password = params[argIndex++];
 				addMode('k');
-				changes += "+k " + _password + " ";
 				break;
 			case UPASSWORD:
-				removeMode('k');
 				_password = "";
-				changes += "-k ";
+				removeMode('k');
 				break;
 			case SPRIV:
 				if (argIndex >= params.size())
@@ -220,7 +220,6 @@ std::string Channel::updateMode(const IRCMessage &msg, int senderSocket, ClientM
 						if (!hasUser(socket))
 							throw std::runtime_error("ERR_USERNOTINCHANNEL");
 						addAdmin(socket);
-						changes += "+o " + targetNickname + " ";
 					} catch (const ClientManager::ClientNotFound& ) {
 						throw std::runtime_error("ERR_NOSUCHNICK");
 					}
@@ -239,7 +238,6 @@ std::string Channel::updateMode(const IRCMessage &msg, int senderSocket, ClientM
 						if (_admins.size() <= 1)
 							throw std::runtime_error("ERR_CHANOPRIVSNEEDED");
 						removeAdmin(socket);
-						changes += "-o " + targetNickname + " ";
 					} catch (const ClientManager::ClientNotFound& ) {
 						throw std::runtime_error("ERR_NOSUCHNICK");
 					}
@@ -256,26 +254,28 @@ std::string Channel::updateMode(const IRCMessage &msg, int senderSocket, ClientM
 						throw std::runtime_error("ERR_NEEDMOREPARAMS");
 					_maxCapacity = limit;
 					addMode('l');
-					ss.str(std::string());
-					ss.clear();
-					ss << _maxCapacity;
-					changes += "+l " + ss.str() + " ";
 				}
 				break;
 			case ULIMIT:
-				removeMode('l');
 				_maxCapacity = 0;
-				changes += "-l ";
+				removeMode('l');
 				break;
 			default:
 				throw std::runtime_error("ERR_UNKNOWNMODE");
 		}
 	}
-	return changes;
 }
 
-void Channel::tryJoin(int socket, const std::string &password) {
-
+bool Channel::tryJoin(int socket, const std::string &password) const {
+	if (isKicked(socket))
+		throw std::runtime_error("ERR_BANNEDFROMCHAN");
+	if (hasMode('i') && !isInvited(socket))
+		throw std::runtime_error("ERR_INVITEONLYCHAN");
+	if (hasMode('k') && password != getPassword())
+		throw std::runtime_error("ERR_BADCHANNELKEY");
+	if (hasMode('l') && getUserCount() >= _maxCapacity)
+		throw std::runtime_error("ERR_CHANNELISFULL");
+	return true;
 }
 
 void Channel::addUser(int socket) {
@@ -311,8 +311,15 @@ void Channel::kickUser(int socket) {
 	_kickedUsers.insert(socket);
 }
 
-void Channel::changeTopic(const std::string &topicName, int sender) {
-
+bool Channel::changeTopic(const std::string &topicName, int sender) {
+	if (!hasUser(sender))
+		throw std::runtime_error("ERR_NOTONCHANNEL");
+	if (hasMode('t') && !isAdmin(sender))
+		throw std::runtime_error("ERR_CHANOPRIVSNEEDED");
+	if (topicName.empty() && _topic.empty())
+		throw std::runtime_error("RPL_NOTOPIC");
+	_topic = topicName;
+	return true;
 }
 
 bool Channel::isValidName(const std::string &name) {
