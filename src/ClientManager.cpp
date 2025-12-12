@@ -38,11 +38,11 @@ size_t ClientManager::getClientCount() const {
 }
 
 void ClientManager::addClient(const Client& client) {
-	this->_clients[client.getSocket()] = client;
+	_clients[client.getSocket()] = client;
 }
 
 void ClientManager::removeClient(int socket) {
-	this->_clients.erase(socket);
+	_clients.erase(socket);
 }
 
 bool ClientManager::isNicknameUsed(const std::string& nickname){

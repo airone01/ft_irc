@@ -46,15 +46,15 @@ Channel &Channel::operator=(const Channel &other) {
 
 Channel::~Channel() {}
 
-const std::string &Channel::getName() const {
+const std::string& Channel::getName() const {
 	return _name;
 }
 
-const std::string &Channel::getTopic() const {
+const std::string& Channel::getTopic() const {
 	return _topic;
 }
 
-const std::string &Channel::getPassword() const {
+const std::string& Channel::getPassword() const {
 	return _password;
 }
 
@@ -66,23 +66,23 @@ bool Channel::hasMode(char mode) const {
 	return _modes.find(mode) != _modes.end();
 }
 
-const std::set<char> &Channel::getMode() const {
+const std::set<char>& Channel::getMode() const {
 	return _modes;
 }
 
-const std::set<int> &Channel::getUsers() const {
+const std::set<int>& Channel::getUsers() const {
 	return _users;
 }
 
-const std::set<int> &Channel::getAdmins() const {
+const std::set<int>& Channel::getAdmins() const {
 	return _admins;
 }
 
-const std::set<int> &Channel::getInvitedUsers() const {
+const std::set<int>& Channel::getInvitedUsers() const {
 	return _invitedUsers;
 }
 
-const std::set<int> &Channel::getKickedUsers() const {
+const std::set<int>& Channel::getKickedUsers() const {
 	return _kickedUsers;
 }
 
@@ -144,7 +144,7 @@ enum CHNGMODE {
 	DEFAULT
 };
 
-CHNGMODE applyMode(const std::string &tmp) {
+CHNGMODE applyMode(const std::string& tmp) {
 	if (tmp == "+i")
 		return SINVITE;
 	if (tmp == "-i")
@@ -168,7 +168,7 @@ CHNGMODE applyMode(const std::string &tmp) {
 	return DEFAULT;
 }
 
-void Channel::updateMode(const IRCMessage &msg, int senderSocket, ClientManager &clients) {
+void Channel::updateMode(const IRCMessage& msg, int senderSocket, ClientManager& clients) {
 	std::vector<std::string> params = msg.getParams();
 	if(msg.getCountParams() < 2)
 		throw std::runtime_error("ERR_NEEDMOREPARAMS");
@@ -268,7 +268,7 @@ void Channel::updateMode(const IRCMessage &msg, int senderSocket, ClientManager 
 	}
 }
 
-bool Channel::tryJoin(int socket, const std::string &password) const {
+bool Channel::tryJoin(int socket, const std::string& password) const {
 	if (isKicked(socket))
 		throw std::runtime_error("ERR_BANNEDFROMCHAN");
 	if (hasMode('i') && !isInvited(socket))
@@ -313,7 +313,7 @@ void Channel::kickUser(int socket) {
 	_kickedUsers.insert(socket);
 }
 
-bool Channel::changeTopic(const std::string &topicName, int sender) {
+bool Channel::changeTopic(const std::string& topicName, int sender) {
 	if (!hasUser(sender))
 		throw std::runtime_error("ERR_NOTONCHANNEL");
 	if (hasMode('t') && !isAdmin(sender))
@@ -324,7 +324,7 @@ bool Channel::changeTopic(const std::string &topicName, int sender) {
 	return true;
 }
 
-bool Channel::isValidName(const std::string &name) {
+bool Channel::isValidName(const std::string& name) {
 	if (name.empty() || name.size() > 200) {
 		return false;
 	}
