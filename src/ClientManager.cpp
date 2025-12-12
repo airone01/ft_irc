@@ -1,6 +1,8 @@
 #include "ClientManager.hpp"
 #include "Client.hpp"
 
+//NE PLUS TOUCHER CE FICHIER SAUF POUR METTRE DES METHODS UTILES
+
 Client& ClientManager::getClientFromUsername(const std::string& username){
 	std::map<int, Client>::iterator it = _clients.begin();
 	std::map<int, Client>::iterator ite = _clients.end();
