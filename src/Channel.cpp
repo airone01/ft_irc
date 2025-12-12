@@ -1,419 +1,330 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Channel.cpp                                        :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/11/12 16:21:59 by nahamida          #+#    #+#             */
-/*   Updated: 2025/12/08 17:22:04 by elagouch         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "Channel.hpp"
 #include <algorithm>
-#include <iostream>
 #include <sstream>
 
-Channel::Channel(void) {}
-Channel::Channel(const Channel &tmp)
-    : _users(tmp._users), _admins(tmp._admins), _mode(tmp._mode),
-      _kickedUsers(tmp._kickedUsers), _topic(tmp._topic), _pswrd(tmp._pswrd),
-      _name(tmp._name), _maxCapacity(tmp._maxCapacity), _modeSet(tmp._modeSet) {
+Channel::Channel()
+	: _name(""), _topic(""), _password(""), _maxCapacity(0) {}
+
+Channel::Channel(int creatorSocket, const std::string &name)
+	: _name(name), _topic(""), _password(""), _maxCapacity(0) {
+	if (!isValidName(name)) {
+		throw InvalidChanName("ERR_NOSUCHCHANNEL");
+	}
+	_users.insert(creatorSocket);
+	_admins.insert(creatorSocket);
 }
 
-Channel &Channel::operator=(const Channel &tmp) {
-  if (this != &tmp) {
-    _users = tmp._users;
-    _admins = tmp._admins;
-    _mode = tmp._mode;
-    _kickedUsers = tmp._kickedUsers;
-    _topic = tmp._topic;
-    _pswrd = tmp._pswrd;
-    _name = tmp._name;
-    _maxCapacity = tmp._maxCapacity;
-    _modeSet = tmp._modeSet;
-  }
-  return *this;
-}
-Channel::~Channel(void) {}
+Channel::Channel(const Channel &copy)
+	: _name(copy._name), _topic(copy._topic), _password(copy._password),
+	_maxCapacity(copy._maxCapacity), _modes(copy._modes), _users(copy._users),
+	_admins(copy._admins), _invitedUsers(copy._invitedUsers),
+	_kickedUsers(copy._kickedUsers) {}
 
-bool Channel::isOperator(const Client &user) const {
-  std::map<int, Client *>::const_iterator it = _admins.find(user.getSocket());
-  return (it != _admins.end());
-}
-
-Client *Channel::getClientInChannel(std::string nick) {
-  for (std::map<int, Client *>::iterator it = _users.begin();
-       it != _users.end(); ++it) {
-    if (it->second->getNickname() == nick) {
-      return it->second;
-    }
-  }
-  return NULL;
+Channel &Channel::operator=(const Channel &other) {
+	if (this != &other) {
+		_name = other._name;
+		_topic = other._topic;
+		_password = other._password;
+		_maxCapacity = other._maxCapacity;
+		_modes = other._modes;
+		_users = other._users;
+		_admins = other._admins;
+		_invitedUsers = other._invitedUsers;
+		_kickedUsers = other._kickedUsers;
+	}
+	return *this;
 }
 
-void validChannelName(std::string tmp) {
-  // RFC 1459/2812 specifies max length of 200 characters for channel names.
-  if (tmp.size() > 200) {
-    throw Channel::invalidChannelName();
-  }
+Channel::~Channel() {}
 
-  // Must start with '#' or '&'.
-  if (tmp.empty() || (tmp[0] != '#' && tmp[0] != '&')) {
-    throw Channel::invalidChannelName();
-  }
-
-  // Disallowed characters: space, comma, BELL (ASCII 7).
-  if (tmp.find(' ') != std::string::npos ||
-      tmp.find(',') != std::string::npos ||
-      tmp.find(7) != std::string::npos) { // ASCII 7 is the BELL character
-    throw Channel::invalidChannelName();
-  }
+const std::string &Channel::getName() const {
+	return _name;
 }
 
-Channel::Channel(Client &tmp, std::string name) : _modeSet(false) {
-  validChannelName(name);
-
-  _name = name;
-  _users.insert(std::pair<int, Client *>(tmp.getSocket(), &tmp));
-  _admins.insert(std::pair<int, Client *>(tmp.getSocket(), &tmp));
+const std::string &Channel::getTopic() const {
+	return _topic;
 }
 
-std::string Channel::getTopic() const { return this->_topic; }
-
-std::string Channel::getPswrd() const { return this->_pswrd; }
-
-std::string Channel::getName() const { return this->_name; }
-
-std::size_t Channel::getCapacity() const { return this->_maxCapacity; }
-
-bool Channel::getModeSet() const { return this->_modeSet; }
-
-std::set<char> Channel::getMode() const { return this->_mode; }
-
-std::set<int> Channel::getKickedUsers() const { return this->_kickedUsers; }
-
-std::map<int, Client *> &Channel::getInvitedUsers() {
-  return this->_invitedUsers;
+const std::string &Channel::getPassword() const {
+	return _password;
 }
 
-std::map<int, Client *> &Channel::getUsers() { return this->_users; }
-
-void Channel::setTopic(std::string newTopic) { this->_topic = newTopic; }
-
-void Channel::setName(std::string newName) {
-  try {
-    validChannelName(newName);
-    this->_name = newName;
-  } catch (const Channel::invalidChannelName::exception &e) {
-    std::cerr << e.what() << std::endl;
-  }
+size_t Channel::getMaxCapacity() const {
+	return _maxCapacity;
 }
 
-void Channel::setPswrd(std::string newPswrd) { this->_pswrd = newPswrd; }
-
-void Channel::setCapacity(int newCapacity) { this->_maxCapacity = newCapacity; }
-
-void Channel::setModeSet(bool changeMode) { this->_modeSet = changeMode; }
-
-void Channel::setMode(const char c) { this->_mode.insert(c); }
-
-void Channel::setKickedUsers(const int socket) {
-  this->_kickedUsers.insert(socket);
+bool Channel::hasMode(char mode) const {
+	return _modes.find(mode) != _modes.end();
 }
 
-void Channel::setInvitedUsers(Client &user) {
-  _invitedUsers.insert(std::pair<int, Client *>(user.getSocket(), &user));
+const std::set<char> &Channel::getMode() const {
+	return _modes;
 }
 
-void Channel::newUser(Client &tmp) {
-  _users.insert(std::pair<int, Client *>(tmp.getSocket(), &tmp));
+const std::set<int> &Channel::getUsers() const {
+	return _users;
 }
 
-void Channel::updatePriv(const Client &admin, Client &user) {
-  if (_admins.find(admin.getSocket()) == _admins.end())
-    throw insufficientPrivilege();
-  _admins.insert(std::pair<int, Client *>(user.getSocket(), &user));
+const std::set<int> &Channel::getAdmins() const {
+	return _admins;
 }
 
-void Channel::tryJoin(const Client &tmp, std::string pswrd) {
-  if (_modeSet) {
-    if (_mode.find('i') != _mode.end()) {
-      if (_invitedUsers.find(tmp.getSocket()) == _invitedUsers.end())
-        throw errorMode("ERR_INVITEONLYCHAN");
-    }
-    if (_mode.find('l') != _mode.end())
-      if ((_users.size() == _maxCapacity))
-        throw errorMode("ERR_CHANNELISFULL");
-    if (_mode.find('k') != _mode.end()) {
-      if (pswrd.empty())
-        throw errorMode("ERR_NEEDMOREPARAMS");
-      else if ((pswrd != _pswrd))
-        throw errorMode("ERR_BADCHANNELKEY");
-    }
-  }
+const std::set<int> &Channel::getInvitedUsers() const {
+	return _invitedUsers;
 }
 
-void Channel::tryKick(std::vector<std::string> param, IRCMessage const &tmp,
-                      Client &admin) {
-  (void)tmp;
-  std::vector<std::string>::iterator it = param.begin();
-  std::map<int, Client *>::iterator victimIt;
-
-  for (victimIt = _users.begin(); victimIt != _users.end(); victimIt++) {
-    if (victimIt == _users.end())
-      throw errorKick("ERR_NOTONCHANNEL");
-  }
-  if ((param[1].empty()) || (++it == param.end())) {
-    throw errorKick("ERR_NEEDMOREPARAMS");
-  }
-  if (_admins.find(admin.getSocket()) == _admins.end()) {
-    throw errorKick("ERR_CHANOPRIVSNEEDED");
-  }
+const std::set<int> &Channel::getKickedUsers() const {
+	return _kickedUsers;
 }
 
-void Channel::leaveChannel(Client const &user) {
-  std::map<int, Client *>::iterator it = _users.find(user.getSocket());
-
-  if (_users.find(user.getSocket()) != _users.end())
-    _users.erase(it);
-  else
-    throw errorPart("ERR_NOTONCHANNEL");
-  if (_admins.find(user.getSocket()) != _admins.end())
-    _admins.erase(it);
+bool Channel::hasUser(int socket) const {
+	return _users.find(socket) != _users.end();
 }
 
-/*
-        -ERR_NEEDMOREPARAMS              -ERR_NOSUCHNICK
-        -ERR_NOTONCHANNEL                -ERR_USERONCHANNEL
-        -ERR_CHANOPRIVSNEEDED
-        RPL_INVITING                    RPL_AWAY
-*/
-
-bool hasComma(std::string str) {
-  if (str.find(',') != std::string::npos)
-    return false;
-  return true;
+bool Channel::isAdmin(int socket) const {
+	return _admins.find(socket) != _admins.end();
 }
 
-void Channel::tryInvite(std::vector<std::string> param, ClientManager clients,
-                        int adminSocket, int userSocket) {
-
-  if (param.size() != 2 ||
-      (std::find_if(param.begin(), param.end(), hasComma) != param.end())) {
-    throw errorInvite("ERR_NEEDMOREPARAMS");
-  }
-  if (_users.find(adminSocket) == _users.end())
-    throw errorInvite("ERR_NOTONCHANNEL");
-  if (std::find_if(param.begin(), param.end(), hasComma) != param.end()) {
-    // todo: this error does not have any replies equivalent
-    throw errorInvite("ERR_TOOMANYPARAMS");
-  }
-  if (_users.find(userSocket) != _users.end())
-    throw errorInvite("ERR_USERONCHANNEL");
-  clients.getClientFromSocket(userSocket);
-  if (_modeSet && _mode.find('o') != _mode.end() &&
-      _admins.find(adminSocket) == _admins.end())
-    throw errorInvite("ERR_CHANOPRIVSNEEDED");
-  setInvitedUsers(clients.getClientFromSocket(userSocket));
+bool Channel::isInvited(int socket) const {
+	return _invitedUsers.find(socket) != _invitedUsers.end();
 }
 
-void Channel::changeTopic(IRCMessage const &tmp, Client const &user) {
-  if (!tmp.getPrefix().empty())
-    if (user.getUsername() != tmp.getPrefix())
-      throw errorTopic("ERR_USERSDONTMATCH");
-  if (_modeSet && _mode.find('o') != _mode.end() &&
-      _admins.find(user.getSocket()) == _admins.end())
-    throw errorTopic("ERR_CHANOPRIVSNEEDED");
-  if (_topic.empty() && tmp.getTrailing().empty())
-    throw errorTopic("RPL_NOTOPIC");
-  else {
-    _topic = tmp.getTrailing();
-    throw errorTopic("RPL_TOPIC");
-  }
+bool Channel::isKicked(int socket) const {
+	return _kickedUsers.find(socket) != _kickedUsers.end();
 }
-/*
-flags:
-        i(set/unset invite only)
-        t(set/unset topic priv to admin)
-        k(set/unset password)
-        o(give/take admin priv)
-        l(set/unset limit size)
 
-replies :
-           -ERR_NEEDMOREPARAMS
-           ERR_CHANOPRIVSNEEDED            ERR_NOSUCHNICK
-           ERR_NOTONCHANNEL                ERR_KEYSET
-           ERR_UNKNOWNMODE                 ERR_NOSUCHCHANNEL
-           ERR_USERSDONTMATCH              ERR_UMODEUNKNOWNFLAG
+size_t Channel::getUserCount() const {
+	return _users.size();
+}
 
-                   RPL_BANLIST                     RPL_ENDOFBANLIST
-           RPL_UMODEIS RPL_CHANNELMODEIS
-*/
+void	Channel::setName(const std::string& name) {
+	_name = name;
+}
 
-void isValidMode(std::string str, Channel &actual) {
-  std::string allMode = "itkol";
-  std::string::iterator it = std::find(allMode.begin(), allMode.end(), str[1]);
-  if ((str[0] != '+') || (str[0] != '-'))
-    throw Channel::errorMode("ERR_UNKNOWNMODE");
-  if ((it == allMode.end()) ||
-      (actual.getMode().find(str[1]) != actual.getMode().end()))
-    throw it != allMode.end() ? Channel::errorMode("ERR_UNKNOWNMODE")
-                              : Channel::errorMode("ERR_KEYSET");
+void Channel::setTopic(const std::string &topic) {
+	_topic = topic;
+}
+
+void Channel::setPassword(const std::string &password) {
+	_password = password;
+}
+
+void Channel::setCapacity(size_t capacity) {
+	_maxCapacity = capacity;
+}
+
+void Channel::addMode(char mode) {
+	_modes.insert(mode);
+}
+
+void Channel::removeMode(char mode) {
+	_modes.erase(mode);
 }
 
 enum CHNGMODE {
-  SINVITE,
-  UINVITE,
-  STOPIC,
-  UTOPIC,
-  SPASSWORD,
-  UPASSWORD,
-  SPRIV,
-  UPRIV,
-  SLIMIT,
-  ULIMIT,
-  DEFAULT
+	SINVITE,
+	UINVITE,
+	STOPIC,
+	UTOPIC,
+	SPASSWORD,
+	UPASSWORD,
+	SPRIV,
+	UPRIV,
+	SLIMIT,
+	ULIMIT,
+	DEFAULT
 };
 
-CHNGMODE applyMode(std::string &tmp) {
-  if (tmp == "+i")
-    return SINVITE;
-  if (tmp == "-i")
-    return UINVITE;
-  if (tmp == "+t")
-    return STOPIC;
-  if (tmp == "-t")
-    return UTOPIC;
-  if (tmp == "+k")
-    return SPASSWORD;
-  if (tmp == "-k")
-    return UPASSWORD;
-  if (tmp == "+o")
-    return SPRIV;
-  if (tmp == "-o")
-    return UPRIV;
-  if (tmp == "+l")
-    return SLIMIT;
-  if (tmp == "-l")
-    return ULIMIT;
-  return DEFAULT;
+CHNGMODE applyMode(const std::string &tmp) {
+	if (tmp == "+i")
+		return SINVITE;
+	if (tmp == "-i")
+		return UINVITE;
+	if (tmp == "+t")
+		return STOPIC;
+	if (tmp == "-t")
+		return UTOPIC;
+	if (tmp == "+k")
+		return SPASSWORD;
+	if (tmp == "-k")
+		return UPASSWORD;
+	if (tmp == "+o")
+		return SPRIV;
+	if (tmp == "-o")
+		return UPRIV;
+	if (tmp == "+l")
+		return SLIMIT;
+	if (tmp == "-l")
+		return ULIMIT;
+	return DEFAULT;
 }
 
-std::string Channel::updateMode(IRCMessage const &tmp, Client const &sender) {
-  std::vector<std::string> params = tmp.getParams();
-  if (params.size() < 2)
-    return "";
-
-  if (!isOperator(sender)) {
-    throw errorMode("ERR_CHANOPRIVSNEEDED");
-  }
-
-  std::string modeString = params[1];
-  std::string changes = "";
-  bool adding = true;
-  size_t argIndex = 2;
-
-  for (size_t i = 0; i < modeString.size(); ++i) {
-    char c = modeString[i];
-
-    if (c == '+') {
-      adding = true;
-      continue;
-    }
-    if (c == '-') {
-      adding = false;
-      continue;
-    }
-
-    if (c == 'o') {
-      if (argIndex < params.size()) {
-        std::string targetNick = params[argIndex++];
-        Client *target = getClientInChannel(targetNick);
-
-        if (target) {
-          if (adding) {
-            _admins.insert(std::make_pair(target->getSocket(), target));
-            changes += "+o " + targetNick + " ";
-          } else {
-            // as our response for what to do when last admin is removed, we
-            // just forbid removing the last admin altogether.
-            _admins.erase(target->getSocket());
-            changes += "-o " + targetNick + " ";
-          }
-          _modeSet = true;
-        } else {
-          throw errorKick("ERR_USERNOTINCHANNEL");
-        }
-      }
-    }
-    // --- KEY MODE (+/-k) ---
-    else if (c == 'k') {
-      if (adding) {
-        if (argIndex < params.size()) {
-          _pswrd = params[argIndex++];
-          _mode.insert(c);
-          changes += "+k " + _pswrd + " ";
-        }
-      } else {
-        _mode.erase(c);
-        _pswrd = "";
-        changes += "-k ";
-      }
-      _modeSet = true;
-    }
-    // --- LIMIT MODE (+/-l) ---
-    else if (c == 'l') {
-      if (adding) {
-        if (argIndex < params.size()) {
-          _maxCapacity = std::atoi(params[argIndex++].c_str());
-          _mode.insert(c);
-          std::ostringstream oss;
-          oss << _maxCapacity;
-          changes += "+l " + oss.str() + " ";
-        }
-      } else {
-        _mode.erase(c);
-        changes += "-l ";
-      }
-      _modeSet = true;
-    }
-    // --- BOOLEAN MODES (i, t) ---
-    else if (c == 'i' || c == 't') {
-      if (adding) {
-        _mode.insert(c);
-        changes += std::string("+") + c + " ";
-      } else {
-        _mode.erase(c);
-        changes += std::string("-") + c + " ";
-      }
-      _modeSet = true;
-    } else {
-      throw errorMode("ERR_UNKNOWNMODE");
-    }
-  }
-  return changes;
+std::string Channel::updateMode(const IRCMessage &msg, int senderSocket, ClientManager &clients) {
+	std::vector<std::string> params = msg.getParams();
+	if(msg.getCountParams() < 2)
+		throw std::runtime_error("ERR_NEEDMOREPARAMS");
+	if (!isAdmin(senderSocket)) {
+		throw std::runtime_error("ERR_CHANOPRIVSNEEDED");
+	}
+	std::string modeString = params[1];
+	std::string changes = "";
+	std::string currentMode = "";
+	std::string temp = "+";
+	size_t argIndex = 2;
+	for (size_t i = 0; i < modeString.size(); i++) {
+		temp[1] = modeString[i];
+		if (modeString[i] == '+' || modeString[i] == '-') {
+			temp[0] = modeString[i];
+			continue;
+		}
+		currentMode = temp[0];
+		currentMode += temp[1];
+		CHNGMODE mode = applyMode(currentMode);
+		switch (mode) {
+			case SINVITE:
+				addMode('i');
+				changes += "+i ";
+				break;
+			case UINVITE:
+				removeMode('i');
+				changes += "-i ";
+				break;
+			case STOPIC:
+				addMode('t');
+				changes += "+t ";
+				break;
+			case UTOPIC:
+				removeMode('t');
+				changes += "-t ";
+				break;
+			case SPASSWORD:
+				if (argIndex >= params.size())
+					throw std::runtime_error("ERR_NEEDMOREPARAMS");
+				_password = params[argIndex++];
+				addMode('k');
+				changes += "+k " + _password + " ";
+				break;
+			case UPASSWORD:
+				removeMode('k');
+				_password = "";
+				changes += "-k ";
+				break;
+			case SPRIV:
+				if (argIndex >= params.size())
+					throw std::runtime_error("ERR_NEEDMOREPARAMS");
+				{
+					std::string& targetNickname = params[argIndex++];
+					try {
+						Client& client = clients.getClientFromNickname(targetNickname);
+						int socket = client.getSocket();
+						if (!hasUser(socket))
+							throw std::runtime_error("ERR_USERNOTINCHANNEL");
+						addAdmin(socket);
+						changes += "+o " + targetNickname + " ";
+					} catch (const ClientManager::ClientNotFound& ) {
+						throw std::runtime_error("ERR_NOSUCHNICK");
+					}
+				}
+				break;
+			case UPRIV:
+				if (argIndex >= params.size())
+					throw std::runtime_error("ERR_NEEDMOREPARAMS");
+				{
+					std::string& targetNickname = params[argIndex++];
+					try {
+						Client& client = clients.getClientFromNickname(targetNickname);
+						int socket = client.getSocket();
+						if (!hasUser(socket))
+							throw std::runtime_error("ERR_USERNOTINCHANNEL");
+						if (_admins.size() <= 1)
+							throw std::runtime_error("ERR_CHANOPRIVSNEEDED");
+						removeAdmin(socket);
+						changes += "-o " + targetNickname + " ";
+					} catch (const ClientManager::ClientNotFound& ) {
+						throw std::runtime_error("ERR_NOSUCHNICK");
+					}
+				}
+				break;
+			case SLIMIT:
+				if (argIndex >= params.size())
+					throw std::runtime_error("ERR_NEEDMOREPARAMS");
+				{
+					size_t limit = 0;
+					std::stringstream ss(params[argIndex++]);
+					ss >> limit;
+					if (limit <= 0)
+						throw std::runtime_error("ERR_NEEDMOREPARAMS");
+					_maxCapacity = limit;
+					addMode('l');
+					ss.str(std::string());
+					ss.clear();
+					ss << _maxCapacity;
+					changes += "+l " + ss.str() + " ";
+				}
+				break;
+			case ULIMIT:
+				removeMode('l');
+				_maxCapacity = 0;
+				changes += "-l ";
+				break;
+			default:
+				throw std::runtime_error("ERR_UNKNOWNMODE");
+		}
+	}
+	return changes;
 }
 
-const char *Channel::insufficientPrivilege::what() const throw() {
-  return "ERR_CHANOPRIVSNEEDED";
+void Channel::tryJoin(int socket, const std::string &password) {
+
 }
 
-const char *Channel::invalidChannelName::what() const throw() {
-  return "error: Channel name must begin with '&' or '#'.";
+void Channel::addUser(int socket) {
+	_users.insert(socket);
+	_invitedUsers.erase(socket);
 }
 
-const char *Channel::errorMode::what() const throw() { return _errMsg.c_str(); }
-
-const char *Channel::errorKick::what() const throw() { return _errMsg.c_str(); }
-
-const char *Channel::errorPart::what() const throw() { return _errMsg.c_str(); }
-
-const char *Channel::errorInvite::what() const throw() {
-  return _errMsg.c_str();
+void Channel::removeUser(int socket) {
+	if (!hasUser(socket)) {
+		throw UserNotInChan("ERR_USERNOTINCHANNEL");
+	}
+	_users.erase(socket);
+	_admins.erase(socket);
 }
 
-const char *Channel::errorTopic::what() const throw() {
-  return _errMsg.c_str();
+void Channel::addAdmin(int socket) {
+	if (!hasUser(socket)) {
+		throw UserNotInChan("ERR_USERNOTINCHANNEL");
+	}
+	_admins.insert(socket);
+}
+
+void Channel::removeAdmin(int socket) {
+	_admins.erase(socket);
+}
+
+void Channel::inviteUser(int socket) {
+	_invitedUsers.insert(socket);
+}
+
+void Channel::kickUser(int socket) {
+	removeUser(socket);
+	_kickedUsers.insert(socket);
+}
+
+void Channel::changeTopic(const std::string &topicName, int sender) {
+
+}
+
+bool Channel::isValidName(const std::string &name) {
+	if (name.empty() || name.size() > 200) {
+		return false;
+	}
+	if (name[0] != '#' && name[0] != '&') {
+		return false;
+	}
+	if (name.find(' ') != std::string::npos || name.find(',') != std::string::npos
+			|| name.find(7) != std::string::npos) {
+		return false;
+	}
+	return true;
 }

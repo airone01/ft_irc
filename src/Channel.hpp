@@ -1,141 +1,80 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Channel.hpp                                        :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/11/12 16:21:59 by nahamida          #+#    #+#             */
-/*   Updated: 2025/12/08 17:21:41 by elagouch         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #ifndef CHANNEL_HPP
 #define CHANNEL_HPP
 
-#include "Client.hpp"
 #include "ClientManager.hpp"
 #include "IRCMessage.hpp"
-#include <map>
 #include <set>
-#include <vector>
 
-#define ADMIN
-#define USER
-// todo: add ERR_NONICKNAMEGIVEN, ERR_NOSUCHCHANNEL replies error check
 class Channel {
 private:
-  std::map<int, Client *> _users;
-  std::map<int, Client *> _admins;
-  std::map<int, Client *> _invitedUsers;
-  std::set<char> _mode;
-  std::set<int> _kickedUsers;
-  std::string _topic;
-  std::string _pswrd;
-  std::string _name;
-  std::size_t _maxCapacity;
-  bool _modeSet;
-
-  Channel(void);
-
+	std::string		_name;
+	std::string		_topic;
+	std::string		_password;
+	std::size_t		_maxCapacity;
+	std::set<char>	_modes;
+	std::set<int>	_users;
+	std::set<int>	_admins;
+	std::set<int>	_invitedUsers;
+	std::set<int>	_kickedUsers;
+	// utility
+	bool	checkPassword(const std::string& password) const;
+	bool	checkCapacity() const;
 public:
-  Channel(const Channel &);
-  Channel &operator=(const Channel &);
-  // Channel( Client & );
-  // Channel( Client & ,int capacity );
-  Channel(Client &, std::string name);
-  ~Channel(void);
-
-  std::string getTopic() const;
-  std::string getPswrd() const;
-  std::string getName() const;
-  std::size_t getCapacity() const;
-  bool getModeSet() const;
-  std::map<int, Client *> &getInvitedUsers();
-  std::map<int, Client *> &getUsers();
-
-  std::set<char> getMode() const;
-  std::set<int> getKickedUsers() const;
-  bool isOperator(const Client &user) const;
-  Client *getClientInChannel(std::string nick);
-
-  void setTopic(const std::string newTopic);
-  void setPswrd(const std::string newPswrd);
-  void setName(const std::string newName);
-  void setCapacity(const int newCapacity);
-  void setModeSet(const bool changeMode);
-  void setMode(const char c);
-  void setKickedUsers(const int socket);
-  void setInvitedUsers(Client &);
-
-  void newUser(Client &);
-  void tryJoin(const Client &, std::string pswrd);
-  void tryKick(std::vector<std::string> param, IRCMessage const &tmp,
-               Client &admin);
-  void tryInvite(std::vector<std::string> param, ClientManager clients,
-                 int adminSocket, int userSocket);
-  void updatePriv(const Client &admin, Client &user);
-  void leaveChannel(Client const &user);
-  void changeTopic(IRCMessage const &tmp, Client const &user);
-  std::string updateMode(IRCMessage const &tmp, Client const &sender);
-
-  class insufficientPrivilege : public std::exception {
-    const char *what() const throw();
-  };
-
-  class invalidChannelName : public std::exception {
-    const char *what() const throw();
-  };
-
-  class errorMode : public std::exception {
-  private:
-    std::string _errMsg;
-
-  public:
-    errorMode(std::string error) : _errMsg(std::string("error: ") + error) {}
-    const char *what() const throw();
-    ~errorMode() throw() {};
-  };
-
-  class errorKick : public std::exception {
-  private:
-    std::string _errMsg;
-
-  public:
-    errorKick(std::string error) : _errMsg(std::string("error: ") + error) {}
-    const char *what() const throw();
-    ~errorKick() throw() {};
-  };
-
-  class errorPart : public std::exception {
-  private:
-    std::string _errMsg;
-
-  public:
-    errorPart(std::string error) : _errMsg(std::string("error: ") + error) {}
-    const char *what() const throw();
-    ~errorPart() throw() {};
-  };
-
-  class errorInvite : public std::exception {
-  private:
-    std::string _errMsg;
-
-  public:
-    errorInvite(std::string error) : _errMsg(std::string("error: ") + error) {}
-    const char *what() const throw();
-    ~errorInvite() throw() {};
-  };
-
-  class errorTopic : public std::exception {
-  private:
-    std::string _errMsg;
-
-  public:
-    errorTopic(std::string error) : _errMsg(std::string("error: ") + error) {}
-    const char *what() const throw();
-    ~errorTopic() throw() {};
-  };
+	Channel();
+	Channel(int socket, const std::string& name);
+	Channel(const Channel& copy);
+	Channel& operator=(const Channel& other);
+	~Channel();
+	// exception
+	class InvalidChanName: public std::runtime_error {
+	public:
+		InvalidChanName(const std::string& msg)
+		: std::runtime_error(msg) {}
+	};
+	class UserNotInChan: public std::runtime_error {
+	public:
+		UserNotInChan(const std::string& msg)
+		: std::runtime_error(msg) {}
+	};
+	// getter
+	const std::string&		getName() const;
+	const std::string&		getTopic() const;
+	const std::string&		getPassword() const;
+	size_t					getMaxCapacity() const;
+	size_t					getUserCount() const;
+	const std::set<char>&	getMode() const;
+	const std::set<int>&	getUsers() const;
+	const std::set<int>&	getAdmins() const;
+	const std::set<int>&	getInvitedUsers() const;
+	const std::set<int>&	getKickedUsers() const;
+	// setter
+	void	setName(const std::string& name);
+	void	setTopic(const std::string& topic);
+	void	setPassword(const std::string& password);
+	void	setCapacity(size_t capacity);
+	// utility
+	bool	hasMode(char mode) const;
+	bool	hasUser(int socket) const;
+	bool	isAdmin(int socket) const;
+	bool	isInvited(int socket) const;
+	bool	isKicked(int socket) const;
+	// mode
+	void		addMode(char mode);
+	void		removeMode(char mode);
+	std::string	updateMode(const IRCMessage& msg, int sender, ClientManager& clients);
+	// user
+	void	tryJoin(int socket, const std::string& password);
+	void	addUser(int socket);
+	void	removeUser(int socket);
+	void	inviteUser(int socket);
+	// admin
+	void	addAdmin(int socket);
+	void	removeAdmin(int socket);
+	void	kickUser(int socket);
+	// topic
+	void	changeTopic(const std::string& topicName, int sender);
+	// validation for all channels
+	static bool	isValidName(const std::string& name);
 };
 
-#endif
+#endif // !CHANNEL_HPP

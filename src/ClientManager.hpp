@@ -26,7 +26,6 @@ public:
 	// utility
 	bool isNicknameUsed(const std::string& nickname);
 	bool isUsernameUsed(const std::string& username);
-
 };
 
 #endif // !CLIENTMANAGER_HPP
