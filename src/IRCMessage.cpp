@@ -80,8 +80,9 @@ static std::vector<std::string> extractParams(const std::string &line) {
   return params;
 }
 
-IRCMessage::IRCMessage(std::string &line) {
-  std::string cleanLine = trimCRLF(line);
+IRCMessage::IRCMessage(const std::string &line) {
+  std::string tempLine = line;
+  std::string cleanLine = trimCRLF(tempLine);
   if (cleanLine.empty())
     throw MsgEmptyException();
   size_t pos = 0;

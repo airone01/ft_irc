@@ -16,13 +16,13 @@
 
 Client::Client(int fd, Reactor *reactor, ConnectionManager *mgr)
     : Connection(fd, reactor, mgr), _socket(fd), _nickname(""), _username(""),
-      _hostname(""), _buffer(""), _auth(false), _registered(false) {}
+      _hostname(""), _rBuffer(""), _auth(false), _registered(false) {}
 
 Client::Client(const Client &copy)
-    : Connection(copy._socket, copy._reactor, copy._manager),
+    : Connection(copy._socket, copy._manager),
       _socket(copy._socket), _nickname(copy._nickname),
       _username(copy._username), _hostname(copy._hostname),
-      _buffer(copy._buffer), _auth(copy._auth), _registered(copy._registered) {}
+      _rBuffer(copy._rBuffer), _auth(copy._auth), _registered(copy._registered) {}
 
 Client &Client::operator=(const Client &other) {
   if (this != &other) {
@@ -30,7 +30,7 @@ Client &Client::operator=(const Client &other) {
     this->_nickname = other._nickname;
     this->_username = other._username;
     this->_hostname = other._hostname;
-    this->_buffer = other._buffer;
+    this->_rBuffer = other._rBuffer;
     this->_auth = other._auth;
     this->_registered = other._registered;
   }
@@ -47,6 +47,8 @@ std::string Client::getUsername() const { return (this->_username); }
 
 std::string Client::getHostname() const { return (this->_hostname); }
 
+std::string Client::getRbuff() const { return (this->_rBuffer); }
+
 bool Client::getAuth() const { return (this->_auth); }
 
 bool Client::getRegistered() const { return (this->_registered); }
@@ -60,20 +62,20 @@ void Client::setAuth(bool auth) { this->_auth = auth; }
 void Client::setRegistered(bool reg) { this->_registered = reg; }
 
 void Client::appendToBuffer(const std::string &buffer) {
-  this->_buffer += buffer;
+  this->_rBuffer += buffer;
 }
 
 std::string Client::extractMessage() {
-  size_t pos = _buffer.find("\n");
+  size_t pos = _rBuffer.find("\n");
   if (pos == std::string::npos) {
     return "";
   }
 
   // Extract the line including the newline
-  std::string line = _buffer.substr(0, pos + 1); // +1 to include \n
+  std::string line = _rBuffer.substr(0, pos + 1); // +1 to include \n
 
   // Remove extracted line from buffer
-  _buffer.erase(0, pos + 1);
+  _rBuffer.erase(0, pos + 1);
 
   // Trim \r if present (CRLF -> LF)
   if (!line.empty() && line[line.size() - 1] == '\n')

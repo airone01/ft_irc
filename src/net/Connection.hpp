@@ -16,6 +16,8 @@
 #include <string>
 #include <sys/types.h>
 #include <vector>
+#include <sys/epoll.h>
+#include <exception>
 
 #include "ConnectionManager.hpp"
 #include "EventHandler.hpp"
@@ -90,11 +92,9 @@ public:
 protected:
   bool _disconnecting;
   int _fd;
-  Reactor *_reactor;
   ConnectionManager *_manager;
   std::vector<char> _readBuf;
   std::vector<char> _writeBuf;
-  MessageCallback _msgCb;
   bool _closed;
   time_t _lastActivity;
 };

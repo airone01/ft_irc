@@ -62,7 +62,7 @@ bool Socket::createAndBind(const std::string &addr, unsigned short port) {
   else
     inet_aton(addr.c_str(), &sin.sin_addr);
 
-  // if (::bind(m_fd, (struct sockaddr *)&sin, sizeof(sin)) != 0) {
+//   if (::bind(m_fd, (struct sockaddr *)&sin, sizeof(sin)) != 0) {
   if (::bind(_fd, reinterpret_cast<struct sockaddr *>(&sin), sizeof(sin)) !=
       0) {
     ::close(_fd);

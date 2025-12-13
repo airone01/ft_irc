@@ -15,6 +15,8 @@
 
 #include <string>
 #include <sys/types.h>
+#include <sys/types.h>
+#include <netdb.h>
 
 /**
  * @brief Lightweight wrapper around a raw socket fd.

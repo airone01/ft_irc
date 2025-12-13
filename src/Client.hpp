@@ -29,7 +29,8 @@ private:
   std::string _nickname;
   std::string _username;
   std::string _hostname;
-  std::string _buffer;
+  std::string _rBuffer;
+  std::string _wBuffer;
   bool _auth;
   bool _registered;
   Client();
@@ -46,6 +47,7 @@ public:
   std::string getHostname() const;
   bool getAuth() const;
   bool getRegistered() const;
+  std::string getRbuff() const;
   // setter
   void setNickname(const std::string &nick);
   void setUsername(const std::string &user);

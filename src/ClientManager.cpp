@@ -54,3 +54,4 @@ Client &ClientManager::getClientFromSocket(int &socket) {
 }
 
 std::vector<Client> &ClientManager::getClients() { return _clients; }
+

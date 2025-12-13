@@ -14,6 +14,7 @@
 #include "Logger.hpp"
 #include <algorithm>
 #include <iostream>
+#include <sstream>
 
 Channel::Channel(void) {}
 Channel::Channel(const Channel &tmp)
@@ -50,23 +51,17 @@ Channel::~Channel(void) {}
 // 	this->_users.insert(std::pair<int, Client*>(tmp.getSocket(), &tmp));
 // }
 
-void validChannelName(std::string tmp) {
-  // RFC 1459/2812 specifies max length of 200 characters for channel names.
-  if (tmp.size() > 200) {
-    throw Channel::invalidChannelName();
-  }
-
-  // Must start with '#' or '&'.
-  if (tmp.empty() || (tmp[0] != '#' && tmp[0] != '&')) {
-    throw Channel::invalidChannelName();
-  }
-
-  // Disallowed characters: space, comma, BELL (ASCII 7).
-  if (tmp.find(' ') != std::string::npos ||
-      tmp.find(',') != std::string::npos ||
-      tmp.find(7) != std::string::npos) { // ASCII 7 is the BELL character
-    throw Channel::invalidChannelName();
-  }
+void	validChannelName(std::string tmp){
+	size_t space = tmp.find(' ');
+	size_t comma = tmp.find(',');
+	size_t ctrlG = tmp.find(7);
+	size_t size = tmp.size();
+	if (size > 200 || space < size || comma < size || ctrlG < size)
+			throw Channel::invalidChannelName();
+	if (tmp.empty() || tmp[0] == '#' || tmp[0] == '&')
+		;
+	else
+		throw Channel::invalidChannelName();
 }
 
 Channel::Channel(Client &tmp, std::string name) : _modeSet(false) {
@@ -134,22 +129,22 @@ void Channel::updatePriv(const Client &admin, Client &user) {
   _admins.insert(std::pair<int, Client *>(user.getSocket(), &user));
 }
 
-void Channel::tryJoin(const Client &tmp, std::string pswrd) {
-  if (_modeSet) {
-    if (_mode.find('i') != _mode.end()) {
-      if (_invitedUsers.find(tmp.getSocket()) == _invitedUsers.end())
-        throw errorMode("ERR_INVITEONLYCHAN");
-    }
-    if (_mode.find('l') != _mode.end())
-      if ((_users.size() == _maxCapacity))
-        throw errorMode("ERR_CHANNELISFULL");
-    if (_mode.find('k') != _mode.end()) {
-      if (pswrd.empty())
-        throw errorMode("ERR_NEEDMOREPARAMS");
-      else if ((pswrd != _pswrd))
-        throw errorMode("ERR_BADCHANNELKEY");
-    }
-  }
+void Channel::tryJoin( const Client &tmp, std::string pswrd){
+	if (_modeSet ){
+		if (_mode.find('i') != _mode.end()){
+			if (_invitedUsers.find(tmp.getSocket()) == _invitedUsers.end())
+				throw errorMode("ERR_INVITEONLYCHAN");
+		}
+		if (_mode.find('l') != _mode.end())
+			if ((_users.size() == _maxCapacity))
+				throw errorMode("ERR_CHANNELISFULL");
+		if (_mode.find('k') != _mode.end()){
+			if (pswrd.empty())
+				throw errorMode("ERR_NEEDMOREPARAMS");
+			else if ((pswrd != _pswrd))
+				throw errorMode("ERR_BADCHANNELKEY");
+		}
+	}
 }
 
 void Channel::tryKick(std::vector<std::string> param, IRCMessage const &tmp,
@@ -250,14 +245,14 @@ replies :
 */
 
 void isValidMode(std::string str, Channel &actual) {
-  std::string allMode = "itkol";
-  std::string::iterator it = std::find(allMode.begin(), allMode.end(), str[1]);
-  if ((str[0] != '+') || (str[0] != '-'))
-    throw Channel::errorMode("ERR_UNKNOWNMODE");
-  if ((it == allMode.end()) ||
-      (actual.getMode().find(str[1]) != actual.getMode().end()))
-    throw it != allMode.end() ? Channel::errorMode("ERR_UNKNOWNMODE")
-                              : Channel::errorMode("ERR_KEYSET");
+	std::string allMode = "itkol";
+	std::string::iterator it = std::find(allMode.begin(), allMode.end(), str[1]);
+	if ((str[0] != '+') || (str[0] != '-'))
+		throw Channel::errorMode("ERR_UNKNOWNMODE");
+	if ((it == allMode.end()) ||
+		(actual.getMode().find(str[1]) != actual.getMode().end()))
+	throw it != allMode.end() ? Channel::errorMode("ERR_UNKNOWNMODE")
+								: Channel::errorMode("ERR_KEYSET");
 }
 
 enum CHNGMODE {
@@ -298,72 +293,65 @@ CHNGMODE applyMode(std::string &tmp) {
   return DEFAULT;
 }
 
-void Channel::updateMode(IRCMessage const &tmp, Client const &user) {
-  (void)user;
-  std::vector<std::string> params = tmp.getParams();
-
-  // If only channel name is given (MODE #channel), it's a query.
-  // We simply return, allowing Dispatcher to handle it without error.
-  if (params.size() < 2)
-    return;
-
-  std::string modeString = params[1];
-  bool adding = true;
-  size_t argIndex = 2; // Arguments (key, limit, user) start after mode string
-
-  for (size_t i = 0; i < modeString.size(); ++i) {
-    char c = modeString[i];
-
-    if (c == '+') {
-      adding = true;
-      continue;
-    }
-    if (c == '-') {
-      adding = false;
-      continue;
-    }
-
-    // Supported modes: i, t, k, l, o
-    if (c == 'i' || c == 't') {
-      if (adding)
-        _mode.insert(c);
-      else
-        _mode.erase(c);
-      _modeSet = true;
-    } else if (c == 'k') {
-      if (adding) {
-        if (argIndex < params.size()) {
-          _pswrd = params[argIndex++];
-          _mode.insert(c);
-        }
-        // else: technically error, but ignoring prevents crash
-      } else {
-        _mode.erase(c);
-        _pswrd = "";
-      }
-      _modeSet = true;
-    } else if (c == 'l') {
-      if (adding) {
-        if (argIndex < params.size()) {
-          _maxCapacity = std::atoi(params[argIndex++].c_str());
-          _mode.insert(c);
-        }
-      } else {
-        _mode.erase(c);
-      }
-      _modeSet = true;
-    } else if (c == 'o') {
-      // Operator mode requires a target nick.
-      // We skip it here to avoid complexity in this scope,
-      // but we consume the arg to keep parsing valid for subsequent modes.
-      if (argIndex < params.size()) {
-        argIndex++;
-      }
-    } else {
-      // Unknown mode char
-      throw errorMode("ERR_UNKNOWNMODE");
-    }
-  }
+void	Channel::updateMode(IRCMessage const &tmp, Client const &user, ClientManager &manager){
+	if(tmp.getCountParams() < 2 || !(_admins.find(user.getSocket()) != _admins.end()))
+		throw tmp.getCountParams() < 2 ? errorMode("ERR_NEEDMOREPARAMS") : errorMode("ERR_CHANOPRIVSNEEDED");
+	isValidMode(tmp.getParams()[1], *this);
+	std::string param = tmp.getParams()[1];
+	switch (applyMode(param))
+	{
+		case SINVITE:
+			_mode.insert(param[1]);
+			break;
+		case UINVITE:
+			_mode.erase(param[1]);
+			break;
+		case STOPIC:
+			_mode.insert(param[1]);
+			break;
+		case UTOPIC:
+			_mode.erase(param[1]);
+			break;
+		case SPASSWORD:
+		{
+			_mode.insert(param[1]);
+			if (!tmp.getParams()[2].empty())
+				_pswrd = tmp.getParams()[2];
+			else
+				throw errorMode("ERR_NEEDMOREPARAMS");
+			break;
+		}
+		case UPASSWORD:
+				_mode.erase(param[1]);
+				_pswrd.clear();
+			break;
+		case SPRIV:{
+			std::string newOp = tmp.getParams()[2];
+			_admins.insert(std::pair<int, Client *>(manager.getClientFromUsername(newOp).getSocket(), 
+				&manager.getClientFromUsername(newOp)));
+			break;
+		}
+		case UPRIV:{
+			std::string newOp = tmp.getParams()[2];
+			_admins.erase(manager.getClientFromUsername(newOp).getSocket());
+			break;
+		}
+		case SLIMIT:{
+			if (std::find_if(tmp.getParams()[2].begin(), tmp.getParams()[2].end(), isdigit) != tmp.getParams()[2].end())
+				throw errorMode("ERR_KEYSET");
+			std::istringstream istmp(tmp.getParams()[2]);
+			size_t value; istmp >> value;
+			_maxCapacity = value;
+			_mode.insert(param[1]);
+			break;
+		}
+		case ULIMIT:
+			_mode.erase(param[1]);
+			_maxCapacity = 0;
+			break;
+		default:
+			break;
+	}
 }
 
 const char *Channel::insufficientPrivilege::what() const throw() {

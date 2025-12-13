@@ -52,7 +52,7 @@ private:
   IRCMessage &operator=(const IRCMessage &other);
 
 public:
-  IRCMessage(std::string &line);
+  IRCMessage(const std::string &line);
   ~IRCMessage();
   // exception
   class MsgEmptyException : public std::exception {

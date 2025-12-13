@@ -24,7 +24,7 @@ public:
   static void part(IRCMessage const &param, ChannelManager &channels,
                    Client &user);
   static void mode(IRCMessage const &tmp, ChannelManager &channels,
-                   Client &user);
+                   Client &user, ClientManager &clients);
   static void topic(IRCMessage const &tmp, ChannelManager &channels,
                     Client &user);
   static void invite(IRCMessage const &tmp, ClientManager &clients,

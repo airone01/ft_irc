@@ -15,7 +15,7 @@
 #include <string.h>
 #include <sys/eventfd.h>
 #include <unistd.h>
-
+#include <iostream>
 #include "Reactor.hpp"
 
 Reactor::Reactor() : _epollFd(-1), _eventFd(-1), _running(false), _events() {}
@@ -33,7 +33,7 @@ Reactor::Reactor(int maxEvents) : _epollFd(-1), _eventFd(-1), _running(false) {
   _events.resize(maxEvents);
 
   // create eventfd used to wake up epoll_wait
-  _eventFd = ::eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+  _eventFd = epoll_ctl(0, EFD_NONBLOCK | EFD_CLOEXEC);
   if (_eventFd >= 0) {
     struct epoll_event ev;
     ev.events = EPOLLIN;

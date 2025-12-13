@@ -37,7 +37,6 @@ private:
   /**
    * @brief Execute a single parsed command.
    */
-  bool executeCommand(Client &client, const std::string &line);
 };
 
 #endif //! DISPATCHER_HPP

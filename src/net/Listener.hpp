@@ -44,14 +44,9 @@ public:
 
   /**
    * @brief Start listening (bind + listen) and register with reactor.
-   * @return true on success
+   * @throw runtime error
    */
-  bool start();
-
-  /**
-   * @brief EventHandler implementation.
-   */
-  virtual void handleEvent(uint32_t events);
+  void start();
 
   /**
    * @brief Set a default message callback that will be installed on each
@@ -59,23 +54,12 @@ public:
    */
   void setDefaultMessageCallback(Connection::MessageCallback cb);
 
-  /**
-   * @brief Set a factory used to construct Connection-derived objects for each
-   * accepted fd.
-   *
-   * If not set, Listener will create plain Connection objects.
-   */
-  void setConnectionFactory(ConnectionFactory f);
-
 private:
   Socket _socket;
   std::string _addr;
   unsigned short _port;
-  Reactor *_reactor;
-  ConnectionManager *_connManager;
 
   Connection::MessageCallback _defaultMsgCb;
-  ConnectionFactory _factory;
 };
 
 #endif // !LISTENER_HPP

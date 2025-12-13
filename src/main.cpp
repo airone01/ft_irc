@@ -23,9 +23,9 @@
 #include "Dispatcher.hpp"
 #include "Logger.hpp"
 #include "net/Connection.hpp"
-#include "net/ConnectionManager.hpp"
 #include "net/Listener.hpp"
-#include "net/Reactor.hpp"
+
+#include <sstream>
 
 static Reactor *g_reactor = NULL;
 static Dispatcher *g_dispatcher = NULL;
@@ -38,11 +38,6 @@ extern "C" void handle_sigint(int) {
     g_reactor->stop();
 }
 
-static Connection *userFactory(int fd, Reactor *reactor,
-                               ConnectionManager *mgr) {
-  return new Client(fd, reactor, mgr);
-}
-
 // Bridge function: C-style callback -> Class method
 static bool bridgeCallback(Connection *conn, const std::vector<char> &data) {
   if (g_dispatcher) {
@@ -52,23 +47,21 @@ static bool bridgeCallback(Connection *conn, const std::vector<char> &data) {
 }
 
 int main(int argc, char **argv) {
-  unsigned short port;
 
-  if (argc != 2) {
+  if (argc < 2 || argc > 3) {
     // TODO: implement password as second arg
     std::cerr << "Usage: " << argv[0] << " <port> <password>" << std::endl;
     return 1;
   }
 
-  int p = atoi(argv[1]);
-  if (p > 0)
-    port = static_cast<unsigned short>(p);
+  std::istringstream ss(argv[1]);
+  unsigned short port; ss >> port;
+  if (!ss.eof())
+    std::cerr << "error: unvalid port." << std::endl;
+
 
   // Set log level (optional)
   logger::Logger::getInstance().setMinLevel(logger::DEBUG);
-
-  Reactor reactor(128);
-  g_reactor = &reactor;
 
   struct sigaction sa;
   memset(&sa, 0, sizeof(sa));
@@ -77,8 +70,6 @@ int main(int argc, char **argv) {
   sa.sa_flags = 0;
   sigaction(SIGINT, &sa, NULL);
 
-  ConnectionManager connMgr(&reactor);
-  g_connMgr = &connMgr;
   ChannelManager chanMgr;
   g_chanMgr = &chanMgr;
   ClientManager clientMgr;

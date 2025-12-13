@@ -75,7 +75,7 @@ public:
   void updatePriv(const Client &admin, Client &user);
   void leaveChannel(Client const &user);
   void changeTopic(IRCMessage const &tmp, Client const &user);
-  void updateMode(IRCMessage const &tmp, Client const &user);
+  void updateMode(IRCMessage const &tmp, Client const &user, ClientManager &manager);
 
   class insufficientPrivilege : public std::exception {
     const char *what() const throw();
