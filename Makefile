@@ -35,37 +35,37 @@ FGGRAY			:=	$(shell tput setaf 244)
 # == mandatory ==
 CXXFLAGS	+=	-Wall -Werror -Wextra --std=c++98
 # == code quality ==
-CXXFLAGS	+=	-Wpedantic		# increas portability
-CXXFLAGS	+=	-Wconversion	# warns against implicit coversion
-CXXFLAGS	+=	-Wformat -Wformat=2 -Werror=format-security
-														# harden against string vulns
-CXXFLAGS	+=	-Wshadow			# warns against shadowing (common error)
-CXXFLAGS	+=	-Wnon-virtual-dtor
-														# warns if a class with virtual functions lacks a
-														# virtual destructor (basically when you don't
-														# actually know virtuality)
-CXXFLAGS	+=	-Wold-style-cast
-														# prefers CPP-style rather than C-style casts
-CXXFLAGS	+=	-Wnull-dereference -Wunused -Wuninitialized
-														# code hygiene
-# == compiler additions ==
-CXXFLAGS	+=	-MMD -MP			# deps
-CXXFLAGS	+=	-D_GLIBCXX_ASSERTIONS
-														# additional runtime checks for STL
-# CXXFLAGS	+=	-fstrict-flex-arrays=3
-# 														# ensures safe usage of flexible array members
-# == security ==
-CXXFLAGS	+=	-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3
-														# better runtime checks for buffer overflows and such
-CXXFLAGS	+=	-fstack-clash-protection -fstack-protector-strong
-														# protects against buffer overflows and such attacks
-CXXFLAGS	+=	-Wl,-z,noexecstack
-														# prevents execution of code on the stack
-CXXFLAGS	+=	-Wl,-z,nodlopen
-														# restricts runtime libs loaing to known safe code
+# CXXFLAGS	+=	-Wpedantic		# increas portability
+# CXXFLAGS	+=	-Wconversion	# warns against implicit coversion
+# CXXFLAGS	+=	-Wformat -Wformat=2 -Werror=format-security
+# 														# harden against string vulns
+# CXXFLAGS	+=	-Wshadow			# warns against shadowing (common error)
+# CXXFLAGS	+=	-Wnon-virtual-dtor
+# 														# warns if a class with virtual functions lacks a
+# 														# virtual destructor (basically when you don't
+# 														# actually know virtuality)
+# CXXFLAGS	+=	-Wold-style-cast
+# 														# prefers CPP-style rather than C-style casts
+# CXXFLAGS	+=	-Wnull-dereference -Wunused -Wuninitialized
+# 														# code hygiene
+# # == compiler additions ==
+# CXXFLAGS	+=	-MMD -MP			# deps
+# CXXFLAGS	+=	-D_GLIBCXX_ASSERTIONS
+# 														# additional runtime checks for STL
+# # CXXFLAGS	+=	-fstrict-flex-arrays=3
+# # 														# ensures safe usage of flexible array members
+# # == security ==
+# CXXFLAGS	+=	-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3
+# 														# better runtime checks for buffer overflows and such
+# CXXFLAGS	+=	-fstack-clash-protection -fstack-protector-strong
+# 														# protects against buffer overflows and such attacks
+# CXXFLAGS	+=	-Wl,-z,noexecstack
+# 														# prevents execution of code on the stack
+# CXXFLAGS	+=	-Wl,-z,nodlopen
+# 														# restricts runtime libs loaing to known safe code
 
-# == prod ==
-CXXFLAGS	+=	-O2						# slower comp, faster runtime
+# # == prod ==
+# CXXFLAGS	+=	-O2						# slower comp, faster runtime
 
 # == dev ==
 CXXFLAGS	+=	-g3
@@ -79,16 +79,14 @@ TESTFLAGS	:= $(CXXFLAGS)
 
 NAME				:=	ircserv
 # main and utils
-SRC_O				:=	main Logger
+SRC_O				:=	main 
 # irc logic
 SRC_O				+=	Client ClientManager
-# networki	ng
-SRC_O				+=	net/Socket net/Connection net/ConnectionManager net/Listener \
-								net/Reactor
+
 # parser
-SRC_O				+=	IRCMessage Dispatcher
+SRC_O				+=	IRCMessage 
 #channel / commands
-SRC_O				+=	Channel ChannelManager Commands
+SRC_O				+=	Channel ChannelManager Commands Server
 SRC_O				+=	ReplyMessage
 SRC					:=	$(addprefix src/, $(addsuffix .cpp, $(SRC_O)))
 OBJ					:=	$(SRC:.cpp=.o)

@@ -47,6 +47,10 @@ const std::string& Client::getHostname() const {
 	return (this->_hostname);
 }
 
+std::string&	Client::getRbuff() {
+	return (this->_rBuff);
+}
+
 bool Client::getAuth() const {
 	return (this->_auth);
 }
@@ -75,11 +79,16 @@ void Client::setRegistered(bool reg) {
 	this->_registered = reg;
 }
 
+void Client::setSocket(int fd) {
+	this->_socket = fd;
+}
+
 void Client::appendToBuffer(const std::string& buffer) {
 	this->_buffer += buffer;
 }
 void Client::clearBuffer() {
 	this->_buffer.clear();
+	this->_rBuff.clear();
 }
 
 std::string Client::extractMessage() {
