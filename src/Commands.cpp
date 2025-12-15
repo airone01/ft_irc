@@ -1,22 +1,142 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Commands.cpp                                       :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/11/12 16:21:59 by nahamida          #+#    #+#             */
-/*   Updated: 2025/12/08 17:24:44 by elagouch         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "Commands.hpp"
-#include "ChannelManager.hpp"
-#include "ClientManager.hpp"
-#include "Logger.hpp"
-#include "ReplyMessage.hpp"
 #include <iostream>
 #include <vector>
+
+CMDS applyCommands(const std::string& cmd) {
+	if (cmd == "PASS")
+		return PASS;
+	if (cmd == "QUIT")
+		return QUIT;
+	if (cmd == "NICK")
+		return NICK;
+	if (cmd == "USER")
+		return USER;
+	if (cmd == "JOIN")
+		return JOIN;
+	if (cmd == "PART")
+		return PART;
+	if (cmd == "TOPIC")
+		return TOPIC;
+	if (cmd == "MODE")
+		return MODE;
+	if (cmd == "KICK")
+		return KICK;
+	if (cmd == "INVITE")
+		return INVITE;
+	if (cmd == "PRIVMSG")
+		return PRIVMSG;
+	if (cmd == "NOTICE")
+		return NOTICE;
+	if (cmd == "PING")
+		return PING;
+	if (cmd == "PONG")
+		return PONG;
+	if (cmd == "WHO")
+		return WHO;
+	if (cmd == "WHOIS")
+		return WHOIS;
+	if (cmd == "LIST")
+		return LIST;
+	if (cmd == "NAMES")
+		return NAMES;
+	return DEFAULT;
+}
+
+void Commands::execute(int clientSocket, const IRCMessage &msg, ChannelManager &channels, ClientManager &clients, const std::string &serverPassword) {
+	Client &client = clients.getClientFromSocket(clientSocket);
+	std::string cmd = msg.getCommand();
+	CMDS command = applyCommands(cmd);
+	switch (command) {
+		case PASS:
+			pass(clientSocket, msg, clients, serverPassword);
+			break;
+		case QUIT:
+			quit(clientSocket, msg, channels, clients);
+			break;
+		default:
+			break;
+	}
+	if (!client.getAuth()) {
+		client.sendMessage(ReplyMessage::errPasswdMismatch());
+		return;
+	}
+	switch (command) {
+		case NICK:
+			nick(clientSocket, msg, channels, clients);
+			return;
+		case USER:
+			user(clientSocket, msg, clients);
+			return;
+		default:
+			break;
+	}
+	if (!client.getRegistered()) {
+		client.sendMessage(ReplyMessage::errNotRegistered());
+		return;
+	}
+	switch (command) {
+		case JOIN:
+			join(clientSocket, msg, channels, clients);
+			break;
+		case PART:
+			part(clientSocket, msg, channels, clients);
+			break;
+		case TOPIC:
+			topic(clientSocket, msg, channels, clients);
+			break;
+		case MODE:
+			mode(clientSocket, msg, channels, clients);
+			break;
+		case KICK:
+			kick(clientSocket, msg, channels, clients);
+			break;
+		case INVITE:
+			invite(clientSocket, msg, channels, clients);
+			break;
+		case PRIVMSG:
+			privmsg(clientSocket, msg, channels, clients);
+			break;
+		case NOTICE:
+			notice(clientSocket, msg, channels, clients);
+			break;
+		case PING:
+			ping(clientSocket, msg, clients);
+			break;
+		case PONG:
+			pong(clientSocket, msg, clients);
+			break;
+		case WHO:
+			who(clientSocket, msg, channels, clients);
+			break;
+		case WHOIS:
+			whois(clientSocket, msg, channels, clients);
+			break;
+		case LIST:
+			list(clientSocket, msg, channels, clients);
+			break;
+		case NAMES:
+			names(clientSocket, msg, channels, clients);
+			break;
+		case DEFAULT:
+			client.sendMessage(ReplyMessage::errUnknownCommand(msg.getCommand()));
+			break;
+		default:
+			break;
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 std::vector<std::string> paramHandler(std::string params) {
   std::vector<std::string> newParam;
