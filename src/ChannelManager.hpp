@@ -31,9 +31,9 @@ public:
 	std::vector<std::string>	getChannelNames();
 	size_t						getChannelCount() const;
 	// setter
-	void	addChannel(const Channel& channel);
-	void	removeChannel(const std::string& name);
-	void	removeUserFromAllChannels(int socket);
+	void		addChannel(const Channel& channel);
+	void		removeChannel(const std::string& name);
+	void		removeUserFromAllChannels(int socket);
 	Channel&	createChannel(const std::string& name, int creatorSocket);
 	// utility
 	bool	hasChannel(const std::string& name) const;

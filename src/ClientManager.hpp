@@ -18,16 +18,16 @@ public:
 		: std::runtime_error(msg) {}
 	};
 	// getter
-	Client& getClientFromUsername(const std::string& username);
-	Client& getClientFromNickname(const std::string& nickname);
-	Client& getClientFromSocket(const int& socket);
-	size_t getClientCount() const;
+	Client&	getClientFromUsername(const std::string& username);
+	Client&	getClientFromNickname(const std::string& nickname);
+	Client&	getClientFromSocket(const int& socket);
+	size_t	getClientCount() const;
 	// setter
-	void addClient(const Client& client);
-	void removeClient(int socket);
+	void	addClient(const Client& client);
+	void	removeClient(int socket);
 	// utility
-	bool isNicknameUsed(const std::string& nickname);
-	bool isUsernameUsed(const std::string& username);
+	bool	isNicknameUsed(const std::string& nickname);
+	bool	isUsernameUsed(const std::string& username);
 };
 
 #endif // !CLIENTMANAGER_HPP
