@@ -65,7 +65,7 @@ public:
 	void	removeMode(char mode);
 	void	updateMode(const IRCMessage& msg, int sender, ClientManager& clients);
 	// user
-	bool	tryJoin(int socket, const std::string& password) const;
+	bool	tryJoin(int socket, const std::string& password);
 	void	addUser(int socket);
 	void	removeUser(int socket);
 	void	inviteUser(int socket);
@@ -78,5 +78,21 @@ public:
 	// validation for all channels
 	static bool	isValidName(const std::string& name);
 };
+
+enum CHNGMODE {
+	SINVITE,
+	UINVITE,
+	STOPIC,
+	UTOPIC,
+	SPASSWORD,
+	UPASSWORD,
+	SPRIV,
+	UPRIV,
+	SLIMIT,
+	ULIMIT,
+	DEFAULT
+};
+
+CHNGMODE applyMode(const std::string& tmp);
 
 #endif // !CHANNEL_HPP

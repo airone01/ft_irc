@@ -6,7 +6,7 @@
 #include "Client.hpp"
 #include "ReplyMessage.hpp"
 #include "IRCMessage.hpp"
-#include <unistd.h>
+#include <sstream>
 
 class Commands {
 private:
@@ -14,14 +14,12 @@ private:
 	// static void	sendWelcome(Client& client);
 	// static bool	isValidNickname(const std::string& nickname);
 public:
-	// static void execute(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients, const std::string& serverPassword);
-
-	// static void	join(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
-	// static void	part(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
-	// static void	topic(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
-	// static void	mode(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
-	// static void	kick(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
-	// static void	invite(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
+	static void	join(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
+	static void	part(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
+	static void	topic(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
+	static void	mode(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
+	static void	kick(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
+	static void	invite(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
 
 	static void pass(int clientSocket, const IRCMessage& msg, ClientManager& clients, const std::string& serverPassword);
 	// static void nick(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
@@ -39,29 +37,5 @@ public:
 	// static void list(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
 	// static void names(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
 };
-
-// enum CMDS {
-// 	PASS,
-// 	QUIT,
-// 	NICK,
-// 	USER,
-// 	JOIN,
-// 	PART,
-// 	TOPIC,
-// 	MODE,
-// 	KICK,
-// 	INVITE,
-// 	PRIVMSG,
-// 	NOTICE,
-// 	PING,
-// 	PONG,
-// 	WHO,
-// 	WHOIS,
-// 	LIST,
-// 	NAMES,
-// 	DEFAULT
-// };
-
-// CMDS applyCommands(const std::string &cmd);
 
 #endif //! COMMANDS_HPP
