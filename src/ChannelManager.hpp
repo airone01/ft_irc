@@ -1,41 +1,42 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   ChannelManager.hpp                                 :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/11/13 14:13:42 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/28 17:30:46 by elagouch         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #ifndef CHANNELMANAGER_HPP
 #define CHANNELMANAGER_HPP
 
+//NE PLUS TOUCHER CE FICHIER SAUF POUR METTRE DES METHODS UTILES
+
 #include "Channel.hpp"
+#include <map>
 #include <vector>
+#include <stdexcept>
 
-// This was meant to be static, but it's too much trouble.
 class ChannelManager {
-public:
-  // ChannelManager();
-  // ChannelManager(const ChannelManager &);
-  // ~ChannelManager();
-  //
-  // ChannelManager &operator=(const ChannelManager &);
-
-  std::vector<Channel> getChannels();
-  void addChannels(const Channel &);
-  void rmChannels(const Channel &);
-  Channel &getChannelFromName(std::string &name);
-
-  class noSuchChannel : public std::exception {
-    const char *what() const throw();
-  };
-
 private:
-  std::vector<Channel> _channels;
+	std::map<std::string, Channel> _channels;
+public:
+	ChannelManager();
+	~ChannelManager();
+	// Exceptions
+	class ChannelNotFound: public std::runtime_error {
+	public:
+		ChannelNotFound(const std::string& msg)
+			: std::runtime_error(msg) {}
+	};
+	class ChannelAlreadyExists: public std::runtime_error {
+	public:
+		ChannelAlreadyExists(const std::string& msg)
+			: std::runtime_error(msg) {}
+	};
+	// getter
+	Channel&					getChannelFromName(const std::string& name);
+	std::vector<std::string>	getChannelsOfUser(int socket);
+	std::vector<std::string>	getChannelNames();
+	size_t						getChannelCount() const;
+	// setter
+	void		addChannel(const Channel& channel);
+	void		removeChannel(const std::string& name);
+	void		removeUserFromAllChannels(int socket);
+	Channel&	createChannel(const std::string& name, int creatorSocket);
+	// utility
+	bool	hasChannel(const std::string& name) const;
 };
 
-#endif
+#endif //!CHANNELMANAGER_HPP

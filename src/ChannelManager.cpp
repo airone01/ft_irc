@@ -1,74 +1,82 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   ChannelManager.cpp                                 :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/11/13 14:21:18 by elagouch          #+#    #+#             */
-/*   Updated: 2025/11/28 17:37:40 by elagouch         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "ChannelManager.hpp"
-#include "Channel.hpp"
 
-#include <algorithm>
-#include <stdexcept>
-#include <vector>
+//NE PLUS TOUCHER CE FICHIER SAUF POUR METTRE DES METHODS UTILES
 
-// ChannelManager::ChannelManager() : _channels() {}
-//
-// ChannelManager::ChannelManager(const ChannelManager &other)
-//     : _channels(other._channels) {}
-//
-// ChannelManager::~ChannelManager() { /* vector should delete itself */ }
-//
-// ChannelManager &ChannelManager::operator=(const ChannelManager &other) {
-//   if (this != &other) {
-//     this->_channels = other._channels;
-//   }
-//   return (*this);
-// }
+ChannelManager::ChannelManager() {}
 
-struct ChannelNameMatcher {
-  ChannelNameMatcher(const std::string &n) : name(n) {}
-  bool operator()(const Channel &chan) const { return chan.getName() == name; }
-  std::string name;
-};
+ChannelManager::~ChannelManager() {}
 
-Channel &ChannelManager::getChannelFromName(std::string &name) {
-  const std::vector<Channel>::iterator it = std::find_if(
-      _channels.begin(), _channels.end(), ChannelNameMatcher(name));
-
-  if (it == _channels.end())
-    throw noSuchChannel();
-  return (*it);
+Channel& ChannelManager::getChannelFromName(const std::string& name) {
+	std::map<std::string, Channel>::iterator it = _channels.begin();
+	std::map<std::string, Channel>::iterator ite = _channels.end();
+	for (; it != ite; ++it) {
+		if (it->second.getName() == name)
+			return it->second;
+	}
+	throw ChannelNotFound("ERR_NOSUCHCHANNEL");
 }
 
-std::vector<Channel> ChannelManager::getChannels(void) {
-  return this->_channels;
+std::vector<std::string> ChannelManager::getChannelsOfUser(int socket) {
+	std::vector<std::string> channelsOfUser;
+	std::map<std::string, Channel>::iterator it = _channels.begin();
+	std::map<std::string, Channel>::iterator ite = _channels.end();
+	for (; it != ite; ++it) {
+		if (it->second.hasUser(socket))
+			channelsOfUser.push_back(it->second.getName());
+	}
+	return channelsOfUser;
 }
 
-void ChannelManager::addChannels(const Channel &tmp) {
-  _channels.push_back(tmp);
+std::vector<std::string> ChannelManager::getChannelNames() {
+	std::vector<std::string> result;
+	std::map<std::string, Channel>::iterator it = _channels.begin();
+	std::map<std::string, Channel>::iterator ite = _channels.end();
+	for (; it != ite; ++it)
+		result.push_back(it->second.getName());
+	return result;
 }
 
-void ChannelManager::rmChannels(const Channel &tmp) {
-  // std::vector<Channel>::iterator it = _channels.begin();
-  // for (std::vector<Channel>::iterator it = _channels.begin();it !=
-  // _channels.end();it++){ 	std::string itName = it->getName(); 	std::string
-  // tmpName = tmp.getName(); 	if (itName == tmpName){ 		_channels.erase(it);
-  // 		break;
-  // 	}
-  // }
-  std::vector<Channel>::iterator it = std::find_if(
-      _channels.begin(), _channels.end(), ChannelNameMatcher(tmp.getName()));
-  if (it == _channels.end())
-    throw noSuchChannel();
-  _channels.erase(it);
+size_t ChannelManager::getChannelCount() const {
+	return _channels.size();
 }
 
-const char *ChannelManager::noSuchChannel::what() const throw() {
-  return ("ERR_NOSUCHCHANNEL");
+void ChannelManager::addChannel(const Channel& channel) {
+	const std::string& name = channel.getName();
+	if (hasChannel(name))
+		throw ChannelAlreadyExists("ERR_");
+	_channels[channel.getName()] = channel;
+}
+
+void ChannelManager::removeChannel(const std::string& name) {
+	_channels.erase(name);
+}
+
+void ChannelManager::removeUserFromAllChannels(int socket) {
+	std::vector<std::string> channelsToRemove;
+	std::map<std::string, Channel>::iterator it = _channels.begin();
+	std::map<std::string, Channel>::iterator ite = _channels.end();
+	for (; it != ite; ++it) {
+		if (it->second.hasUser(socket)) {
+			try {
+				it->second.removeUser(socket);
+				if (it->second.getUserCount() == 0)
+					channelsToRemove.push_back(it->first);
+			} catch (...) {}
+		}
+	}
+	for (size_t i = 0; i < channelsToRemove.size(); i++)
+		_channels.erase(channelsToRemove[i]);
+}
+
+Channel& ChannelManager::createChannel(const std::string& name, int creatorSocket) {
+	if (hasChannel(name)) {
+		throw ChannelAlreadyExists("ERR_CHANNELALREADYEXISTS");
+	}
+	Channel newChannel(creatorSocket, name);
+	_channels[name] = newChannel;
+	return _channels[name];
+}
+
+bool ChannelManager::hasChannel(const std::string& name) const {
+	return _channels.find(name) != _channels.end();
 }
