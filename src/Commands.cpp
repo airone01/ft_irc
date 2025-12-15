@@ -2,251 +2,280 @@
 #include <iostream>
 #include <vector>
 
-CMDS applyCommands(const std::string& cmd) {
-	if (cmd == "PASS")
-		return PASS;
-	if (cmd == "QUIT")
-		return QUIT;
-	if (cmd == "NICK")
-		return NICK;
-	if (cmd == "USER")
-		return USER;
-	if (cmd == "JOIN")
-		return JOIN;
-	if (cmd == "PART")
-		return PART;
-	if (cmd == "TOPIC")
-		return TOPIC;
-	if (cmd == "MODE")
-		return MODE;
-	if (cmd == "KICK")
-		return KICK;
-	if (cmd == "INVITE")
-		return INVITE;
-	if (cmd == "PRIVMSG")
-		return PRIVMSG;
-	if (cmd == "NOTICE")
-		return NOTICE;
-	if (cmd == "PING")
-		return PING;
-	if (cmd == "PONG")
-		return PONG;
-	if (cmd == "WHO")
-		return WHO;
-	if (cmd == "WHOIS")
-		return WHOIS;
-	if (cmd == "LIST")
-		return LIST;
-	if (cmd == "NAMES")
-		return NAMES;
-	return DEFAULT;
+static std::vector<std::string> paramHandler(const std::string& params) {
+	std::vector<std::string> newParam;
+	std::string tmp;
+	for (size_t i = 0;;) {
+		if (i == 0)
+			tmp = params.substr(i, params.find(','));
+		else
+			tmp = params.substr(i);
+		newParam.push_back(tmp);
+		i = params.find(',', i);
+		if (i == std::string::npos)
+			break;
+		i++;
+	}
+	return newParam;
 }
 
-void Commands::execute(int clientSocket, const IRCMessage &msg, ChannelManager &channels, ClientManager &clients, const std::string &serverPassword) {
-	Client &client = clients.getClientFromSocket(clientSocket);
-	std::string cmd = msg.getCommand();
-	CMDS command = applyCommands(cmd);
-	switch (command) {
-		case PASS:
-			pass(clientSocket, msg, clients, serverPassword);
-			break;
-		case QUIT:
-			quit(clientSocket, msg, channels, clients);
-			break;
-		default:
-			break;
+void Commands::join(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients) {
+	Client& client = clients.getClientFromSocket(clientSocket);
+	const std::vector<std::string>& params = msg.getParams();
+	if (params.empty()) {
+		client.sendMessage(ReplyMessage::errNeedMoreParams("JOIN"));
+		return ;
 	}
-	if (!client.getAuth()) {
-		client.sendMessage(ReplyMessage::errPasswdMismatch());
+	std::vector<std::string> rooms;
+	std::vector<std::string> keys;
+	if (!msg.getParams().empty())
+		rooms = paramHandler(params[0]);
+	if (msg.getParams().size() >= 2)
+		keys = paramHandler(params[1]);
+	for (size_t i = 0; i< rooms.size(); i++) {
+		const std::string& channelName = rooms[i];
+		// if (channelName[0] == '#' || channelName[0] == '&')
+		//
+		const std::string& password = (keys[i].size() > 1) ? keys[i] : "";
+		Channel* channel = NULL;
+		if (channels.hasChannel(channelName)) {
+			try {
+				channel = &channels.getChannelFromName(channelName);
+				channel->tryJoin(clientSocket, password);
+				channel->addUser(clientSocket);
+			} catch (const std::runtime_error& e) {
+				std::string error = e.what();
+				if (error == "ERR_NOSUCHCHANNEL")
+					client.sendMessage(ReplyMessage::errNoSuchChannel(channelName));
+				else if (error == "ERR_BANNEDFROMCHAN")
+					client.sendMessage(ReplyMessage::errBannedFromChan(channelName));
+				else if (error == "ERR_INVITEONLYCHAN")
+					client.sendMessage(ReplyMessage::errInviteOnlyChan(channelName));
+				else if (error == "ERR_BADCHANNELKEY")
+					client.sendMessage(ReplyMessage::errBadChannelKey(channelName));
+				else if (error == "ERR_CHANNELISFULL")
+					client.sendMessage(ReplyMessage::errChannelIsFull(channelName));
+				return ;
+			}
+		} else {
+			try {
+				channel = &channels.createChannel(channelName, clientSocket);
+				channel->addAdmin(clientSocket);
+			} catch (const Channel::InvalidChanName& ) {
+				client.sendMessage(ReplyMessage::errNoSuchChannel(channelName));
+				return ;
+			} catch (const ChannelManager::ChannelAlreadyExists& ) {
+				client.sendMessage(ReplyMessage::errNoSuchChannel(channelName));
+				return ;
+			}
+		}
+		std::ostringstream joinMsg;
+		joinMsg << client.getNickname() << " JOIN " << channelName << "\r\n";
+		broadcastToChannel(*channel, joinMsg.str(), clients);
+		if (!channel->getTopic().empty())
+			client.sendMessage(ReplyMessage::rplTopic(channelName, channel->getTopic()));
+		else
+			client.sendMessage(ReplyMessage::rplNoTopic(channelName));
+		std::ostringstream namesMsg;
+		const std::set<int>& users = channel->getUsers();
+		std::set<int>::const_iterator it = users.begin();
+		std::set<int>::const_iterator ite = users.end();
+		for (; it != ite; ++it) {
+			Client& user = clients.getClientFromSocket(*it);
+			if (channel->isAdmin(*it))
+				namesMsg << "@";
+			namesMsg << user.getNickname() << " ";
+		}
+		client.sendMessage(ReplyMessage::rplNamReply("= " + channelName, namesMsg.str()));
+		client.sendMessage(ReplyMessage::rplEndOfNames(channelName));
+	}
+}
+
+void Commands::part(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients) {
+	Client& client = clients.getClientFromSocket(clientSocket);
+	std::vector<std::string> param = msg.getParams();
+	std::vector<std::string>:: iterator it = param.begin();
+	std::vector<std::string>:: iterator ite = param.end();
+	for (; it != ite; ++it) {
+		try {
+			Channel& channel = channels.getChannelFromName(*it);
+			channel.removeUser(clientSocket);
+			if (channel.getUserCount() == 0) {
+				channels.removeChannel(*it);
+				channel.~Channel();
+			}
+		} catch (const std::runtime_error& e) {
+			const std::string error = e.what();
+			if (error == "ERR_NOSUCHCHANNEL")
+				client.sendMessage(ReplyMessage::errNoSuchChannel(*it));
+			else if (error == "ERR_USERNOTINCHANNEL")
+				client.sendMessage(ReplyMessage::errUserNotInChannel(client.getNickname(), *it));
+		}
+	}
+}
+
+void Commands::topic(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients) {
+	Client& client = clients.getClientFromSocket(clientSocket);
+	if (msg.getCountParams() != 1)
+		client.sendMessage(ReplyMessage::errNeedMoreParams("TOPIC"));
+	const std::vector<std::string>& params = msg.getParams();
+	try {
+		Channel& channel = channels.getChannelFromName(params[0]);
+		channel.changeTopic(msg.getTrailing(), clientSocket);
+		client.sendMessage(ReplyMessage::rplTopic(channel.getName(), channel.getTopic()));
+	} catch (const std::runtime_error& e) {
+		const std::string error = e.what();
+		if (error == "ERR_NOSUCHCHANNEL")
+			client.sendMessage(ReplyMessage::errNoSuchChannel(params[0]));
+		if (error == "ERR_NOTONCHANNEL")
+			client.sendMessage(ReplyMessage::errNotOnChannel(params[0]));
+		if (error == "ERR_CHANOPRIVSNEEDED")
+			client.sendMessage(ReplyMessage::errChaNoPrivsNeeded(params[0]));
+		if (error == "RPL_NOTOPIC")
+			client.sendMessage(ReplyMessage::rplNoTopic(params[0]));
+	}
+}
+
+void Commands::mode(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients) {
+	const std::vector<std::string>& params = msg.getParams();
+	Client& client = clients.getClientFromSocket(clientSocket);
+	if (params.empty()) {
+		client.sendMessage(ReplyMessage::errNeedMoreParams("MODE"));
+		return ;
+	}
+	const std::string& target = params[0];
+	if (target[0] == '#' || target[0] == '&') {
+
+	}
+}
+
+void Commands::kick(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients) {
+
+}
+
+void Commands::invite(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients) {
+
+}
+
+
+void pass(int clientSocket, const IRCMessage& msg, ClientManager& clients, const std::string& serverPassword);
+void nick(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
+void user(int clientSocket, const IRCMessage& msg, ClientManager& clients);
+void quit(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
+
+void privmsg(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
+void notice(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
+
+void ping(int clientSocket, const IRCMessage& msg, ClientManager& clients);
+void pong(int clientSocket, const IRCMessage& msg, ClientManager& clients);
+
+void who(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
+void whois(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
+void list(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
+void names(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
+
+
+
+
+
+
+
+
+
+
+
+
+
+void Commands::join(IRCMessage const &tmp, ChannelManager &channels, Client &user) {
+	std::vector<std::string> param = tmp.getParams();
+	if (param.empty()) {
+		ReplyMessage::errNeedMoreParams("JOIN");
 		return;
 	}
-	switch (command) {
-		case NICK:
-			nick(clientSocket, msg, channels, clients);
-			return;
-		case USER:
-			user(clientSocket, msg, clients);
-			return;
-		default:
-			break;
+
+	std::vector<std::string> rooms;
+	std::vector<std::string> keys;
+
+	if (tmp.getParams().size() >= 1)
+		rooms = paramHandler(param[0]);
+	if (tmp.getParams().size() >= 2)
+		keys = paramHandler(param[1]);
+
+	for (size_t i = 0; i < rooms.size(); i++) {
+		std::string name = rooms[i];
+		std::string key = (i < keys.size()) ? keys[i] : "";
+
+		Channel *chan = NULL;
+		try {
+			chan = &channels.getChannelFromName(name);
+		} catch (const ChannelManager::noSuchChannel &e) {
+			// create new if it doesn't exist
+			// TODO: ensure channel doesn't duplicate the user if we call newUser()
+			// later.
+			try {
+				Channel newChan(user, name);
+				channels.addChannels(newChan);
+				chan = &channels.getChannelFromName(name);
+			} catch (const std::exception &e2) {
+				logger::error() << e2.what() << std::endl;
+				continue;
+			}
+		}
+
+		// validatation (password, limit, invite)
+		try {
+			// only check constraints if it's an existing channel
+			// (if we just created it, we are the owner/first user, so we get in free)
+			bool isNew =
+					(chan->getUsers().find(user.getSocket()) != chan->getUsers().end());
+
+			if (!isNew) {
+				chan->tryJoin(user, key);
+				chan->newUser(user);
+			}
+		} catch (const std::exception &e) {
+			// send error reply (e.g. ERR_BADCHANNELKEY)
+			logger::error() << "Join Error: " << e.what() << std::endl;
+			user.send(ReplyMessage::errBadChannelKey(name));
+			continue;
+		}
+
+		// broadcasting join message
+		std::string joinMsg = ":" + user.getNickname() + "!" + user.getUsername() +
+													"@" + user.getHostname() +
+													" JOIN :" + chan->getName() + "\r\n";
+		std::vector<char> joinResp(joinMsg.begin(), joinMsg.end());
+		// send to everyone in the channel (including the joiner)
+		std::map<int, Client *> users = chan->getUsers();
+		for (std::map<int, Client *>::iterator it = users.begin();
+				 it != users.end(); ++it) {
+			it->second->send(joinResp);
+		}
+
+		// send topic
+		if (!chan->getTopic().empty()) {
+			user.send(ReplyMessage::rplTopic(chan->getName(), chan->getTopic()));
+		}
+
+		// send names list
+		std::string namesList;
+		for (std::map<int, Client *>::iterator it = users.begin();
+				 it != users.end(); ++it) {
+			// logic to check if OP (@) or Voice (+) goes here
+			// for now, just list them
+			namesList += it->second->getNickname() + " ";
+		}
+
+		std::string rplNames = ":localhost 353 " + user.getNickname() + " = " +
+													 chan->getName() + " :" + namesList + "\r\n";
+		std::vector<char> nResp(rplNames.begin(), rplNames.end());
+		user.send(nResp);
+
+		std::string rplEndNames = ":localhost 366 " + user.getNickname() + " " +
+															chan->getName() + " :End of /NAMES list\r\n";
+		std::vector<char> enResp(rplEndNames.begin(), rplEndNames.end());
+		user.send(enResp);
 	}
-	if (!client.getRegistered()) {
-		client.sendMessage(ReplyMessage::errNotRegistered());
-		return;
-	}
-	switch (command) {
-		case JOIN:
-			join(clientSocket, msg, channels, clients);
-			break;
-		case PART:
-			part(clientSocket, msg, channels, clients);
-			break;
-		case TOPIC:
-			topic(clientSocket, msg, channels, clients);
-			break;
-		case MODE:
-			mode(clientSocket, msg, channels, clients);
-			break;
-		case KICK:
-			kick(clientSocket, msg, channels, clients);
-			break;
-		case INVITE:
-			invite(clientSocket, msg, channels, clients);
-			break;
-		case PRIVMSG:
-			privmsg(clientSocket, msg, channels, clients);
-			break;
-		case NOTICE:
-			notice(clientSocket, msg, channels, clients);
-			break;
-		case PING:
-			ping(clientSocket, msg, clients);
-			break;
-		case PONG:
-			pong(clientSocket, msg, clients);
-			break;
-		case WHO:
-			who(clientSocket, msg, channels, clients);
-			break;
-		case WHOIS:
-			whois(clientSocket, msg, channels, clients);
-			break;
-		case LIST:
-			list(clientSocket, msg, channels, clients);
-			break;
-		case NAMES:
-			names(clientSocket, msg, channels, clients);
-			break;
-		case DEFAULT:
-			client.sendMessage(ReplyMessage::errUnknownCommand(msg.getCommand()));
-			break;
-		default:
-			break;
-	}
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-std::vector<std::string> paramHandler(std::string params) {
-  std::vector<std::string> newParam;
-  std::string tmp;
-  for (size_t i = 0;;) {
-    if (i == 0)
-      tmp = params.substr(i, params.find(','));
-    else
-      tmp = params.substr(i);
-    newParam.push_back(tmp);
-    i = params.find(',', i);
-    if (i == std::string::npos)
-      break;
-    i++;
-  }
-  return newParam;
-}
-
-void Commands::join(IRCMessage const &tmp, ChannelManager &channels,
-                    Client &user) {
-  std::vector<std::string> param = tmp.getParams();
-  if (param.empty()) {
-    ReplyMessage::errNeedMoreParams("JOIN");
-    return;
-  }
-
-  std::vector<std::string> rooms;
-  std::vector<std::string> keys;
-
-  if (tmp.getParams().size() >= 1)
-    rooms = paramHandler(param[0]);
-  if (tmp.getParams().size() >= 2)
-    keys = paramHandler(param[1]);
-
-  for (size_t i = 0; i < rooms.size(); i++) {
-    std::string name = rooms[i];
-    std::string key = (i < keys.size()) ? keys[i] : "";
-
-    Channel *chan = NULL;
-    try {
-      // try to get existing channel
-      chan = &channels.getChannelFromName(name);
-    } catch (const ChannelManager::noSuchChannel &e) {
-      // create new if it doesn't exist
-      // TODO: ensure channel doesn't duplicate the user if we call newUser()
-      // later.
-      try {
-        Channel newChan(user, name);
-        channels.addChannels(newChan);
-        chan = &channels.getChannelFromName(name);
-      } catch (const std::exception &e2) {
-        logger::error() << e2.what() << std::endl;
-        continue;
-      }
-    }
-
-    // validatation (password, limit, invite)
-    try {
-      // only check constraints if it's an existing channel
-      // (if we just created it, we are the owner/first user, so we get in free)
-      bool isNew =
-          (chan->getUsers().find(user.getSocket()) != chan->getUsers().end());
-
-      if (!isNew) {
-        chan->tryJoin(user, key);
-        chan->newUser(user);
-      }
-    } catch (const std::exception &e) {
-      // send error reply (e.g. ERR_BADCHANNELKEY)
-      logger::error() << "Join Error: " << e.what() << std::endl;
-      user.send(ReplyMessage::errBadChannelKey(name));
-      continue;
-    }
-
-    // broadcasting join message
-    std::string joinMsg = ":" + user.getNickname() + "!" + user.getUsername() +
-                          "@" + user.getHostname() +
-                          " JOIN :" + chan->getName() + "\r\n";
-    std::vector<char> joinResp(joinMsg.begin(), joinMsg.end());
-    // send to everyone in the channel (including the joiner)
-    std::map<int, Client *> users = chan->getUsers();
-    for (std::map<int, Client *>::iterator it = users.begin();
-         it != users.end(); ++it) {
-      it->second->send(joinResp);
-    }
-
-    // send topic
-    if (!chan->getTopic().empty()) {
-      user.send(ReplyMessage::rplTopic(chan->getName(), chan->getTopic()));
-    }
-
-    // send names list
-    std::string namesList;
-    for (std::map<int, Client *>::iterator it = users.begin();
-         it != users.end(); ++it) {
-      // logic to check if OP (@) or Voice (+) goes here
-      // for now, just list them
-      namesList += it->second->getNickname() + " ";
-    }
-
-    std::string rplNames = ":localhost 353 " + user.getNickname() + " = " +
-                           chan->getName() + " :" + namesList + "\r\n";
-    std::vector<char> nResp(rplNames.begin(), rplNames.end());
-    user.send(nResp);
-
-    std::string rplEndNames = ":localhost 366 " + user.getNickname() + " " +
-                              chan->getName() + " :End of /NAMES list\r\n";
-    std::vector<char> enResp(rplEndNames.begin(), rplEndNames.end());
-    user.send(enResp);
-  }
 }
 
 void Commands::part(IRCMessage const &tmp, ChannelManager &channels,

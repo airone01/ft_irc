@@ -130,20 +130,6 @@ void Channel::removeMode(char mode) {
 	_modes.erase(mode);
 }
 
-enum CHNGMODE {
-	SINVITE,
-	UINVITE,
-	STOPIC,
-	UTOPIC,
-	SPASSWORD,
-	UPASSWORD,
-	SPRIV,
-	UPRIV,
-	SLIMIT,
-	ULIMIT,
-	DEFAULT
-};
-
 CHNGMODE applyMode(const std::string& tmp) {
 	if (tmp == "+i")
 		return SINVITE;
@@ -268,7 +254,7 @@ void Channel::updateMode(const IRCMessage& msg, int senderSocket, ClientManager&
 	}
 }
 
-bool Channel::tryJoin(int socket, const std::string& password) const {
+bool Channel::tryJoin(int socket, const std::string& password){
 	if (isKicked(socket))
 		throw std::runtime_error("ERR_BANNEDFROMCHAN");
 	if (hasMode('i') && !isInvited(socket))
