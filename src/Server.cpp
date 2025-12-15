@@ -172,14 +172,14 @@ std::string Server::handleRead(int fd) {
 					return std::string();
 				}
 			}
-	
+
 		}
 		return readBuff;
 	}
 	catch(const std::exception& e){
-		std::cerr << e.what() << '\n';		
+		std::cerr << e.what() << '\n';
 	}
-	
+
 	return std::string();
 }
 
@@ -266,11 +266,12 @@ void Server::setSock(){
 		throw std::runtime_error("listen failed.");
 }
 
-void	Server::rmClient(epoll_event event){
-		close(event.data.fd);
-		epoll_ctl(this->_epfd, EPOLL_CTL_DEL, event.data.fd, NULL);
-		_channels.removeUserFromAllChannels(event.data.fd);
-		_clients.removeClient(event.data.fd);
+void	Server::rmClient(int clientSocket){
+	while (int i = 0; clientSocket != this->events[i].data.fd; i++);
+	close(this->events[i].data.fd);
+	epoll_ctl(this->_epfd, EPOLL_CTL_DEL, this->events[i].data.fd, NULL);
+	_channels.removeUserFromAllChannels(this->events[i].data.fd);
+	_clients.removeClient(this->events[i].data.fd);
 }
 
 void Server::serverRoutine() {
@@ -279,50 +280,50 @@ void Server::serverRoutine() {
 	struct epoll_event ev, events[maxEvents];
 	this->setSock();
 
-	ev.events = EPOLLIN;
-	ev.data.fd = this->_socketFd;
+	this->ev.events = EPOLLIN;
+	this->ev.data.fd = this->_socketFd;
 	this->_epfd = epoll_create1(0);
 	if (this->_epfd < 0)
 		throw std::runtime_error("epoll_create1 failed.");
 
-	if (epoll_ctl(this->_epfd, EPOLL_CTL_ADD, this->_socketFd, &ev) == -1)
+	if (epoll_ctl(this->_epfd, EPOLL_CTL_ADD, this->_socketFd, &this->ev) == -1)
 					throw std::runtime_error("wpoll_wait failed");
 
 	for(;;){
-		int nfds = epoll_wait(this->_epfd, events, maxEvents, -1);
+		int nfds = epoll_wait(this->_epfd, this->events, maxEvents, -1);
 		if (nfds < 0)
 			throw std::runtime_error("epoll_wait failed");
 
 		for (int i = 0; i < nfds; ++i) {
 
-			if (events[i].events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP)) {
+			if (this->events[i].events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP)) {
 				std::cerr << "quit event\n";
-				close(events[i].data.fd);
-				epoll_ctl(this->_epfd, EPOLL_CTL_DEL, events[i].data.fd, NULL);
-				_channels.removeUserFromAllChannels(events[i].data.fd);
-				_clients.removeClient(events[i].data.fd);
+				close(this->events[i].data.fd);
+				epoll_ctl(this->_epfd, EPOLL_CTL_DEL, this->events[i].data.fd, NULL);
+				_channels.removeUserFromAllChannels(this->events[i].data.fd);
+				_clients.removeClient(this->events[i].data.fd);
 			}
 			// si le fd est le meme que celui de listen, alors c'est un nv client
-			else if (events[i].data.fd == this->_socketFd){
+			else if (this->events[i].data.fd == this->_socketFd){
 				sockaddr_in client;
 				socklen_t len = sizeof(client);
 				// int connSock = accept(events[i].data.fd, (struct sockaddr*)&client, &len);
-				int connSock = accept(events[i].data.fd, reinterpret_cast<sockaddr*>(&client), &len);
+				int connSock = accept(this->events[i].data.fd, reinterpret_cast<sockaddr*>(&client), &len);
 				if (connSock < 0){
-					std::cerr << "error: accept failed on fd " << events[i].data.fd << '\n' << std::endl;
+					std::cerr << "error: accept failed on fd " << this->events[i].data.fd << '\n' << std::endl;
 					continue;
 				}
 
-				int oldflags = fcntl(events[i].data.fd, F_GETFL, 0);
+				int oldflags = fcntl(this->events[i].data.fd, F_GETFL, 0);
 				fcntl(connSock, F_SETFL, oldflags | O_NONBLOCK);
-				ev.events = EPOLLIN;
-				ev.data.fd = connSock;
-				if (epoll_ctl(this->_epfd, EPOLL_CTL_ADD, connSock, &ev) == -1)
+				this->ev.events = EPOLLIN;
+				this->ev.data.fd = connSock;
+				if (epoll_ctl(this->_epfd, EPOLL_CTL_ADD, connSock, &this->ev) == -1)
 					throw std::runtime_error("epoll_ctl failed");
 				_clients.addClient(Client(connSock));
 			}
-			else if (events[i].events & EPOLLIN) {
-				handleEvent(events[i].data.fd);
+			else if (this->events[i].events & EPOLLIN) {
+				handleEvent(this->events[i].data.fd);
 			}
 		}
 	}

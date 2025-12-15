@@ -15,16 +15,18 @@
 #include <sys/epoll.h>
 
 class Server{
-	
+
 	private:
 
 	ClientManager _clients;
 	ChannelManager _channels;
+
 	const std::string _pswrd;
 	const int _port;
 	int	_socketFd;
 	int _epfd;
-	epoll_event event;
+	epoll_event ev;
+	epoll_event events[1024];
 	// Server( void );
 
 	public:
@@ -37,7 +39,7 @@ class Server{
 
 	void handleEvent(int);
 	std::string handleRead(int fd);
-	void	rmClient(epoll_event event);
+	void	rmClient(int clientSocket);
 	// ssize_t Server::handleWrite();
 	void execute(int clientSocket, const IRCMessage &msg, const std::string &serverPassword);
 };

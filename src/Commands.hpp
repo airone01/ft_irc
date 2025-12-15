@@ -22,9 +22,9 @@ public:
 	static void	invite(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
 
 	static void pass(int clientSocket, const IRCMessage& msg, ClientManager& clients, const std::string& serverPassword);
-	// static void nick(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
-	// static void user(int clientSocket, const IRCMessage& msg, ClientManager& clients);
-	static void quit(int clientSocket, ClientManager &manager);
+	static void nick(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
+	static void user(int clientSocket, const IRCMessage& msg, ClientManager& clients);
+	static void quit(int clientSocket);
 
 	// static void privmsg(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
 	// static void notice(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);

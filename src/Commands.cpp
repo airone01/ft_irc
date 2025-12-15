@@ -567,59 +567,65 @@ void Commands::pass(int clientSocket, const IRCMessage& msg, ClientManager& clie
   std::cerr << client.getAuth() << '\n';
 }
 
-// void Commands::nick(IRCMessage const &msg, ClientManager &clients,
-//                     Client &client) {
-//   if (msg.getParams().empty()) {
-//     ReplyMessage::errNoNickNameGiven();
-//     return;
-//   }
+void Commands::nick(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients) {
+	Client &client = clients.getClientFromSocket(clientSocket);
 
-//   std::string newNick = msg.getParams()[0];
+	if (msg.getParams().empty()) {
+		client.sendMessage(ReplyMessage::errNoNickNameGiven());
+	return;
+	}
 
-//   // nickname validation
-//   if (newNick.empty()) {
-//     ReplyMessage::errErroneusNuckname(newNick);
-//     return;
-//   }
+	std::string newNick = msg.getParams()[0];
 
-//   // we check collistion
-//   // eventually this will use ClientManager
-//   std::vector<Client> &allClients = clients.getClients();
-//   for (size_t i = 0; i < allClients.size(); i++) {
-//     if (allClients[i].getSocket() !=
-//         client.getSocket()) { // Don't check against self
-//       if (allClients[i].getNickname() == newNick) {
-//         ReplyMessage::errNicknameInUse(newNick);
-//         return;
-//       }
-//     }
-//   }
+	if (newNick.empty()) {
+		client.sendMessage(ReplyMessage::errErroneusNuckname(newNick));
+	return;
+	}
 
-//   // if user was already registered, we might need to broadcast nick change
-//   // i haven't done it yet bc i just want it to work
-//   client.setNickname(newNick);
+	try
+	{
+		if (clients.getClientFromNickname(newNick).getSocket() != clientSocket)
+			client.sendMessage(ReplyMessage::errNicknameInUse(newNick));
+	}
+	catch(const std::exception& e){
+	}
 
-//   checkRegistration(client); // try registration
-// }
+	client.setNickname(newNick);
 
-// void Commands::user(IRCMessage const &msg, Client &client) {
-//   if (client.getRegistered()) {
-//     ReplyMessage::errAlreadyRegistered();
-//     return;
-//   }
+	if (!client.getUsername().empty())
+		client.setRegistered(true);
+}
 
-//   // USER <username> <hostname> <servername> <realname>
-//   if (msg.getParams().size() < 3 || msg.getTrailing().empty()) {
-//     ReplyMessage::errNeedMoreParams("USER");
-//     return;
-//   }
+void Commands::user(int clientSocket, const IRCMessage& msg, ClientManager& clients) {
 
-//   client.setUsername(msg.getParams()[0]);
-//   // client.setHostname(msg.getParams()[1]); // Optional: store hostname
-//   // Realname is usually in the trailing part
+	Client &client = clients.getClientFromSocket(clientSocket);
 
-//   checkRegistration(client); // try registration
-// }
+	if (client.getRegistered()) {
+		client.sendMessage(ReplyMessage::errAlreadyRegistered());
+	return;
+	}
+
+	// USER <username> <hostname> <servername> <realname>
+	if (msg.getParams().size() != 1 || msg.getTrailing().empty()) {
+		client.sendMessage(ReplyMessage::errNeedMoreParams("USER"));
+	return;
+	}
+
+	try
+	{
+		if (clients.getClientFromUsername(msg.getParams()[0]).getSocket() != clientSocket)
+			client.sendMessage(ReplyMessage::errAlreadyRegistered());
+	}
+	catch(const std::exception& e){
+	}
+
+	client.setUsername(msg.getParams()[0]);
+	// client.setHostname(msg.getParams()[1]); // Optional: store hostname
+	// Realname is usually in the trailing part
+
+	if (!client.getNickname().empty())
+		client.setRegistered(true);
+}
 
 // /**
 //  * CAP is needed for advanced clients such as IRSSI or HexChat which do not
@@ -657,9 +663,6 @@ void Commands::pass(int clientSocket, const IRCMessage& msg, ClientManager& clie
 //   }
 // }
 
-void Commands::quit(int clientSocket, ClientManager &manager){
-  Client &client = manager.getClientFromSocket(clientSocket);
-  // close(clientSocket);
-  client.setSocket(0);
-  
+void Commands::quit(int clientSocket){
+	Server::rmClient(clientSocket);
 }
