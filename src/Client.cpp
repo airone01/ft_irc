@@ -107,7 +107,6 @@ std::string Client::extractMessage() {
 
 void Client::sendMessage(const std::string& buffer) const {
 	if (buffer.length() < 2) {
-		//TODO Need to send an empty msg or just a return is usefull ?
 		return ;
 	}
 	if (this->_socket != -1) {
