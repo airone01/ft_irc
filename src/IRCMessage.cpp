@@ -28,8 +28,11 @@ static std::string extractPrefix(std::string& line, size_t& pos) {
 static std::string extractCommand(std::string& line, size_t& pos) {
 	std::string newLine = line;
 	pos = newLine.find(" ");
-	if (pos == std::string::npos)
-		return ("");
+	if (pos == std::string::npos) {
+		std::string cmd = line;
+		line.clear();
+		return (cmd);
+	}
 	newLine = line.substr(0, pos);
 	line = line.substr(pos + 1);
 	return (newLine);

@@ -53,10 +53,24 @@ CMDS applyCommands(const std::string& cmd) {
 }
 
 void Server::handleEvent(int clientSocket){
-	const std::string tmp = handleRead(clientSocket);
-	if (!tmp.empty()){
-		IRCMessage msg(tmp);
-		execute(clientSocket, msg, this->_pswrd);
+	const std::string& data = handleRead(clientSocket);
+	if (data.empty())
+		return;
+	try {
+		Client &client = _clients.getClientFromSocket(clientSocket);
+		client.appendToBuffer(data);
+		while (true) {
+			std::string message = client.extractMessage();
+			if (message.empty())
+				break;
+			try {
+				IRCMessage msg(message);
+				execute(clientSocket, msg, this->_pswrd);
+				client.clearBuffer();
+			} catch (const IRCMessage::MsgEmptyException&) {
+			}
+		}
+	} catch (const ClientManager::ClientNotFound&) {
 	}
 }
 
@@ -70,7 +84,7 @@ void Server::execute(int clientSocket, const IRCMessage &msg, const std::string 
 		clientPtr = &this->_clients.getClientFromSocket(clientSocket);
 	}
 	Client& client = *clientPtr;
-	std::string cmd = msg.getCommand();
+	const std::string& cmd = msg.getCommand();
 	CMDS command = applyCommands(cmd);
 	if (command == CAP) {
 		const std::vector<std::string>& params = msg.getParams();
@@ -115,22 +129,22 @@ void Server::execute(int clientSocket, const IRCMessage &msg, const std::string 
 	switch (command) {
 		case JOIN:
 			Commands::join(clientSocket, msg, this->_channels, this->_clients);
-			break;
+			return;
 		case PART:
 			Commands::part(clientSocket, msg, this->_channels, this->_clients);
-			break;
+			return;
 		case TOPIC:
 			Commands::topic(clientSocket, msg, this->_channels, this->_clients);
-			break;
+			return;
 		case MODE:
 			Commands::mode(clientSocket, msg, this->_channels, this->_clients);
-			break;
+			return;
 		case KICK:
 			Commands::kick(clientSocket, msg, this->_channels, this->_clients);
-			break;
+			return;
 		case INVITE:
 			Commands::invite(clientSocket, msg, this->_channels, this->_clients);
-			break;
+			return;
 		// case PRIVMSG:
 		//	 Commands::privmsg(clientSocket, msg, this->_channels, this->_clients);
 		//	 break;
@@ -138,15 +152,13 @@ void Server::execute(int clientSocket, const IRCMessage &msg, const std::string 
 		//	 Commands::ping(clientSocket, msg, this->_clients);
 		//	 break;
 		default:
-			client.sendMessage(ReplyMessage::errUnknownCommand(msg.getCommand()));
-			break;
+			client.sendMessage(ReplyMessage::errUnknownCommand(cmd));
+			return;
 	}
 	client.clearBuffer();
 }
 
-
 std::string Server::handleRead(int fd) {
-
 	char buf[4096];
 	try
 	{
@@ -168,9 +180,9 @@ std::string Server::handleRead(int fd) {
 				if (errno == EAGAIN || errno == EWOULDBLOCK)
 					break;
 				else {
-					close(fd);
 					_clients.removeClient(fd);
 					_channels.removeUserFromAllChannels(fd);
+					close(fd);
 					return std::string();
 				}
 			}
