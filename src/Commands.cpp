@@ -85,7 +85,7 @@ void Commands::join(int clientSocket, const IRCMessage& msg, ChannelManager& cha
 			}
 		}
 		std::ostringstream joinMsg;
-		joinMsg << ":" << client.getNickname() << "!" << client.getUsername() << "@127.0.0.1" << " JOIN " << channelName << "\r\n";
+		joinMsg << ":" << client.getNickname() << " JOIN " << channelName << "\r\n";
 		client.sendMessage(joinMsg.str());
 		broadcastToChannel(*channel, joinMsg.str(), clients, clientSocket);
 		if (!channel->getTopic().empty())
@@ -118,7 +118,6 @@ void Commands::part(int clientSocket, const IRCMessage& msg, ChannelManager& cha
 			channel.removeUser(clientSocket);
 			if (channel.getUserCount() == 0) {
 				channels.removeChannel(*it);
-				channel.~Channel();
 			}
 		} catch (const std::runtime_error& e) {
 			const std::string error = e.what();
@@ -315,12 +314,14 @@ void Commands::pass(int clientSocket, const IRCMessage& msg, ClientManager& clie
 		client.sendMessage(ReplyMessage::errNeedMoreParams("PASS"));
 		return;
 	}
-	std::string providedPass = msg.getParams()[0];
-	if (providedPass != serverPassword) {
-		client.sendMessage(ReplyMessage::errPasswdMismatch());
-		return;
-	}
+	if (msg.getCommand() == "PASS") {
+		std::string providedPass = msg.getParams()[0];
+		if (providedPass != serverPassword) {
+			client.sendMessage(ReplyMessage::errPasswdMismatch());
+			return;
+		}
 	client.setAuth(true);
+	}
 }
 
 void Commands::nick(int clientSocket, const IRCMessage& msg, ClientManager& clients) {
@@ -345,7 +346,7 @@ void Commands::nick(int clientSocket, const IRCMessage& msg, ClientManager& clie
 
 	client.setNickname(newNick);
 
-	if (!client.getUsername().empty()){
+	if (!client.getUsername().empty() && client.getAuth()){
 		client.setRegistered(true);
 	}
 }
@@ -369,11 +370,11 @@ void Commands::user(int clientSocket, const IRCMessage& msg, ClientManager& clie
 
 	if (clients.isUsernameUsed(newUser) && client.getUsername() != newUser)
 		return ;
-		
+
 	client.setUsername(newUser);
 
 
-	if (!client.getNickname().empty()){
+	if (!client.getNickname().empty() && client.getAuth()){
 		client.setRegistered(true);
 	}
 }
