@@ -12,8 +12,9 @@ private:
 	std::string	_username;
 	std::string	_hostname;
 	std::string	_buffer;
-	bool		_auth;
-	bool		_registered;
+	std::string	_rBuff;
+	bool		_auth; // mot de passe validé
+	bool		_registered; // mdp + nick + user
 public:
 	Client();
 	Client(int fd);
@@ -25,6 +26,7 @@ public:
 	const std::string&	getNickname() const;
 	const std::string&	getUsername() const;
 	const std::string&	getHostname() const;
+	std::string&		getRbuff() ;
 	bool				getAuth() const;
 	bool				getRegistered() const;
 	// setter
@@ -33,6 +35,7 @@ public:
 	void	setHostname(const std::string& hostname);
 	void	setAuth(bool auth);
 	void	setRegistered(bool reg);
+	void	setSocket(int fd);
 	// method
 	void		appendToBuffer(const std::string& buffer);
 	void		clearBuffer();

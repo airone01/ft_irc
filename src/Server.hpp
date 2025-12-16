@@ -11,6 +11,8 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <iostream>
+#include <errno.h>
+#include <sys/epoll.h>
 
 class Server{
 	
@@ -18,19 +20,52 @@ class Server{
 
 	ClientManager _clients;
 	ChannelManager _channels;
+	const std::string _pswrd;
+	const int _port;
 	int	_socketFd;
+	int _epfd;
+	epoll_event event;
+	// Server( void );
 
 	public:
 
-	Server( void );
+	Server( int port, std::string pswrd );
 	~Server();
 
 	void setSock();
-	void server(sockaddr_in sin);
+	void serverRoutine();
 
 	void handleEvent(int);
 	std::string handleRead(int fd);
-	void executeCommand(Client &client, const std::string &line);
+	void	rmClient(epoll_event event);
+	// ssize_t Server::handleWrite();
+	void execute(int clientSocket, const IRCMessage &msg, const std::string &serverPassword);
 };
+
+enum CMDS {
+	CAP,
+	PASS,
+	QUIT,
+	NICK,
+	USER,
+	JOIN,
+	PART,
+	TOPIC,
+	MODE,
+	KICK,
+	INVITE,
+	PRIVMSG,
+	NOTICE,
+	PING,
+	PONG,
+	WHO,
+	WHOIS,
+	LIST,
+	NAMES,
+	DEFAULT
+};
+
+
+CMDS applyCommands(const std::string& cmd);
 
 #endif
