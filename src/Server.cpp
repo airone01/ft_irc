@@ -66,7 +66,6 @@ void Server::handleEvent(int clientSocket){
 			try {
 				IRCMessage msg(message);
 				execute(clientSocket, msg, this->_pswrd);
-				client.clearBuffer();
 			} catch (const IRCMessage::MsgEmptyException&) {
 			}
 		}
@@ -86,49 +85,31 @@ void Server::execute(int clientSocket, const IRCMessage &msg, const std::string 
 	Client& client = *clientPtr;
 	const std::string& cmd = msg.getCommand();
 	CMDS command = applyCommands(cmd);
-	// if (command == CAP) {
-	// 	const std::vector<std::string>& params = msg.getParams();
-	// 	if (!params.empty()) {
-	// 		if (params[0] == "LS") {
-	// 			client.sendMessage(":localhost CAP * LS :\r\n");
-	// 		} else if (params[0] == "REQ") {
-	// 			client.sendMessage(":localhost CAP * NAK :\r\n");
-	// 		}
-	// 	}
-	// 	return;
-	// }
 	switch (command) {
+		case CAP:
 		case PASS:
 			Commands::pass(clientSocket, msg, this->_clients, serverPassword);
-			return;
-		case QUIT:
-			Commands::quit(clientSocket);
-			this->rmClient(clientSocket);
-			return;
-		default:
 			break;
-	}
-	if (!client.getAuth()) {
-		client.sendMessage(ReplyMessage::errPasswdMismatch());
-		client.clearBuffer();
-		return;
-	}
-	switch (command) {
 		case NICK:
 			Commands::nick(clientSocket, msg, _clients);
 			break;
 		case USER:
 			Commands::user(clientSocket, msg, _clients);
 			break;
-		default:
+		case QUIT:
+			Commands::quit(clientSocket);
+			this->rmClient(clientSocket);
 			break;
-	}
-	if (!client.getRegistered() && !client.getAuth()) {
-		client.sendMessage(ReplyMessage::errNotRegistered());
-		client.clearBuffer();
-		return;
-	}
-	switch (command) {
+	// if (!client.getAuth()) {
+	// 	client.sendMessage(ReplyMessage::errPasswdMismatch());
+	// 	client.clearBuffer();
+	// 	return;
+	// }
+	// if (!client.getRegistered()) {
+	// 	client.sendMessage(ReplyMessage::errNotRegistered());
+	// 	client.clearBuffer();
+	// 	return;
+	// }
 		case JOIN:
 			Commands::join(clientSocket, msg, this->_channels, this->_clients);
 			break;
@@ -150,16 +131,12 @@ void Server::execute(int clientSocket, const IRCMessage &msg, const std::string 
 		// case PRIVMSG:
 		//	 Commands::privmsg(clientSocket, msg, this->_channels, this->_clients);
 		//	 break;
-		// case PING:
-		//	 Commands::ping(clientSocket, msg, this->_clients);
-		//	 break;
 		case NONE:
 			client.sendMessage(ReplyMessage::errUnknownCommand(cmd));
 			break;
 		default:
 			break;
 	}
-	client.clearBuffer();
 }
 
 std::string Server::handleRead(int fd) {
@@ -190,9 +167,10 @@ std::string Server::handleRead(int fd) {
 					return std::string();
 				}
 			}
-
 		}
-		return readBuff;
+		std::string result = readBuff;
+		readBuff.clear();
+		return result;
 	}
 	catch(const std::exception& e){
 		std::cerr << e.what() << '\n';
