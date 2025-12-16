@@ -47,7 +47,7 @@ CMDS applyCommands(const std::string& cmd) {
 		return LIST;
 	if (cmd == "NAMES")
 		return NAMES;
-	return DEFAULT;
+	return NONE;
 }
 
 void Server::handleEvent(int clientSocket){
@@ -56,6 +56,7 @@ void Server::handleEvent(int clientSocket){
 		IRCMessage msg(tmp);
 		execute(clientSocket, msg, this->_pswrd);
 	}
+
 }
 
 void Server::execute(int clientSocket, const IRCMessage &msg, const std::string &serverPassword) {
@@ -66,30 +67,33 @@ void Server::execute(int clientSocket, const IRCMessage &msg, const std::string 
 		case PASS:
 			Commands::pass(clientSocket, msg, this->_clients, serverPassword);
 			break;
-		case QUIT:
-			Commands::quit(clientSocket, this->_clients);
+		case QUIT:{
+			Commands::quit(clientSocket);
+			this->rmClient(clientSocket);
+			break;
+		}
+		default:
+			break;
+	}
+	if (!client.getAuth()) {
+		client.sendMessage(ReplyMessage::errPasswdMismatch());
+		return;
+	}
+	switch (command) {
+		case NICK:
+			Commands::nick(clientSocket, msg, _clients);
+			break;
+		case USER:
+			Commands::user(clientSocket, msg, _clients);
 			break;
 		default:
 			break;
 	}
-// 	if (!client.getAuth()) {
-// 		client.sendMessage(ReplyMessage::errPasswdMismatch());
-// 		return;
-// 	}
-// 	switch (command) {
-// 		case NICK:
-// 			nick(clientSocket, msg, channels, clients);
-// 			return;
-// 		case USER:
-// 			user(clientSocket, msg, clients);
-// 			return;
-// 		default:
-// 			break;
-// 	}
-// 	if (!client.getRegistered()) {
-// 		client.sendMessage(ReplyMessage::errNotRegistered());
-// 		return;
-// 	}
+	if (!client.getRegistered() && !client.getAuth()) {
+		client.sendMessage(ReplyMessage::errNotRegistered());
+		client.clearBuffer();
+		return;
+	}
 // 	switch (command) {
 // 		case JOIN:
 // 			join(clientSocket, msg, channels, clients);
@@ -140,6 +144,7 @@ void Server::execute(int clientSocket, const IRCMessage &msg, const std::string 
 // 			break;
 // 	}
 	client.clearBuffer();
+	std::cerr << "giga prout\n" << std::endl;
 }
 
 
@@ -267,17 +272,19 @@ void Server::setSock(){
 }
 
 void	Server::rmClient(int clientSocket){
-	while (int i = 0; clientSocket != this->events[i].data.fd; i++);
+	int i = 0;
+	while (clientSocket != this->events[i].data.fd)
+		i++;
 	close(this->events[i].data.fd);
 	epoll_ctl(this->_epfd, EPOLL_CTL_DEL, this->events[i].data.fd, NULL);
 	_channels.removeUserFromAllChannels(this->events[i].data.fd);
 	_clients.removeClient(this->events[i].data.fd);
+
 }
 
 void Server::serverRoutine() {
 
 	int maxEvents = 1024;
-	struct epoll_event ev, events[maxEvents];
 	this->setSock();
 
 	this->ev.events = EPOLLIN;

@@ -63,7 +63,7 @@ enum CMDS {
 	WHOIS,
 	LIST,
 	NAMES,
-	DEFAULT
+	NONE
 };
 
 

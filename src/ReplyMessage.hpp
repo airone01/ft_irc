@@ -9,7 +9,7 @@ public:
       const std::string &arg); // "<nickname> :No such nick/channel" 401
   static std::string errNoSuchServer(
       const std::string &arg); // "<server name> :No such server" 402
-  static std::string errNoSuckChannel(
+  static std::string errNoSuchChannel(
       const std::string &arg); // "<channel name> :No such channel" 403
   static std::string errCannotSendToChannel(
       const std::string &arg); // "<channel name> :Cannot send to channel" 404

@@ -13,7 +13,7 @@ std::string ReplyMessage::errNoSuchServer(const std::string &arg) {
   return tmp;
 }
 
-std::string ReplyMessage::errNoSuckChannel(const std::string &arg) {
+std::string ReplyMessage::errNoSuchChannel(const std::string &arg) {
   std::string tmp = "403 ERR_NOSUCHCHANNEL " + arg + " :No such channel\r\n";
   return tmp;
 }
