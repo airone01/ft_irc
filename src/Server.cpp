@@ -86,29 +86,31 @@ void Server::execute(int clientSocket, const IRCMessage &msg, const std::string 
 	Client& client = *clientPtr;
 	const std::string& cmd = msg.getCommand();
 	CMDS command = applyCommands(cmd);
-	if (command == CAP) {
-		const std::vector<std::string>& params = msg.getParams();
-		if (!params.empty()) {
-			if (params[0] == "LS") {
-				client.sendMessage(":localhost CAP * LS :\r\n");
-			} else if (params[0] == "REQ") {
-				client.sendMessage(":localhost CAP * NAK :\r\n");
-			}
-		}
-		return;
-	}
-	if (command == PASS) {
-		Commands::pass(clientSocket, msg, this->_clients, serverPassword);
-		return;
-	}
-		case QUIT:{
+	// if (command == CAP) {
+	// 	const std::vector<std::string>& params = msg.getParams();
+	// 	if (!params.empty()) {
+	// 		if (params[0] == "LS") {
+	// 			client.sendMessage(":localhost CAP * LS :\r\n");
+	// 		} else if (params[0] == "REQ") {
+	// 			client.sendMessage(":localhost CAP * NAK :\r\n");
+	// 		}
+	// 	}
+	// 	return;
+	// }
+	switch (command) {
+		case PASS:
+			Commands::pass(clientSocket, msg, this->_clients, serverPassword);
+			return;
+		case QUIT:
 			Commands::quit(clientSocket);
 			this->rmClient(clientSocket);
+			return;
+		default:
 			break;
-		}
+	}
 	if (!client.getAuth()) {
 		client.sendMessage(ReplyMessage::errPasswdMismatch());
-    client.clearBuffer();
+		client.clearBuffer();
 		return;
 	}
 	switch (command) {
@@ -129,31 +131,33 @@ void Server::execute(int clientSocket, const IRCMessage &msg, const std::string 
 	switch (command) {
 		case JOIN:
 			Commands::join(clientSocket, msg, this->_channels, this->_clients);
-			return;
+			break;
 		case PART:
 			Commands::part(clientSocket, msg, this->_channels, this->_clients);
-			return;
+			break;
 		case TOPIC:
 			Commands::topic(clientSocket, msg, this->_channels, this->_clients);
-			return;
+			break;
 		case MODE:
 			Commands::mode(clientSocket, msg, this->_channels, this->_clients);
-			return;
+			break;
 		case KICK:
 			Commands::kick(clientSocket, msg, this->_channels, this->_clients);
-			return;
+			break;
 		case INVITE:
 			Commands::invite(clientSocket, msg, this->_channels, this->_clients);
-			return;
+			break;
 		// case PRIVMSG:
 		//	 Commands::privmsg(clientSocket, msg, this->_channels, this->_clients);
 		//	 break;
 		// case PING:
 		//	 Commands::ping(clientSocket, msg, this->_clients);
 		//	 break;
-		default:
+		case NONE:
 			client.sendMessage(ReplyMessage::errUnknownCommand(cmd));
-			return;
+			break;
+		default:
+			break;
 	}
 	client.clearBuffer();
 }

@@ -85,7 +85,8 @@ void Commands::join(int clientSocket, const IRCMessage& msg, ChannelManager& cha
 			}
 		}
 		std::ostringstream joinMsg;
-		joinMsg << client.getNickname() << " JOIN " << channelName << "\r\n";
+		joinMsg << ":" << client.getNickname() << "!" << client.getUsername() << "@127.0.0.1" << " JOIN " << channelName << "\r\n";
+		client.sendMessage(joinMsg.str());
 		broadcastToChannel(*channel, joinMsg.str(), clients, clientSocket);
 		if (!channel->getTopic().empty())
 			client.sendMessage(ReplyMessage::rplTopic(channelName, channel->getTopic()));
