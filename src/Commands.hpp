@@ -29,7 +29,7 @@ public:
 	// static void privmsg(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
 	// static void notice(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
 
-	// static void who(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
+	static void who(int clientSocket, const IRCMessage& msg, ClientManager& clients);
 	// static void whois(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
 	// static void list(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
 	// static void names(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);

@@ -136,6 +136,9 @@ void Server::execute(int clientSocket, const IRCMessage &msg, const std::string 
 		case INVITE:
 			Commands::invite(clientSocket, msg, this->_channels, this->_clients);
 			return;
+    case WHO:
+      Commands::who(clientSocket, msg, this->_clients);
+      return;
 		// case PRIVMSG:
 		//	 Commands::privmsg(clientSocket, msg, this->_channels, this->_clients);
 		//	 break;
