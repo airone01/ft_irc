@@ -131,13 +131,19 @@ void Commands::part(int clientSocket, const IRCMessage& msg, ChannelManager& cha
 
 void Commands::topic(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients) {
 	Client& client = clients.getClientFromSocket(clientSocket);
-	if (msg.getCountParams() != 1)
+	if (msg.getCountParams() != 1) {
 		client.sendMessage(ReplyMessage::errNeedMoreParams("TOPIC"));
+		return ;
+	}
 	const std::vector<std::string>& params = msg.getParams();
 	try {
 		Channel& channel = channels.getChannelFromName(params[0]);
-		channel.changeTopic(msg.getTrailing(), clientSocket);
-		client.sendMessage(ReplyMessage::rplTopic(channel.getName(), channel.getTopic()));
+		if (!msg.getTrailing().empty())
+			channel.changeTopic(msg.getTrailing(), clientSocket);
+		if (!channel.getTopic().empty())
+			client.sendMessage(ReplyMessage::rplTopic(channel.getName(), channel.getTopic()));
+		else
+			client.sendMessage(ReplyMessage::rplNoTopic(params[0]));
 	} catch (const std::runtime_error& e) {
 		const std::string error = e.what();
 		if (error == "ERR_NOSUCHCHANNEL")
@@ -146,8 +152,6 @@ void Commands::topic(int clientSocket, const IRCMessage& msg, ChannelManager& ch
 			client.sendMessage(ReplyMessage::errNotOnChannel(params[0]));
 		if (error == "ERR_CHANOPRIVSNEEDED")
 			client.sendMessage(ReplyMessage::errChaNoPrivsNeeded(params[0]));
-		if (error == "RPL_NOTOPIC")
-			client.sendMessage(ReplyMessage::rplNoTopic(params[0]));
 	}
 }
 
@@ -317,215 +321,6 @@ void whois(int clientSocket, const IRCMessage& msg, ChannelManager& channels, Cl
 void list(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
 void names(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
 
-
-
-
-// void Commands::join(IRCMessage const &tmp, ChannelManager &channels,
-//					 Client &user) {
-//   std::vector<std::string> param = tmp.getParams();
-//   if (param.empty()) {
-//	 ReplyMessage::errNeedMoreParams("JOIN");
-//	 return;
-//   }
-
-//   std::vector<std::string> rooms;
-//   std::vector<std::string> keys;
-
-//   if (tmp.getParams().size() >= 1)
-//	 rooms = paramHandler(param[0]);
-//   if (tmp.getParams().size() >= 2)
-//	 keys = paramHandler(param[1]);
-
-//   for (size_t i = 0; i < rooms.size(); i++) {
-//	 std::string name = rooms[i];
-//	 std::string key = (i < keys.size()) ? keys[i] : "";
-
-//     Channel *chan = NULL;
-//     try {
-//       // try to get existing channel
-//       chan = &channels.getChannelFromName(name);
-//     } catch (const ChannelManager::noSuchChannel &e) {
-//       // create new if it doesn't exist
-//       // TODO: ensure channel doesn't duplicate the user if we call newUser()
-//       // later.
-//       try {
-//         Channel newChan(user, name);
-//         channels.addChannels(newChan);
-//         chan = &channels.getChannelFromName(name);
-//       } catch (const std::exception &e2) {
-//         logger::error() << e2.what() << std::endl;
-//         continue;
-//       }
-//     }
-
-//     // validatation (password, limit, invite)
-//     try {
-//       // only check constraints if it's an existing channel
-//       // (if we just created it, we are the owner/first user, so we get in free)
-//       bool isNew =
-//           (chan->getUsers().find(user.getSocket()) != chan->getUsers().end());
-
-//       if (!isNew) {
-//         chan->tryJoin(user, key);
-//         chan->newUser(user);
-//       }
-//     } catch (const std::exception &e) {
-//       // send error reply (e.g. ERR_BADCHANNELKEY)
-//       logger::error() << "Join Error: " << e.what() << std::endl;
-//       user.send(ReplyMessage::errBadChannelKey(name));
-//       continue;
-//     }
-
-//     // broadcasting join message
-//     std::string joinMsg = ":" + user.getNickname() + "!" + user.getUsername() +
-//                           "@" + user.getHostname() +
-//                           " JOIN :" + chan->getName() + "\r\n";
-//     std::vector<char> joinResp(joinMsg.begin(), joinMsg.end());
-//     // send to everyone in the channel (including the joiner)
-//     std::map<int, Client *> users = chan->getUsers();
-//     for (std::map<int, Client *>::iterator it = users.begin();
-//          it != users.end(); ++it) {
-//       it->second->send(joinResp);
-//     }
-
-//     // send topic
-//     if (!chan->getTopic().empty()) {
-//       user.send(ReplyMessage::rplTopic(chan->getName(), chan->getTopic()));
-//     }
-
-//     // send names list
-//     std::string namesList;
-//     for (std::map<int, Client *>::iterator it = users.begin();
-//          it != users.end(); ++it) {
-//       // logic to check if OP (@) or Voice (+) goes here
-//       // for now, just list them
-//       namesList += it->second->getNickname() + " ";
-//     }
-
-//     std::string rplNames = ":localhost 353 " + user.getNickname() + " = " +
-//                            chan->getName() + " :" + namesList + "\r\n";
-//     std::vector<char> nResp(rplNames.begin(), rplNames.end());
-//     user.send(nResp);
-
-//     std::string rplEndNames = ":localhost 366 " + user.getNickname() + " " +
-//                               chan->getName() + " :End of /NAMES list\r\n";
-//     std::vector<char> enResp(rplEndNames.begin(), rplEndNames.end());
-//     user.send(enResp);
-//   }
-// }
-
-// void Commands::part(IRCMessage const &tmp, ChannelManager &channels,
-//                     Client &user) {
-//   std::vector<std::string> param = tmp.getParams();
-//   std::vector<std::string>::iterator it;
-//   for (it = param.begin(); it != param.end(); it++) {
-//     try {
-//       Channel &actual = channels.getChannelFromName(*it);
-//       actual.leaveChannel(user);
-//       if (actual.getUsers().empty()) {
-//         channels.rmChannels(actual);
-//         actual.~Channel();
-//         // todo: reply
-//       }
-//     } catch (const std::exception &e) {
-//       logger::error() << e.what() << '\n';
-//     }
-//   }
-// }
-
-// /*
-// flags:
-//         i(set/unset invite only)
-//         t(set/unset topic priv to admin)
-//         k(set/unset password)
-//         o(give/take admin priv)
-//         l(set/unset limit size)
-
-// replies :
-//            ERR_NEEDMOREPARAMS              RPL_CHANNELMODEIS
-//            ERR_CHANOPRIVSNEEDED            ERR_NOSUCHNICK
-//            ERR_NOTONCHANNEL                ERR_KEYSET
-//            RPL_BANLIST                     RPL_ENDOFBANLIST
-//            ERR_UNKNOWNMODE                 ERR_NOSUCHCHANNEL
-//            ERR_USERSDONTMATCH              ERR_UMODEUNKNOWNFLAG
-//            RPL_UMODEIS
-// */
-// void Commands::mode(IRCMessage const &param, ChannelManager &channels,
-//                     Client &user) {
-//   std::vector<std::string> params = param.getParams();
-//   if (params.size() < 1) {
-//     ReplyMessage::errNeedMoreParams("MODE");
-//     return;
-//   }
-
-//   std::string target = params[0];
-
-//   if (target[0] == '#' || target[0] == '&') {
-//     try {
-//       Channel &chan = channels.getChannelFromName(target);
-
-//       // query mode
-//       if (params.size() == 1) {
-//         std::string modeStr = "+";
-//         std::set<char> modes = chan.getMode();
-//         for (std::set<char>::iterator it = modes.begin(); it != modes.end();
-//              ++it) {
-//           modeStr += *it;
-//         }
-//         // also append args for k and l if they exist
-//         // (usually sending args in trailing works)
-//         std::string rpl = ":localhost 324 " + user.getNickname() + " " +
-//                           target + " " + modeStr + "\r\n";
-//         user.send(rpl);
-//         return;
-//       }
-
-//       // change mode
-//       std::string changes = chan.updateMode(param, user);
-//       if (!changes.empty()) {
-//         // boradcast
-//         std::string msg = ":" + user.getNickname() + "!" + user.getUsername() +
-//                           "@" + user.getHostname() + " MODE " + target + " :" +
-//                           changes + "\r\n";
-//         std::vector<char> raw(msg.begin(), msg.end());
-//         std::map<int, Client *> users = chan.getUsers();
-//         for (std::map<int, Client *>::iterator it = users.begin();
-//              it != users.end(); ++it) {
-//           it->second->send(raw);
-//         }
-//       }
-//     } catch (const Channel::errorMode &e) {
-//       // Handle specific errors like ERR_CHANOPRIVSNEEDED (482)
-//       if (std::string(e.what()) == "ERR_CHANOPRIVSNEEDED") {
-//         user.send(ReplyMessage::errChaNoPrivsNeeded(target));
-//       } else {
-//         user.send(ReplyMessage::errUnknownMode(e.what()));
-//       }
-//     } catch (const std::exception &e) {
-//       // Fallback
-//       logger::error() << "Mode error: " << e.what() << std::endl;
-//     }
-//   }
-// }
-
-// void Commands::topic(IRCMessage const &tmp, ChannelManager &channels,
-//                      Client &user) {
-//   if (tmp.getCountParams() != 1)
-//     logger::error() << "ERR_NEEDMOREPARAMS\n";
-//   std::vector<std::string> param = paramHandler(tmp.getParams()[0]);
-//   std::vector<std::string>::iterator it = param.begin();
-//   Channel &chan = channels.getChannelFromName(param[0]);
-
-//   if (!tmp.getTrailing().empty()) {
-//     // CHECK +t and +o
-//     if (chan.getMode().find('t') != chan.getMode().end()) {
-//       if (!chan.isOperator(user)) {
-//         user.send(ReplyMessage::errChaNoPrivsNeeded(param[0]));
-//         return;
-//       }
-//     }
-//   }
-
 //   for (; it != param.end(); it++) {
 //     try {
 //       Channel &actual = channels.getChannelFromName(*it);
@@ -533,70 +328,6 @@ void names(int clientSocket, const IRCMessage& msg, ChannelManager& channels, Cl
 //     } catch (const std::exception &e) {
 //       logger::error() << e.what() << '\n';
 //     }
-//   }
-// }
-
-// void Commands::invite(IRCMessage const &tmp, ClientManager &clients,
-//                       ChannelManager &channels, Client &user) {
-//   std::vector<std::string> param = tmp.getParams();
-//   Channel &chan = channels.getChannelFromName(param[1]);
-
-//   try {
-//     if (chan.getMode().find('i') != chan.getMode().end()) {
-//       if (!chan.isOperator(user)) {
-//         user.send(ReplyMessage::errChaNoPrivsNeeded(param[1]));
-//         return;
-//       }
-//     }
-//     Channel &actual = channels.getChannelFromName(param[1]);
-//     actual.tryInvite(param, clients, user.getSocket(),
-//                      clients.getClientFromUsername(param[0]).getSocket());
-//   } catch (const std::exception &e) {
-//     logger::error() << e.what() << std::endl;
-//   }
-// }
-
-// void Commands::kick(IRCMessage const &tmp, ChannelManager &channels,
-//                     Client &admin) {
-//   std::vector<std::string> param = tmp.getParams();
-//   if (param.size() < 2) {
-//     // TODO: handle error
-//     return;
-//   }
-
-//   try {
-//     Channel &actual = channels.getChannelFromName(param[0]);
-//     std::string targetNick = param[1];
-//     actual.tryKick(param, tmp, admin);
-
-//     Client *victim = NULL;
-//     std::map<int, Client *> &users = actual.getUsers();
-
-//     for (std::map<int, Client *>::iterator it = users.begin();
-//          it != users.end(); ++it) {
-//       if (it->second->getNickname() == targetNick) {
-//         victim = it->second;
-//         break;
-//       }
-//     }
-
-//     if (victim) {
-//       // kicking the user
-//       // sending the message BEFORE removing the user so they receive
-//       // it.
-
-//       actual.setKickedUsers(victim->getSocket());
-//       actual.leaveChannel(*victim);
-
-//       logger::info() << admin.getNickname() << " kicked " << targetNick
-//                      << std::endl;
-//     } else {
-//       admin.send(
-//           ReplyMessage::errUserNotInChannel(targetNick, actual.getName()));
-//     }
-
-//   } catch (const std::exception &e) {
-//     logger::error() << e.what() << '\n';
 //   }
 // }
 
@@ -796,8 +527,7 @@ void Commands::pass(int clientSocket, const IRCMessage& msg, ClientManager& clie
 // }
 
 void Commands::quit(int clientSocket, ClientManager &manager){
-  Client &client = manager.getClientFromSocket(clientSocket);
-  // close(clientSocket);
-  client.setSocket(0);
-  
+	Client &client = manager.getClientFromSocket(clientSocket);
+	// close(clientSocket);
+	client.setSocket(-1);
 }

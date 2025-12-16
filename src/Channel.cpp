@@ -1,5 +1,6 @@
 #include "Channel.hpp"
 #include <algorithm>
+#include <iostream>
 #include <sstream>
 
 //NE PLUS TOUCHER CE FICHIER SAUF POUR METTRE DES METHODS UTILES
@@ -306,7 +307,7 @@ bool Channel::changeTopic(const std::string& topicName, int sender) {
 		throw std::runtime_error("ERR_CHANOPRIVSNEEDED");
 	if (topicName.empty() && _topic.empty())
 		throw std::runtime_error("RPL_NOTOPIC");
-	_topic = topicName;
+	setTopic(topicName);
 	return true;
 }
 
