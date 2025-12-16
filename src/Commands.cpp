@@ -51,7 +51,7 @@ void Commands::join(int clientSocket, const IRCMessage& msg, ChannelManager& cha
 		keys = paramHandler(params[1]);
 	for (size_t i = 0; i< rooms.size(); i++) {
 		const std::string& channelName = rooms[i];
-		const std::string& password = (keys[i].size() > 1 && keys[i].empty()) ? keys[i] : "";
+		const std::string& password = (i < keys.size() && !keys[i].empty()) ? keys[i] : "";
 		Channel* channel = NULL;
 		if (channels.hasChannel(channelName)) {
 			try {
