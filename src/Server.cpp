@@ -11,6 +11,8 @@ Server::~Server(){
 }
 
 CMDS applyCommands(const std::string& cmd) {
+	if (cmd == "CAP")
+		return CAP;
 	if (cmd == "PASS")
 		return PASS;
 	if (cmd == "QUIT")
@@ -56,27 +58,43 @@ void Server::handleEvent(int clientSocket){
 		IRCMessage msg(tmp);
 		execute(clientSocket, msg, this->_pswrd);
 	}
-
 }
 
 void Server::execute(int clientSocket, const IRCMessage &msg, const std::string &serverPassword) {
-	Client &client = this->_clients.getClientFromSocket(clientSocket);
+	Client* clientPtr = NULL;
+	try {
+		clientPtr = &this->_clients.getClientFromSocket(clientSocket);
+	} catch (const ClientManager::ClientNotFound&) {
+		Client newClient(clientSocket);
+		this->_clients.addClient(newClient);
+		clientPtr = &this->_clients.getClientFromSocket(clientSocket);
+	}
+	Client& client = *clientPtr;
 	std::string cmd = msg.getCommand();
 	CMDS command = applyCommands(cmd);
-	switch (command) {
-		case PASS:
-			Commands::pass(clientSocket, msg, this->_clients, serverPassword);
-			break;
+	if (command == CAP) {
+		const std::vector<std::string>& params = msg.getParams();
+		if (!params.empty()) {
+			if (params[0] == "LS") {
+				client.sendMessage(":localhost CAP * LS :\r\n");
+			} else if (params[0] == "REQ") {
+				client.sendMessage(":localhost CAP * NAK :\r\n");
+			}
+		}
+		return;
+	}
+	if (command == PASS) {
+		Commands::pass(clientSocket, msg, this->_clients, serverPassword);
+		return;
+	}
 		case QUIT:{
 			Commands::quit(clientSocket);
 			this->rmClient(clientSocket);
 			break;
 		}
-		default:
-			break;
-	}
 	if (!client.getAuth()) {
 		client.sendMessage(ReplyMessage::errPasswdMismatch());
+    client.clearBuffer();
 		return;
 	}
 	switch (command) {
@@ -94,57 +112,36 @@ void Server::execute(int clientSocket, const IRCMessage &msg, const std::string 
 		client.clearBuffer();
 		return;
 	}
-// 	switch (command) {
-// 		case JOIN:
-// 			join(clientSocket, msg, channels, clients);
-// 			break;
-// 		case PART:
-// 			part(clientSocket, msg, channels, clients);
-// 			break;
-// 		case TOPIC:
-// 			topic(clientSocket, msg, channels, clients);
-// 			break;
-// 		case MODE:
-// 			mode(clientSocket, msg, channels, clients);
-// 			break;
-// 		case KICK:
-// 			kick(clientSocket, msg, channels, clients);
-// 			break;
-// 		case INVITE:
-// 			invite(clientSocket, msg, channels, clients);
-// 			break;
-// 		case PRIVMSG:
-// 			privmsg(clientSocket, msg, channels, clients);
-// 			break;
-// 		case NOTICE:
-// 			notice(clientSocket, msg, channels, clients);
-// 			break;
-// 		case PING:
-// 			ping(clientSocket, msg, clients);
-// 			break;
-// 		case PONG:
-// 			pong(clientSocket, msg, clients);
-// 			break;
-// 		case WHO:
-// 			who(clientSocket, msg, channels, clients);
-// 			break;
-// 		case WHOIS:
-// 			whois(clientSocket, msg, channels, clients);
-// 			break;
-// 		case LIST:
-// 			list(clientSocket, msg, channels, clients);
-// 			break;
-// 		case NAMES:
-// 			names(clientSocket, msg, channels, clients);
-// 			break;
-// 		case DEFAULT:
-// 			client.sendMessage(ReplyMessage::errUnknownCommand(msg.getCommand()));
-// 			break;
-// 		default:
-// 			break;
-// 	}
+	switch (command) {
+		case JOIN:
+			Commands::join(clientSocket, msg, this->_channels, this->_clients);
+			break;
+		case PART:
+			Commands::part(clientSocket, msg, this->_channels, this->_clients);
+			break;
+		case TOPIC:
+			Commands::topic(clientSocket, msg, this->_channels, this->_clients);
+			break;
+		case MODE:
+			Commands::mode(clientSocket, msg, this->_channels, this->_clients);
+			break;
+		case KICK:
+			Commands::kick(clientSocket, msg, this->_channels, this->_clients);
+			break;
+		case INVITE:
+			Commands::invite(clientSocket, msg, this->_channels, this->_clients);
+			break;
+		// case PRIVMSG:
+		//	 Commands::privmsg(clientSocket, msg, this->_channels, this->_clients);
+		//	 break;
+		// case PING:
+		//	 Commands::ping(clientSocket, msg, this->_clients);
+		//	 break;
+		default:
+			client.sendMessage(ReplyMessage::errUnknownCommand(msg.getCommand()));
+			break;
+	}
 	client.clearBuffer();
-	std::cerr << "giga prout\n" << std::endl;
 }
 
 
@@ -187,67 +184,6 @@ std::string Server::handleRead(int fd) {
 
 	return std::string();
 }
-
-// ssize_t Server::handleWrite() {
-//   if (_fd < 0)
-// 	return -1;
-
-//   while (!_writeBuf.empty()) {
-// 	ssize_t n = ::send(_fd, &_writeBuf[0], _writeBuf.size(), MSG_NOSIGNAL);
-// 	if (n > 0) {
-// 	  _lastActivity = std::time(NULL);
-// 	  if (static_cast<size_t>(n) >= _writeBuf.size()) {
-// 		_writeBuf.clear();
-// 		return n;
-// 	  } else {
-// 		_writeBuf.erase(_writeBuf.begin(), _writeBuf.begin() + n);
-// 	  }
-// 	} else {
-// 	  if (errno == EAGAIN || errno == EWOULDBLOCK) {
-// 		return 0;
-// 	  }
-// 	  perror("send");
-// 	  close();
-// 	  return -1;
-// 	}
-//   }
-//   if (_writeBuf.empty() && _disconnecting) {
-// 	close();
-//   }
-//   return 0;
-// }
-
-// // overload for convenience
-// void Connection::send(const std::string &data) {
-//   std::vector<char> char_data(data.begin(), data.end());
-//   this->send(char_data);
-// }
-
-// void Connection::send(const std::vector<char> &data) {
-//   if (_closed || data.empty())
-// 	return;
-
-//   ssize_t sent = 0;
-
-//   if (_writeBuf.empty()) {
-// 	sent = ::send(_fd, &data[0], data.size(), MSG_NOSIGNAL);
-
-// 	if (sent < 0) {
-// 	  if (errno == EAGAIN || errno == EWOULDBLOCK) {
-// 		sent = 0;
-// 	  } else {
-// 		perror("send");
-// 		close();
-// 		return;
-// 	  }
-// 	} else {
-// 	  _lastActivity = std::time(NULL);
-// 	}
-//   }
-
-//   if (static_cast<size_t>(sent) < data.size())
-// 	_writeBuf.insert(_writeBuf.end(), data.begin() + sent, data.end());
-// }
 
 void Server::setSock(){
 

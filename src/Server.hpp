@@ -45,6 +45,7 @@ class Server{
 };
 
 enum CMDS {
+	CAP,
 	PASS,
 	QUIT,
 	NICK,

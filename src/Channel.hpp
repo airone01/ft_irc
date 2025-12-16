@@ -90,7 +90,7 @@ enum CHNGMODE {
 	UPRIV,
 	SLIMIT,
 	ULIMIT,
-	DEFAULT
+	DEFAULT1
 };
 
 CHNGMODE applyMode(const std::string& tmp);

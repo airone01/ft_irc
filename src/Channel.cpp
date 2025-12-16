@@ -151,7 +151,7 @@ CHNGMODE applyMode(const std::string& tmp) {
 		return SLIMIT;
 	if (tmp == "-l")
 		return ULIMIT;
-	return DEFAULT;
+	return DEFAULT1;
 }
 
 void Channel::updateMode(const IRCMessage& msg, int senderSocket, ClientManager& clients) {

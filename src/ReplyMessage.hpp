@@ -16,7 +16,7 @@ public:
   static std::string errTooManyChannels(
       const std::string
           &arg); // "<channel name> :You have joined too many channels" 405
-  static std::string errWasNoSuckNick(
+  static std::string errWasNoSuchNick(
       const std::string &arg); // "<nickname> :There was no such nickname" 406
   static std::string errTooManyTargets(
       const std::string
