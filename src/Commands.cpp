@@ -688,26 +688,21 @@ void names(int clientSocket, const IRCMessage& msg, ChannelManager& channels, Cl
 // }
 
 void Commands::pass(int clientSocket, const IRCMessage& msg, ClientManager& clients, const std::string& serverPassword) {
-  Client &client = clients.getClientFromSocket(clientSocket);
-
-  if (client.getRegistered()) {
-    client.sendMessage(ReplyMessage::errAlreadyRegistered());
-    return;
-  }
-
-  if (msg.getParams().empty()) {
-    client.sendMessage(ReplyMessage::errNeedMoreParams("PASS"));
-    return;
-  }
-
-  std::string providedPass = msg.getParams()[0];
-  if (providedPass != serverPassword) {
-    client.sendMessage(ReplyMessage::errPasswdMismatch());
-    return;
-  }
-
-  client.setAuth(true);
-  std::cerr << client.getAuth() << '\n';
+	Client& client = clients.getClientFromSocket(clientSocket);
+	if (client.getRegistered()) {
+		client.sendMessage(ReplyMessage::errAlreadyRegistered());
+		return;
+	}
+	if (msg.getParams().empty()) {
+		client.sendMessage(ReplyMessage::errNeedMoreParams("PASS"));
+		return;
+	}
+	std::string providedPass = msg.getParams()[0];
+	if (providedPass != serverPassword) {
+		client.sendMessage(ReplyMessage::errPasswdMismatch());
+		return;
+	}
+	client.setAuth(true);
 }
 
 // void Commands::nick(IRCMessage const &msg, ClientManager &clients,

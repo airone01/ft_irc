@@ -54,9 +54,11 @@ CMDS applyCommands(const std::string& cmd) {
 
 void Server::handleEvent(int clientSocket){
 	const std::string tmp = handleRead(clientSocket);
+	Client& client = _clients.getClientFromSocket(clientSocket);
 	if (!tmp.empty()){
 		IRCMessage msg(tmp);
 		execute(clientSocket, msg, this->_pswrd);
+		client.clearBuffer();
 	}
 }
 
