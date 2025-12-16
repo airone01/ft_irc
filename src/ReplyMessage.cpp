@@ -13,7 +13,7 @@ std::string ReplyMessage::errNoSuchServer(const std::string &arg) {
   return tmp;
 }
 
-std::string ReplyMessage::errNoSuckChannel(const std::string &arg) {
+std::string ReplyMessage::errNoSuchChannel(const std::string &arg) {
   std::string tmp = "403 ERR_NOSUCHCHANNEL " + arg + " :No such channel\r\n";
   return tmp;
 }
@@ -28,7 +28,7 @@ std::string ReplyMessage::errTooManyChannels(const std::string &arg) {
   return tmp;
 }
 
-std::string ReplyMessage::errWasNoSuckNick(const std::string &arg) {
+std::string ReplyMessage::errWasNoSuchNick(const std::string &arg) {
   std::string tmp = "406 ERR_WASNOSUCHNICK " + arg + " :There was no such nickname\r\n";
   return tmp;
 }
@@ -46,7 +46,7 @@ std::string ReplyMessage::errNoOrigin() {
 
 std::string ReplyMessage::errNoRecipient(const std::string &arg) {
   std::string tmp = "411 ERR_NORECIPIENT :No recipient given " + arg + "\r\n";
-  return tmp;
+  return "411 ERR_NORECIPIENT :No recipient given " + arg + "\r\n";
 }
 
 std::string ReplyMessage::errNoTextToSend() {

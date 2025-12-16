@@ -9,14 +9,14 @@ public:
       const std::string &arg); // "<nickname> :No such nick/channel" 401
   static std::string errNoSuchServer(
       const std::string &arg); // "<server name> :No such server" 402
-  static std::string errNoSuckChannel(
+  static std::string errNoSuchChannel(
       const std::string &arg); // "<channel name> :No such channel" 403
   static std::string errCannotSendToChannel(
       const std::string &arg); // "<channel name> :Cannot send to channel" 404
   static std::string errTooManyChannels(
       const std::string
           &arg); // "<channel name> :You have joined too many channels" 405
-  static std::string errWasNoSuckNick(
+  static std::string errWasNoSuchNick(
       const std::string &arg); // "<nickname> :There was no such nickname" 406
   static std::string errTooManyTargets(
       const std::string

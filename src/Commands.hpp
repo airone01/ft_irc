@@ -10,7 +10,7 @@
 
 class Commands {
 private:
-	// static void broadcastToChannel(Channel& channel, const std::string& message, ClientManager& clients, int excludeSocket = -1);
+	static void broadcastToChannel(Channel& channel, const std::string& message, ClientManager& clients, int senderSocket);
 	// static void	sendWelcome(Client& client);
 	// static bool	isValidNickname(const std::string& nickname);
 public:

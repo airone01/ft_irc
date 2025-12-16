@@ -11,6 +11,8 @@ Server::~Server(){
 }
 
 CMDS applyCommands(const std::string& cmd) {
+	if (cmd == "CAP")
+		return CAP;
 	if (cmd == "PASS")
 		return PASS;
 	if (cmd == "QUIT")
@@ -59,86 +61,81 @@ void Server::handleEvent(int clientSocket){
 }
 
 void Server::execute(int clientSocket, const IRCMessage &msg, const std::string &serverPassword) {
-	Client &client = this->_clients.getClientFromSocket(clientSocket);
+	Client* clientPtr = NULL;
+	try {
+		clientPtr = &this->_clients.getClientFromSocket(clientSocket);
+	} catch (const ClientManager::ClientNotFound&) {
+		Client newClient(clientSocket);
+		this->_clients.addClient(newClient);
+		clientPtr = &this->_clients.getClientFromSocket(clientSocket);
+	}
+	Client& client = *clientPtr;
 	std::string cmd = msg.getCommand();
 	CMDS command = applyCommands(cmd);
+	if (command == CAP) {
+		const std::vector<std::string>& params = msg.getParams();
+		if (!params.empty()) {
+			if (params[0] == "LS") {
+				client.sendMessage(":localhost CAP * LS :\r\n");
+			} else if (params[0] == "REQ") {
+				client.sendMessage(":localhost CAP * NAK :\r\n");
+			}
+		}
+		return;
+	}
+	if (command == PASS) {
+		Commands::pass(clientSocket, msg, this->_clients, serverPassword);
+		return;
+	}
+	if (command == QUIT) {
+		Commands::quit(clientSocket, this->_clients);
+		return;
+	}
+	// if (!client.getAuth()) {
+	// 	client.sendMessage(ReplyMessage::errPasswdMismatch());
+	// 	return;
+	// }
+	// if (command == NICK) {
+	//	 Commands::nick(clientSocket, msg, this->_clients);
+	//	 return;
+	// }
+	// if (command == USER) {
+	//	 Commands::user(clientSocket, msg, this->_clients);
+	//	 return;
+	// }
+	// if (!client.getRegistered()) {
+	// 	client.sendMessage(ReplyMessage::errNotRegistered());
+	// 	return;
+	// }
 	switch (command) {
-		case PASS:
-			Commands::pass(clientSocket, msg, this->_clients, serverPassword);
+		case JOIN:
+			Commands::join(clientSocket, msg, this->_channels, this->_clients);
 			break;
-		case QUIT:
-			Commands::quit(clientSocket, this->_clients);
+		case PART:
+			Commands::part(clientSocket, msg, this->_channels, this->_clients);
 			break;
+		case TOPIC:
+			Commands::topic(clientSocket, msg, this->_channels, this->_clients);
+			break;
+		case MODE:
+			Commands::mode(clientSocket, msg, this->_channels, this->_clients);
+			break;
+		case KICK:
+			Commands::kick(clientSocket, msg, this->_channels, this->_clients);
+			break;
+		case INVITE:
+			Commands::invite(clientSocket, msg, this->_channels, this->_clients);
+			break;
+		// case PRIVMSG:
+		//	 Commands::privmsg(clientSocket, msg, this->_channels, this->_clients);
+		//	 break;
+		// case PING:
+		//	 Commands::ping(clientSocket, msg, this->_clients);
+		//	 break;
 		default:
+			client.sendMessage(ReplyMessage::errUnknownCommand(msg.getCommand()));
 			break;
 	}
-// 	if (!client.getAuth()) {
-// 		client.sendMessage(ReplyMessage::errPasswdMismatch());
-// 		return;
-// 	}
-// 	switch (command) {
-// 		case NICK:
-// 			nick(clientSocket, msg, channels, clients);
-// 			return;
-// 		case USER:
-// 			user(clientSocket, msg, clients);
-// 			return;
-// 		default:
-// 			break;
-// 	}
-// 	if (!client.getRegistered()) {
-// 		client.sendMessage(ReplyMessage::errNotRegistered());
-// 		return;
-// 	}
-// 	switch (command) {
-// 		case JOIN:
-// 			join(clientSocket, msg, channels, clients);
-// 			break;
-// 		case PART:
-// 			part(clientSocket, msg, channels, clients);
-// 			break;
-// 		case TOPIC:
-// 			topic(clientSocket, msg, channels, clients);
-// 			break;
-// 		case MODE:
-// 			mode(clientSocket, msg, channels, clients);
-// 			break;
-// 		case KICK:
-// 			kick(clientSocket, msg, channels, clients);
-// 			break;
-// 		case INVITE:
-// 			invite(clientSocket, msg, channels, clients);
-// 			break;
-// 		case PRIVMSG:
-// 			privmsg(clientSocket, msg, channels, clients);
-// 			break;
-// 		case NOTICE:
-// 			notice(clientSocket, msg, channels, clients);
-// 			break;
-// 		case PING:
-// 			ping(clientSocket, msg, clients);
-// 			break;
-// 		case PONG:
-// 			pong(clientSocket, msg, clients);
-// 			break;
-// 		case WHO:
-// 			who(clientSocket, msg, channels, clients);
-// 			break;
-// 		case WHOIS:
-// 			whois(clientSocket, msg, channels, clients);
-// 			break;
-// 		case LIST:
-// 			list(clientSocket, msg, channels, clients);
-// 			break;
-// 		case NAMES:
-// 			names(clientSocket, msg, channels, clients);
-// 			break;
-// 		case DEFAULT:
-// 			client.sendMessage(ReplyMessage::errUnknownCommand(msg.getCommand()));
-// 			break;
-// 		default:
-// 			break;
-// 	}
 	client.clearBuffer();
 }
 
