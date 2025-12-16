@@ -37,10 +37,6 @@ CMDS applyCommands(const std::string& cmd) {
 		return PRIVMSG;
 	if (cmd == "NOTICE")
 		return NOTICE;
-	if (cmd == "PING")
-		return PING;
-	if (cmd == "PONG")
-		return PONG;
 	if (cmd == "WHO")
 		return WHO;
 	if (cmd == "WHOIS")
@@ -142,9 +138,6 @@ void Server::execute(int clientSocket, const IRCMessage &msg, const std::string 
 			return;
 		// case PRIVMSG:
 		//	 Commands::privmsg(clientSocket, msg, this->_channels, this->_clients);
-		//	 break;
-		// case PING:
-		//	 Commands::ping(clientSocket, msg, this->_clients);
 		//	 break;
 		default:
 			client.sendMessage(ReplyMessage::errUnknownCommand(cmd));

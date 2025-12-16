@@ -313,9 +313,6 @@ void quit(int clientSocket, const IRCMessage& msg, ChannelManager& channels, Cli
 void privmsg(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
 void notice(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
 
-void ping(int clientSocket, const IRCMessage& msg, ClientManager& clients);
-void pong(int clientSocket, const IRCMessage& msg, ClientManager& clients);
-
 void who(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
 void whois(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
 void list(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);

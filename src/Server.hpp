@@ -56,8 +56,6 @@ enum CMDS {
 	INVITE,
 	PRIVMSG,
 	NOTICE,
-	PING,
-	PONG,
 	WHO,
 	WHOIS,
 	LIST,
