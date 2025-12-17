@@ -69,7 +69,6 @@ void Server::handleEvent(int clientSocket){
 		}
 	} catch (const IRCMessage::MsgEmptyException&) {
 	} catch (const ClientManager::ClientNotFound&) {
-		std::cerr << "catch found\n" << std::endl;
 	}
 }
 
@@ -98,7 +97,6 @@ void Server::execute(int clientSocket, const IRCMessage &msg, const std::string 
 		Commands::user(clientSocket, msg, _clients);
 		break;
 	case QUIT:
-		Commands::quit(clientSocket);
 		this->rmClient(clientSocket);
 		break;
 	case JOIN:
