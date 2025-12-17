@@ -26,7 +26,7 @@ public:
 	static void user(int clientSocket, const IRCMessage& msg, ClientManager& clients);
 	static void quit(int clientSocket);
 
-	// static void privmsg(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
+	static void privmsg(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
 	// static void notice(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients);
 
 	// static void ping(int clientSocket, const IRCMessage& msg, ClientManager& clients);
