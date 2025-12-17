@@ -69,6 +69,7 @@ void Server::handleEvent(int clientSocket){
 		}
 	} catch (const IRCMessage::MsgEmptyException&) {
 	} catch (const ClientManager::ClientNotFound&) {
+		std::cerr << "catch found\n" << std::endl;
 	}
 }
 
@@ -118,9 +119,9 @@ void Server::execute(int clientSocket, const IRCMessage &msg, const std::string 
 	case INVITE:
 		Commands::invite(clientSocket, msg, this->_channels, this->_clients);
 		break;
-	// case PRIVMSG:
-	//	 Commands::privmsg(clientSocket, msg, this->_channels, this->_clients);
-	//	 break;
+	case PRIVMSG:
+		 Commands::privmsg(clientSocket, msg, this->_channels, this->_clients);
+		 break;
 	case NONE:
 		client.sendMessage(ReplyMessage::errUnknownCommand(cmd));
 		break;
