@@ -86,6 +86,7 @@ void Client::setSocket(int fd) {
 void Client::appendToBuffer(const std::string& buffer) {
 	this->_buffer += buffer;
 }
+
 void Client::clearBuffer() {
 	this->_buffer.clear();
 	this->_rBuff.clear();
