@@ -63,12 +63,11 @@ void Server::handleEvent(int clientSocket){
 			std::string message = client.extractMessage();
 			if (message.empty())
 				break;
-			try {
-				IRCMessage msg(message);
-				execute(clientSocket, msg, this->_pswrd);
-			} catch (const IRCMessage::MsgEmptyException&) {
-			}
+			IRCMessage msg(message);
+			execute(clientSocket, msg, this->_pswrd);
+			_clients.getClientFromSocket(clientSocket);
 		}
+	} catch (const IRCMessage::MsgEmptyException&) {
 	} catch (const ClientManager::ClientNotFound&) {
 	}
 }
@@ -86,56 +85,47 @@ void Server::execute(int clientSocket, const IRCMessage &msg, const std::string 
 	const std::string& cmd = msg.getCommand();
 	CMDS command = applyCommands(cmd);
 	switch (command) {
-		case CAP:
-		case PASS:
-			Commands::pass(clientSocket, msg, this->_clients, serverPassword);
-			break;
-		case NICK:
-			Commands::nick(clientSocket, msg, _clients);
-			break;
-		case USER:
-			Commands::user(clientSocket, msg, _clients);
-			break;
-		case QUIT:
-			Commands::quit(clientSocket);
-			this->rmClient(clientSocket);
-			break;
-	// if (!client.getAuth()) {
-	// 	client.sendMessage(ReplyMessage::errPasswdMismatch());
-	// 	client.clearBuffer();
-	// 	return;
-	// }
-	// if (!client.getRegistered()) {
-	// 	client.sendMessage(ReplyMessage::errNotRegistered());
-	// 	client.clearBuffer();
-	// 	return;
-	// }
-		case JOIN:
-			Commands::join(clientSocket, msg, this->_channels, this->_clients);
-			break;
-		case PART:
-			Commands::part(clientSocket, msg, this->_channels, this->_clients);
-			break;
-		case TOPIC:
-			Commands::topic(clientSocket, msg, this->_channels, this->_clients);
-			break;
-		case MODE:
-			Commands::mode(clientSocket, msg, this->_channels, this->_clients);
-			break;
-		case KICK:
-			Commands::kick(clientSocket, msg, this->_channels, this->_clients);
-			break;
-		case INVITE:
-			Commands::invite(clientSocket, msg, this->_channels, this->_clients);
-			break;
-		// case PRIVMSG:
-		//	 Commands::privmsg(clientSocket, msg, this->_channels, this->_clients);
-		//	 break;
-		case NONE:
-			client.sendMessage(ReplyMessage::errUnknownCommand(cmd));
-			break;
-		default:
-			break;
+	case CAP:
+		break;
+	case PASS:
+		Commands::pass(clientSocket, msg, this->_clients, serverPassword);
+		break;
+	case NICK:
+		Commands::nick(clientSocket, msg, _clients);
+		break;
+	case USER:
+		Commands::user(clientSocket, msg, _clients);
+		break;
+	case QUIT:
+		Commands::quit(clientSocket);
+		this->rmClient(clientSocket);
+		break;
+	case JOIN:
+		Commands::join(clientSocket, msg, this->_channels, this->_clients);
+		break;
+	case PART:
+		Commands::part(clientSocket, msg, this->_channels, this->_clients);
+		break;
+	case TOPIC:
+		Commands::topic(clientSocket, msg, this->_channels, this->_clients);
+		break;
+	case MODE:
+		Commands::mode(clientSocket, msg, this->_channels, this->_clients);
+		break;
+	case KICK:
+		Commands::kick(clientSocket, msg, this->_channels, this->_clients);
+		break;
+	case INVITE:
+		Commands::invite(clientSocket, msg, this->_channels, this->_clients);
+		break;
+	// case PRIVMSG:
+	//	 Commands::privmsg(clientSocket, msg, this->_channels, this->_clients);
+	//	 break;
+	case NONE:
+		client.sendMessage(ReplyMessage::errUnknownCommand(cmd));
+		break;
+	default:
+		break;
 	}
 }
 
