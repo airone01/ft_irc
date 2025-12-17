@@ -23,10 +23,7 @@ static std::vector<std::string> paramHandler(const std::string& params) {
 	std::vector<std::string> newParam;
 	std::string tmp;
 	for (size_t i = 0;;) {
-		if (i == 0)
-			tmp = params.substr(i, params.find(','));
-		else
-			tmp = params.substr(i);
+		tmp = params.substr(i, params.find(','));
 		newParam.push_back(tmp);
 		i = params.find(',', i);
 		if (i == std::string::npos)
@@ -38,6 +35,10 @@ static std::vector<std::string> paramHandler(const std::string& params) {
 
 void Commands::join(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients) {
 	Client& client = clients.getClientFromSocket(clientSocket);
+	if (!client.getRegistered()) {
+		client.sendMessage(ReplyMessage::errNotRegistered());
+		return;
+	}
 	const std::vector<std::string>& params = msg.getParams();
 	if (params.empty()) {
 		client.sendMessage(ReplyMessage::errNeedMoreParams("JOIN"));
@@ -109,6 +110,10 @@ void Commands::join(int clientSocket, const IRCMessage& msg, ChannelManager& cha
 
 void Commands::part(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients) {
 	Client& client = clients.getClientFromSocket(clientSocket);
+	if (!client.getRegistered()) {
+		client.sendMessage(ReplyMessage::errNotRegistered());
+		return;
+	}
 	std::vector<std::string> param = msg.getParams();
 	std::vector<std::string>:: iterator it = param.begin();
 	std::vector<std::string>:: iterator ite = param.end();
@@ -131,6 +136,10 @@ void Commands::part(int clientSocket, const IRCMessage& msg, ChannelManager& cha
 
 void Commands::topic(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients) {
 	Client& client = clients.getClientFromSocket(clientSocket);
+	if (!client.getRegistered()) {
+		client.sendMessage(ReplyMessage::errNotRegistered());
+		return;
+	}
 	if (msg.getCountParams() != 1) {
 		client.sendMessage(ReplyMessage::errNeedMoreParams("TOPIC"));
 		return ;
@@ -157,6 +166,10 @@ void Commands::topic(int clientSocket, const IRCMessage& msg, ChannelManager& ch
 
 void Commands::mode(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients) {
 	Client& client = clients.getClientFromSocket(clientSocket);
+	if (!client.getRegistered()) {
+		client.sendMessage(ReplyMessage::errNotRegistered());
+		return;
+	}
 	const std::vector<std::string>& params = msg.getParams();
 	if (params.empty()) {
 		client.sendMessage(ReplyMessage::errNeedMoreParams("MODE"));
@@ -223,6 +236,10 @@ void Commands::mode(int clientSocket, const IRCMessage& msg, ChannelManager& cha
 
 void Commands::kick(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients) {
 	Client& client = clients.getClientFromSocket(clientSocket);
+	if (!client.getRegistered()) {
+		client.sendMessage(ReplyMessage::errNotRegistered());
+		return;
+	}
 	const std::vector<std::string>& params = msg.getParams();
 	if (params.size() < 2) {
 		client.sendMessage(ReplyMessage::errNeedMoreParams("KICK"));
@@ -264,6 +281,10 @@ void Commands::kick(int clientSocket, const IRCMessage& msg, ChannelManager& cha
 
 void Commands::invite(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients) {
 	Client& client = clients.getClientFromSocket(clientSocket);
+	if (!client.getRegistered()) {
+		client.sendMessage(ReplyMessage::errNotRegistered());
+		return;
+	}
 	const std::vector<std::string>& params = msg.getParams();
 	if (params.size() < 2) {
 		client.sendMessage(ReplyMessage::errNeedMoreParams("INVITE"));
@@ -314,18 +335,22 @@ void Commands::pass(int clientSocket, const IRCMessage& msg, ClientManager& clie
 		client.sendMessage(ReplyMessage::errNeedMoreParams("PASS"));
 		return;
 	}
-	if (msg.getCommand() == "PASS") {
-		std::string providedPass = msg.getParams()[0];
-		if (providedPass != serverPassword) {
-			client.sendMessage(ReplyMessage::errPasswdMismatch());
-			return;
-		}
-	client.setAuth(true);
+	std::string providedPass = msg.getParams()[0];
+	if (providedPass != serverPassword) {
+		client.sendMessage(ReplyMessage::errPasswdMismatch());
+		return;
 	}
+	client.setAuth(true);
 }
 
 void Commands::nick(int clientSocket, const IRCMessage& msg, ClientManager& clients) {
 	Client &client = clients.getClientFromSocket(clientSocket);
+
+	if (!client.getAuth()) {
+		client.sendMessage(ReplyMessage::errPasswdMismatch());
+		client.clearBuffer();
+		return;
+	}
 
 	if (msg.getParams().empty()) {
 		client.sendMessage(ReplyMessage::errNeedMoreParams("NICK"));
@@ -352,9 +377,12 @@ void Commands::nick(int clientSocket, const IRCMessage& msg, ClientManager& clie
 }
 
 void Commands::user(int clientSocket, const IRCMessage& msg, ClientManager& clients) {
-
 	Client &client = clients.getClientFromSocket(clientSocket);
-
+	if (!client.getAuth()) {
+		client.sendMessage(ReplyMessage::errPasswdMismatch());
+		client.clearBuffer();
+		return;
+	}
 	if (client.getRegistered()) {
 		client.sendMessage(ReplyMessage::errAlreadyRegistered());
 		return;
