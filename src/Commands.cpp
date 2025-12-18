@@ -85,25 +85,22 @@ void Commands::join(int clientSocket, const IRCMessage& msg, ChannelManager& cha
 				continue ;
 			}
 		}
-		std::ostringstream joinMsg;
-		joinMsg << ":" << client.getNickname() << " JOIN " << channelName << "\r\n";
-		client.sendMessage(joinMsg.str());
-		broadcastToChannel(*channel, joinMsg.str(), clients, clientSocket);
+		std::string joinMsg = ":" + client.getNickname() + " JOIN " + channelName + "\r\n";
+		client.sendMessage(joinMsg);
+		broadcastToChannel(*channel, joinMsg, clients, clientSocket);
 		if (!channel->getTopic().empty())
 			client.sendMessage(ReplyMessage::rplTopic(channelName, channel->getTopic()));
-		else
-			client.sendMessage(ReplyMessage::rplNoTopic(channelName));
-		std::ostringstream namesMsg;
+		std::string namesMsg;
 		const std::set<int>& users = channel->getUsers();
 		std::set<int>::const_iterator it = users.begin();
 		std::set<int>::const_iterator ite = users.end();
 		for (; it != ite; ++it) {
 			Client& user = clients.getClientFromSocket(*it);
 			if (channel->isAdmin(*it))
-				namesMsg << "@";
-			namesMsg << user.getNickname() << " ";
+				namesMsg += "@";
+			namesMsg += user.getNickname() + " ";
 		}
-		client.sendMessage(ReplyMessage::rplNamReply("= " + channelName, namesMsg.str()));
+		client.sendMessage(ReplyMessage::rplNamReply("= " + channelName, namesMsg));
 		client.sendMessage(ReplyMessage::rplEndOfNames(channelName));
 	}
 }
@@ -114,12 +111,17 @@ void Commands::part(int clientSocket, const IRCMessage& msg, ChannelManager& cha
 		client.sendMessage(ReplyMessage::errNotRegistered());
 		return;
 	}
-	std::vector<std::string> param = msg.getParams();
-	std::vector<std::string>:: iterator it = param.begin();
-	std::vector<std::string>:: iterator ite = param.end();
+	std::vector<std::string> param = paramHandler(msg.getParams()[0]);
+	std::vector<std::string>::iterator it = param.begin();
+	std::vector<std::string>::iterator ite = param.end();
 	for (; it != ite; ++it) {
 		try {
 			Channel& channel = channels.getChannelFromName(*it);
+			std::string partMsg = ":" + client.getNickname() + " PART " + channel.getName();
+			if (!msg.getTrailing().empty())
+				partMsg += " :" + msg.getTrailing();
+			partMsg += "\r\n";
+			broadcastToChannel(channel, partMsg, clients, -1);
 			channel.removeUser(clientSocket);
 			if (channel.getUserCount() == 0) {
 				channels.removeChannel(*it);
@@ -147,8 +149,11 @@ void Commands::topic(int clientSocket, const IRCMessage& msg, ChannelManager& ch
 	const std::vector<std::string>& params = msg.getParams();
 	try {
 		Channel& channel = channels.getChannelFromName(params[0]);
-		if (!msg.getTrailing().empty())
+		if (!msg.getTrailing().empty()) {
 			channel.changeTopic(msg.getTrailing(), clientSocket);
+			std::string topicMsg = ":" + client.getNickname() + " TOPIC " + channel.getName() + " :" + channel.getTopic() + "\r\n";
+			broadcastToChannel(channel, topicMsg, clients, -1);
+		}
 		if (!channel.getTopic().empty())
 			client.sendMessage(ReplyMessage::rplTopic(channel.getName(), channel.getTopic()));
 		else
@@ -208,13 +213,12 @@ void Commands::mode(int clientSocket, const IRCMessage& msg, ChannelManager& cha
 		}
 		try {
 			channel.updateMode(msg, clientSocket, clients);
-			std::ostringstream modeMsg;
-			modeMsg << ":" << client.getNickname() << " MODE " << target;
+			std::string modeMsg = ":" + client.getNickname() + " MODE " + target;
 			for (size_t i = 1; i < params.size(); ++i) {
-				modeMsg << " " << params[i];
+				modeMsg += " " + params[i];
 			}
-			modeMsg << "\r\n";
-			broadcastToChannel(channel, modeMsg.str(), clients, -1);
+			modeMsg += "\r\n";
+			broadcastToChannel(channel, modeMsg, clients, -1);
 		} catch (const std::runtime_error& e) {
 			std::string error = e.what();
 			if (error == "ERR_NEEDMOREPARAMS")
@@ -273,9 +277,8 @@ void Commands::kick(int clientSocket, const IRCMessage& msg, ChannelManager& cha
 		client.sendMessage(ReplyMessage::errUserNotInChannel(targetNick, channelName));
 		return;
 	}
-	std::ostringstream kickMsg;
-	kickMsg << ":" << client.getNickname() << " KICK " << channelName << " " << targetNick << " :" << reason << "\r\n";
-	broadcastToChannel(channel, kickMsg.str(), clients, -1);
+	std::string kickMsg = ":" + client.getNickname() + " KICK " + channelName + " " + targetNick + " :" + reason + "\r\n";
+	broadcastToChannel(channel, kickMsg, clients, -1);
 	channel.kickUser(targetSocket);
 }
 
@@ -320,9 +323,8 @@ void Commands::invite(int clientSocket, const IRCMessage& msg, ChannelManager& c
 	}
 	channel.inviteUser(targetSocket);
 	client.sendMessage(ReplyMessage::rplInviting(channelName, targetNick));
-	std::ostringstream inviteMsg;
-	inviteMsg << ":" << client.getNickname() << " INVITE " << targetNick << " " << channelName << "\r\n";
-	targetClient->sendMessage(inviteMsg.str());
+	std::string inviteMsg = ":" + client.getNickname() + " INVITE " + targetNick + " " + channelName + "\r\n";
+	targetClient->sendMessage(inviteMsg);
 }
 
 void Commands::pass(int clientSocket, const IRCMessage& msg, ClientManager& clients, const std::string& serverPassword) {
@@ -345,32 +347,25 @@ void Commands::pass(int clientSocket, const IRCMessage& msg, ClientManager& clie
 
 void Commands::nick(int clientSocket, const IRCMessage& msg, ClientManager& clients) {
 	Client &client = clients.getClientFromSocket(clientSocket);
-
 	if (!client.getAuth()) {
 		client.sendMessage(ReplyMessage::errPasswdMismatch());
 		client.clearBuffer();
 		return;
 	}
-
 	if (msg.getParams().empty()) {
 		client.sendMessage(ReplyMessage::errNeedMoreParams("NICK"));
 		return;
 	}
-
 	std::string newNick = msg.getParams()[0];
-
 	if (newNick.empty()) {
 		client.sendMessage(ReplyMessage::errErroneusNuckname(newNick));
 		return;
 	}
-
 	if (clients.isNicknameUsed(newNick)){
 		client.sendMessage(ReplyMessage::errNicknameInUse(newNick));
 		return ;
 	}
-
 	client.setNickname(newNick);
-
 	if (!client.getUsername().empty() && client.getAuth()){
 		client.setRegistered(true);
 	}
@@ -387,62 +382,46 @@ void Commands::user(int clientSocket, const IRCMessage& msg, ClientManager& clie
 		client.sendMessage(ReplyMessage::errAlreadyRegistered());
 		return;
 	}
-
-	// USER <username> <hostname> <servername> <realname>
 	if ((msg.getParams().size() < 1 || msg.getParams().size() > 3) || msg.getTrailing().empty()) {
 		client.sendMessage(ReplyMessage::errNeedMoreParams("USER"));
 		return;
 	}
-
 	std::string newUser = msg.getParams()[0];
-
 	if (clients.isUsernameUsed(newUser) && client.getUsername() != newUser)
 		return ;
-
 	client.setUsername(newUser);
-
-
 	if (!client.getNickname().empty() && client.getAuth()){
 		client.setRegistered(true);
 	}
 }
 
-void Commands::quit(int clientSocket){
-	(void)clientSocket;
-}
-
 void Commands::privmsg(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients){
-
 	try {
 		Client &client = clients.getClientFromSocket(clientSocket);
-
 		if (msg.getParams().size() > 1){
 			client.sendMessage(ReplyMessage::errTooManyTargets(msg.getParams()[1]));
 			return ;
 		}
-		else if (msg.getParams().empty()) {
+		if (msg.getParams().empty()) {
 			client.sendMessage(ReplyMessage::errNoRecipient(msg.getCommand()));
 			return ;
 		}
-
 		std::vector<std::string> tmp = paramHandler(msg.getParams()[0]);
 		std::vector<std::string>::iterator it = tmp.begin();
 		std::vector<std::string>::iterator ite = tmp.end();
 		for (; it != ite; ++it ) {
-			if (channels.hasChannel(*it)){
-				std::ostringstream joinMsg;
-				joinMsg << ":" << client.getNickname() << " PRIVMSG " << *it << " " << msg.getTrailing() << "\r\n";
-				broadcastToChannel(channels.getChannelFromName(*it), joinMsg.str(), clients, clientSocket);
+			if (channels.hasChannel(*it) && channels.getChannelFromName(*it).hasUser(client.getSocket())){
+				std::string privMsg = ":" + client.getNickname() + " PRIVMSG " + *it + " :" + msg.getTrailing() + "\r\n";
+				broadcastToChannel(channels.getChannelFromName(*it), privMsg, clients, clientSocket);
 			}
 			else if (clients.isNicknameUsed(*it)){
-				std::string oe = ":" + client.getNickname() + " PRIVMSG " + *it + " " + msg.getTrailing() + "\r\n";
-				send(clients.getClientFromNickname(*it).getSocket(), oe.c_str() , oe.size() , 0);			
+				std::string privMsg = ":" + client.getNickname() + " PRIVMSG " + *it + " :" + msg.getTrailing() + "\r\n";
+				send(clients.getClientFromNickname(*it).getSocket(), privMsg.c_str(), privMsg.size(), 0);
 			}
 			else 
 				client.sendMessage(ReplyMessage::errNoSuchNick(*it));
 		}
 	}
-	catch(const std::exception& e) {
-		std::cerr << "error: failed to accexx client\n" << std::endl;
+	catch(const std::exception& ) {
 	}
 }
