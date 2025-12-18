@@ -1,5 +1,7 @@
 #include "Server.hpp"
 
+extern bool doQuit;
+
 // Server::Server( void ) :  _port(NULL), _pswrd(NULL) {}
 
 Server::Server( int port, std::string pswrd ) :  _pswrd(pswrd), _port(port) {
@@ -183,7 +185,6 @@ void Server::setSock(){
 	sin.sin_family = AF_INET;
 	sin.sin_addr.s_addr = INADDR_ANY;
 	sin.sin_port = htons(static_cast<short>(this->_port));
-	// if (::bind(this->_socketFd, (struct sockaddr*)&sin, sizeof(sin)) < 0)
 	if (::bind(this->_socketFd, reinterpret_cast<sockaddr*>(&sin), sizeof(sin)) < 0)
 		throw std::runtime_error("bind failed.");
 	if (::listen(this->_socketFd, 1024) < 0)
@@ -195,10 +196,9 @@ void	Server::rmClient(int clientSocket){
 	while (clientSocket != this->events[i].data.fd)
 		i++;
 	close(this->events[i].data.fd);
-	epoll_ctl(this->_epfd, EPOLL_CTL_DEL, this->events[i].data.fd, NULL);
-	_channels.removeUserFromAllChannels(this->events[i].data.fd);
-	_clients.removeClient(this->events[i].data.fd);
-
+	epoll_ctl(this->_epfd, EPOLL_CTL_DEL, clientSocket, NULL);
+	_channels.removeUserFromAllChannels(clientSocket);
+	// _clients.removeClient(clientSocket);
 }
 
 void Server::serverRoutine() {
@@ -217,9 +217,14 @@ void Server::serverRoutine() {
 
 	for(;;){
 		int nfds = epoll_wait(this->_epfd, this->events, maxEvents, -1);
+		if (doQuit){
+			_clients.clearClients();
+			close(this->_epfd);
+			close(this->_socketFd);
+			return ;
+		}
 		if (nfds < 0)
 			throw std::runtime_error("epoll_wait failed");
-
 		for (int i = 0; i < nfds; ++i) {
 
 			if (this->events[i].events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP)) {
@@ -233,7 +238,6 @@ void Server::serverRoutine() {
 			else if (this->events[i].data.fd == this->_socketFd){
 				sockaddr_in client;
 				socklen_t len = sizeof(client);
-				// int connSock = accept(events[i].data.fd, (struct sockaddr*)&client, &len);
 				int connSock = accept(this->events[i].data.fd, reinterpret_cast<sockaddr*>(&client), &len);
 				if (connSock < 0){
 					std::cerr << "error: accept failed on fd " << this->events[i].data.fd << '\n' << std::endl;

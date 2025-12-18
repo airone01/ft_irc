@@ -36,6 +36,13 @@
 //   return true;
 // }
 
+bool doQuit = false;
+
+void handle_sigint(int sig){
+  if (sig == SIGINT)
+    doQuit = true;
+}
+
 int main(int argc, char **argv) {
   if (argc != 3) {
     // TODO: implement password as second arg
@@ -48,16 +55,17 @@ int main(int argc, char **argv) {
   if (!ss.eof())
     std::cerr << "error: unvalid port." << std::endl;
   
+  struct sigaction sa;
+  memset(&sa, 0, sizeof(sa));
+  sa.sa_handler = handle_sigint;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  sigaction(SIGINT, &sa, NULL);
+
   Server serv(port, argv[2]);
 	serv.serverRoutine();
   // Set log level (optional)
 
-  struct sigaction sa;
-  memset(&sa, 0, sizeof(sa));
-  // sa.sa_handler = handle_sigint;
-  sigemptyset(&sa.sa_mask);
-  sa.sa_flags = 0;
-  sigaction(SIGINT, &sa, NULL);
 
   // g_connMgr = &connMgr;
   // ChannelManager chanMgr;

@@ -45,6 +45,15 @@ void ClientManager::removeClient(int socket) {
 	_clients.erase(socket);
 }
 
+void ClientManager::clearClients() {
+	std::map<int, Client>::iterator	it = _clients.begin();
+	std::map<int, Client>::iterator ite = _clients.end();
+	for (; it != ite; ++it) {
+		close(it->first);
+	}
+	_clients.clear();
+}
+
 bool ClientManager::isNicknameUsed(const std::string& nickname){
 	std::map<int, Client>::iterator it = _clients.begin();
 	std::map<int, Client>::iterator ite = _clients.end();
