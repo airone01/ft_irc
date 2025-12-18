@@ -113,6 +113,10 @@ void Commands::part(int clientSocket, const IRCMessage& msg, ChannelManager& cha
 		client.sendMessage(ReplyMessage::errNotRegistered());
 		return;
 	}
+	if (msg.getParams().empty()) {
+		client.sendMessage(ReplyMessage::errNeedMoreParams("PART"));
+		return;
+	}
 	std::vector<std::string> param = paramHandler(msg.getParams()[0]);
 	std::vector<std::string>::iterator it = param.begin();
 	std::vector<std::string>::iterator ite = param.end();
@@ -465,8 +469,10 @@ void Commands::privmsg(int clientSocket, const IRCMessage& msg, ChannelManager& 
 				std::string privMsg = ":" + client.getNickname() + " PRIVMSG " + *it + " :" + msg.getTrailing() + "\r\n";
 				send(clients.getClientFromNickname(*it).getSocket(), privMsg.c_str(), privMsg.size(), 0);
 			}
-			else 
+			else {
 				client.sendMessage(ReplyMessage::errNoSuchNick(*it));
+				return ;
+			}
 		}
 	}
 	catch(const std::exception& ) {
