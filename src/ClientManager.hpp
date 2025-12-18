@@ -23,7 +23,7 @@ public:
 	Client&	getClientFromNickname(const std::string& nickname);
 	Client&	getClientFromSocket(const int& socket);
 	size_t	getClientCount() const;
-  std::vector<Client*> getAllClients();
+	std::vector<Client*> getAllClients();
 	// setter
 	void	addClient(const Client& client);
 	void	removeClient(int socket);
