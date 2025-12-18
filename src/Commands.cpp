@@ -438,52 +438,52 @@ void Commands::pass(int clientSocket, const IRCMessage& msg, ClientManager& clie
 // WHO requires sending responses for every user hit by the mask
 // idk about this implementation but it works
 void Commands::who(int clientSocket, const IRCMessage& msg, ClientManager& clients) {
-    Client& requestor = clients.getClientFromSocket(clientSocket);
-    const std::vector<std::string>& params = msg.getParams();
-    std::vector<Client*> allClients = clients.getAllClients();
+	Client& requestor = clients.getClientFromSocket(clientSocket);
+	const std::vector<std::string>& params = msg.getParams();
+	std::vector<Client*> allClients = clients.getAllClients();
 
-    std::string searchMask = (params.size() > 0) ? params[0] : "*"; // defaults to "*"
-    std::string::size_type pos = searchMask.find('*');
+	std::string searchMask = (params.size() > 0) ? params[0] : "*"; // defaults to "*"
+	std::string::size_type pos = searchMask.find('*');
 
-    // iterate and filter
-    for (std::vector<Client*>::iterator it = allClients.begin(); it != allClients.end(); ++it) {
-        Client* target = *it;
-        std::string nick = target->getNickname(); // should check username but whatever
-        bool isMatch = false;
+	// iterate and filter
+	for (std::vector<Client*>::iterator it = allClients.begin(); it != allClients.end(); ++it) {
+		Client* target = *it;
+		std::string nick = target->getNickname(); // should check username but whatever
+		bool isMatch = false;
 
-        if (pos == std::string::npos) {
-            // exact match (no wildcard)
-            if (nick == searchMask) {
-                isMatch = true;
-            }
-        } else {
-            // wildcard match
-            std::string prefix = searchMask.substr(0, pos);
-            std::string suffix = "";
-            
-            if (pos + 1 < searchMask.size()) { // is there text after "*"?
-                suffix = searchMask.substr(pos + 1);
-            }
-            if (nick.length() >= prefix.length() + suffix.length()) { // the check™
-                if (nick.substr(0, prefix.length()) == prefix &&
-                    nick.substr(nick.length() - suffix.length()) == suffix) {
-                    isMatch = true;
-                }
-            }
-        }
+		if (pos == std::string::npos) {
+			// exact match (no wildcard)
+			if (nick == searchMask) {
+				isMatch = true;
+			}
+		} else {
+			// wildcard match
+			std::string prefix = searchMask.substr(0, pos);
+			std::string suffix = "";
 
-        if (isMatch) {
-            std::stringstream ss;
-            ss << 0; 
-            std::string hopcount = ss.str();
+			if (pos + 1 < searchMask.size()) { // is there text after "*"?
+				suffix = searchMask.substr(pos + 1);
+			}
+			if (nick.length() >= prefix.length() + suffix.length()) { // the check™
+				if (nick.substr(0, prefix.length()) == prefix &&
+					nick.substr(nick.length() - suffix.length()) == suffix) {
+					isMatch = true;
+				}
+			}
+		}
 
-            requestor.sendMessage(ReplyMessage::rplWhoReply(
-                // we miss implementations realname host or server
-                "*", target->getUsername(), "ft_irc", "ft_irc", nick, "H", hopcount, "realname"
-            ));
-        }
-    }
-    requestor.sendMessage(ReplyMessage::rplEndOfWho(searchMask)); // end message
+		if (isMatch) {
+			std::stringstream ss;
+			ss << 0;
+			std::string hopcount = ss.str();
+
+			requestor.sendMessage(ReplyMessage::rplWhoReply(
+				// we miss implementations realname host or server
+				"*", target->getUsername(), "ft_irc", "ft_irc", nick, "H", hopcount, "realname"
+			));
+		}
+	}
+	requestor.sendMessage(ReplyMessage::rplEndOfWho(searchMask)); // end message
 }
 
 // void Commands::nick(IRCMessage const &msg, ClientManager &clients,
