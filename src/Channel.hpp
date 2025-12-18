@@ -5,8 +5,6 @@
 #include "IRCMessage.hpp"
 #include <set>
 
-//NE PLUS TOUCHER CE FICHIER SAUF POUR METTRE DES METHODS UTILES
-
 class Channel {
 private:
 	std::string		_name;

@@ -1,7 +1,5 @@
 #include "IRCMessage.hpp"
 
-//NE PLUS TOUCHER CE FICHIER SAUF POUR METTRE DES METHODS UTILES
-
 static std::string trimCRLF(std::string& line) {
 	std::string result = line;
 	if (!result.empty() && result[result.size() - 1] == '\n')

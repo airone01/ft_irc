@@ -25,10 +25,8 @@ class Server{
 	const int _port;
 	int	_socketFd;
 	int _epfd;
-	epoll_event ev;
-	epoll_event events[1024];
-
-	// Server( void );
+	epoll_event _ev;
+	epoll_event _events[1024];
 
 	public:
 
@@ -41,7 +39,6 @@ class Server{
 	void handleEvent(int);
 	std::string handleRead(int fd);
 	void	rmClient(int clientSocket);
-	// ssize_t Server::handleWrite();
 	void execute(int clientSocket, const IRCMessage &msg, const std::string &serverPassword);
 };
 
@@ -58,14 +55,9 @@ enum CMDS {
 	KICK,
 	INVITE,
 	PRIVMSG,
-	NOTICE,
 	WHO,
-	WHOIS,
-	LIST,
-	NAMES,
 	NONE
 };
-
 
 CMDS applyCommands(const std::string& cmd);
 

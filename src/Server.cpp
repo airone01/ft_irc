@@ -2,8 +2,6 @@
 
 extern bool doQuit;
 
-// Server::Server( void ) :  _port(NULL), _pswrd(NULL) {}
-
 Server::Server( int port, std::string pswrd ) :  _pswrd(pswrd), _port(port) {
 
 }
@@ -37,16 +35,8 @@ CMDS applyCommands(const std::string& cmd) {
 		return INVITE;
 	if (cmd == "PRIVMSG")
 		return PRIVMSG;
-	if (cmd == "NOTICE")
-		return NOTICE;
 	if (cmd == "WHO")
 		return WHO;
-	if (cmd == "WHOIS")
-		return WHOIS;
-	if (cmd == "LIST")
-		return LIST;
-	if (cmd == "NAMES")
-		return NAMES;
 	return NONE;
 }
 
@@ -192,12 +182,11 @@ void Server::setSock(){
 
 void	Server::rmClient(int clientSocket){
 	int i = 0;
-	while (clientSocket != this->events[i].data.fd)
+	while (clientSocket != this->_events[i].data.fd)
 		i++;
-	close(this->events[i].data.fd);
+	close(this->_events[i].data.fd);
 	epoll_ctl(this->_epfd, EPOLL_CTL_DEL, clientSocket, NULL);
 	_channels.removeUserFromAllChannels(clientSocket);
-	// _clients.removeClient(clientSocket);
 }
 
 void Server::serverRoutine() {
@@ -205,17 +194,17 @@ void Server::serverRoutine() {
 	int maxEvents = 1024;
 	this->setSock();
 
-	this->ev.events = EPOLLIN;
-	this->ev.data.fd = this->_socketFd;
+	this->_ev.events = EPOLLIN;
+	this->_ev.data.fd = this->_socketFd;
 	this->_epfd = epoll_create1(0);
 	if (this->_epfd < 0)
 		throw std::runtime_error("epoll_create1 failed.");
 
-	if (epoll_ctl(this->_epfd, EPOLL_CTL_ADD, this->_socketFd, &this->ev) == -1)
-					throw std::runtime_error("wpoll_wait failed");
+	if (epoll_ctl(this->_epfd, EPOLL_CTL_ADD, this->_socketFd, &this->_ev) == -1)
+		throw std::runtime_error("server epoll_ctl_add failed");
 
 	for(;;){
-		int nfds = epoll_wait(this->_epfd, this->events, maxEvents, -1);
+		int nfds = epoll_wait(this->_epfd, this->_events, maxEvents, -1);
 		if (doQuit){
 			_clients.clearClients();
 			close(this->_epfd);
@@ -226,33 +215,31 @@ void Server::serverRoutine() {
 			throw std::runtime_error("epoll_wait failed");
 		for (int i = 0; i < nfds; ++i) {
 
-			if (this->events[i].events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP)) {
-				std::cerr << "quit event\n";
-				close(this->events[i].data.fd);
-				epoll_ctl(this->_epfd, EPOLL_CTL_DEL, this->events[i].data.fd, NULL);
-				_channels.removeUserFromAllChannels(this->events[i].data.fd);
-				_clients.removeClient(this->events[i].data.fd);
+			if (this->_events[i].events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP)) {
+				close(this->_events[i].data.fd);
+				epoll_ctl(this->_epfd, EPOLL_CTL_DEL, this->_events[i].data.fd, NULL);
+				_channels.removeUserFromAllChannels(this->_events[i].data.fd);
+				_clients.removeClient(this->_events[i].data.fd);
 			}
-			// si le fd est le meme que celui de listen, alors c'est un nv client
-			else if (this->events[i].data.fd == this->_socketFd){
+			else if (this->_events[i].data.fd == this->_socketFd){
 				sockaddr_in client;
 				socklen_t len = sizeof(client);
-				int connSock = accept(this->events[i].data.fd, reinterpret_cast<sockaddr*>(&client), &len);
+				int connSock = accept(this->_events[i].data.fd, reinterpret_cast<sockaddr*>(&client), &len);
 				if (connSock < 0){
-					std::cerr << "error: accept failed on fd " << this->events[i].data.fd << '\n' << std::endl;
+					std::cerr << "accept failed on fd" << this->_events[i].data.fd << '\n' << std::endl;
 					continue;
 				}
 
-				int oldflags = fcntl(this->events[i].data.fd, F_GETFL, 0);
+				int oldflags = fcntl(this->_events[i].data.fd, F_GETFL, 0);
 				fcntl(connSock, F_SETFL, oldflags | O_NONBLOCK);
-				this->ev.events = EPOLLIN;
-				this->ev.data.fd = connSock;
-				if (epoll_ctl(this->_epfd, EPOLL_CTL_ADD, connSock, &this->ev) == -1)
-					throw std::runtime_error("epoll_ctl failed");
+				this->_ev.events = EPOLLIN;
+				this->_ev.data.fd = connSock;
+				if (epoll_ctl(this->_epfd, EPOLL_CTL_ADD, connSock, &this->_ev) == -1)
+					throw std::runtime_error("client epoll_ctl_add failed");
 				_clients.addClient(Client(connSock));
 			}
-			else if (this->events[i].events & EPOLLIN) {
-				handleEvent(this->events[i].data.fd);
+			else if (this->_events[i].events & EPOLLIN) {
+				handleEvent(this->_events[i].data.fd);
 			}
 		}
 	}

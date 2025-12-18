@@ -23,69 +23,47 @@
 #include "Client.hpp"
 #include "Server.hpp"
 
-// extern "C" void handle_sigint(int) {
-//   if (g_reactor)
-//     g_reactor->stop();
-// }
-
-// Bridge function: C-style callback -> Class method
-// static bool bridgeCallback(Connection *conn, const std::vector<char> &data) {
-//   if (g_dispatcher) {
-//     return g_dispatcher->handleData(conn, data);
-//   }
-//   return true;
-// }
-
 bool doQuit = false;
 
-void handle_sigint(int sig){
-  if (sig == SIGINT)
-    doQuit = true;
+void handleSigint(int sig){
+	if (sig == SIGINT)
+		doQuit = true;
+}
+
+void sigHandler(){
+	struct sigaction sa;
+	memset(&sa, 0, sizeof(sa));
+	sa.sa_handler = handleSigint;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = 0;
+	sigaction(SIGINT, &sa, NULL);
 }
 
 int main(int argc, char **argv) {
-  if (argc != 3) {
-    // TODO: implement password as second arg
-    std::cerr << "Usage: " << argv[0] << " <port> <password>" << std::endl;
-    return 1;
-  }
+	if (argc != 3) {
+		std::cerr << "Usage: " << argv[0] << " <port> <password>" << std::endl;
+		return 1;
+	}
 
-  std::istringstream ss(argv[1]);
-  unsigned short port; ss >> port;
-  if (!ss.eof())
-    std::cerr << "error: unvalid port." << std::endl;
-  
-  struct sigaction sa;
-  memset(&sa, 0, sizeof(sa));
-  sa.sa_handler = handle_sigint;
-  sigemptyset(&sa.sa_mask);
-  sa.sa_flags = 0;
-  sigaction(SIGINT, &sa, NULL);
+	std::istringstream ss(argv[1]);
+	unsigned short port; ss >> port;
+	if (!ss.eof()){
+		std::cerr << "error: unvalid port." << std::endl;
+		return 1;
+	}
 
-  Server serv(port, argv[2]);
-	serv.serverRoutine();
-  // Set log level (optional)
+	sigHandler();
 
+	try
+	{
+		Server serv(port, argv[2]);
+		serv.serverRoutine();
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << '\n';
+	}
+	
 
-  // g_connMgr = &connMgr;
-  // ChannelManager chanMgr;
-  // g_chanMgr = &chanMgr;
-  // ClientManager clientMgr;
-  // g_clientMgr = &clientMgr;
-  // TimerManager timerMgr;
-
-  // Listener listener("0.0.0.0", port, &reactor, &connMgr);
-  // listener.setConnectionFactory(&userFactory);
-
-  // Hook up the bridge
-  // listener.setDefaultMessageCallback(&bridgeCallback);
-
-  // if (!listener.start()) {
-  //   logger::error() << "Failed to start listener on port " << port << std::endl;
-  //   return 1;
-  // }
-
-  // connMgr.closeAll();
-
-  return 0;
+	return 0;
 }

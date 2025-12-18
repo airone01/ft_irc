@@ -2,8 +2,6 @@
 #include "Client.hpp"
 #include <algorithm>
 
-//NE PLUS TOUCHER CE FICHIER SAUF POUR METTRE DES METHODS UTILES
-
 Client& ClientManager::getClientFromUsername(const std::string& username){
 	std::map<int, Client>::iterator it = _clients.begin();
 	std::map<int, Client>::iterator ite = _clients.end();
@@ -62,7 +60,6 @@ bool ClientManager::isNicknameUsed(const std::string& nickname){
 		if (it->second.getNickname() == nickname)
 			return true;
 	}
-	//TODO NEED TO THROW ERR_NICKNAMEINUSE ? OR IF VERIFICATION LATER ?
 	return false;
 }
 bool ClientManager::isUsernameUsed(const std::string& username){
@@ -72,11 +69,9 @@ bool ClientManager::isUsernameUsed(const std::string& username){
 		if (it->second.getUsername() == username)
 			return true;
 	}
-	//TODO NEED TO THROW ERR_NICKNAMEINUSE ? OR IF VERIFICATION LATER ?
 	return false;
 }
 
-// this should never allocate anything
 std::vector<Client*> ClientManager::getAllClients() {
 	std::vector<Client*> clients;
 	std::map<int, Client>::iterator it = _clients.begin();

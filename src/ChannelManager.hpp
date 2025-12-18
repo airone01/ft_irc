@@ -1,8 +1,6 @@
 #ifndef CHANNELMANAGER_HPP
 #define CHANNELMANAGER_HPP
 
-//NE PLUS TOUCHER CE FICHIER SAUF POUR METTRE DES METHODS UTILES
-
 #include "Channel.hpp"
 #include <map>
 #include <vector>

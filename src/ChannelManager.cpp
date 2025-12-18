@@ -1,7 +1,5 @@
 #include "ChannelManager.hpp"
 
-//NE PLUS TOUCHER CE FICHIER SAUF POUR METTRE DES METHODS UTILES
-
 ChannelManager::ChannelManager() {}
 
 ChannelManager::~ChannelManager() {}

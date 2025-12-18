@@ -3,8 +3,6 @@
 
 #include <string>
 
-//NE PLUS TOUCHER CE FICHIER SAUF POUR METTRE DES METHODS UTILES
-
 class Client {
 private:
 	int			_socket;
@@ -13,8 +11,8 @@ private:
 	std::string	_hostname;
 	std::string	_buffer;
 	std::string	_rBuff;
-	bool		_auth; // mot de passe validé
-	bool		_registered; // mdp + nick + user
+	bool		_auth;
+	bool		_registered;
 public:
 	Client();
 	Client(int fd);

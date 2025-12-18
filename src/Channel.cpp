@@ -3,7 +3,6 @@
 #include <iostream>
 #include <sstream>
 
-//NE PLUS TOUCHER CE FICHIER SAUF POUR METTRE DES METHODS UTILES
 
 bool	Channel::checkPassword(const std::string& password) const {
 	return !password.empty();

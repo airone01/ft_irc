@@ -7,8 +7,6 @@
 #include <stdexcept>
 #include <vector>
 
-//NE PLUS TOUCHER CE FICHIER SAUF POUR METTRE DES METHODS UTILES
-
 class ClientManager {
 private:
 	std::map<int, Client> _clients;

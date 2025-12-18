@@ -1,8 +1,6 @@
 #ifndef IRCMESSAGE_HPP
 #define IRCMESSAGE_HPP
 
-//NE PLUS TOUCHER CE FICHIER SAUF POUR METTRE DES METHODS UTILES
-
 #include <exception>
 #include <string>
 #include <vector>
