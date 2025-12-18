@@ -6,42 +6,64 @@
 /*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/08 16:46:16 by elagouch          #+#    #+#             */
-/*   Updated: 2025/10/16 20:39:36 by elagouch         ###   ########.fr       */
+/*   Updated: 2025/12/08 14:43:24 by elagouch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Logger.hpp"
-#include "Socket.hpp"
-#include <ostream>
-#include <stdexcept>
+#include <cerrno>
+#include <cstdlib>
+#include <cstring>
+#include <iostream>
+#include <signal.h>
+#include <unistd.h>
+#include <sstream>
 
-int main() {
-  logger::Logger::getInstance().setMinLevel(logger::DEBUG);
+#include "Channel.hpp"
+#include "ChannelManager.hpp"
+#include "Client.hpp"
+#include "Server.hpp"
 
-  try {
-    Socket server;
-    server.bind(IRC_PORT);
+bool doQuit = false;
 
-    logger::info() << "Server listening on port " << IRC_PORT << std::endl;
-    server.listen();
+void handleSigint(int sig){
+	if (sig == SIGINT)
+		doQuit = true;
+}
 
-    for (;;) {
-      Socket *client = server.accept();
-      logger::debug() << "New client connected" << std::endl;
+void sigHandler(){
+	struct sigaction sa;
+	memset(&sa, 0, sizeof(sa));
+	sa.sa_handler = handleSigint;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = 0;
+	sigaction(SIGINT, &sa, NULL);
+}
 
-      // stupid handling which just echoes back the data for now
-      std::string data = client->recv(1024);
-      if (!data.empty()) {
-        logger::debug() << "Received: " << data << std::endl;
-        client->send("Echo: " + data);
-      }
+int main(int argc, char **argv) {
+	if (argc != 3) {
+		std::cerr << "Usage: " << argv[0] << " <port> <password>" << std::endl;
+		return 1;
+	}
 
-      client->close();
-      delete client;
-    }
-  } catch (const std::runtime_error &e) {
-    logger::error() << e.what() << std::endl;
-  }
+	std::istringstream ss(argv[1]);
+	unsigned short port; ss >> port;
+	if (!ss.eof()){
+		std::cerr << "error: unvalid port." << std::endl;
+		return 1;
+	}
 
-  return 0;
+	sigHandler();
+
+	try
+	{
+		Server serv(port, argv[2]);
+		serv.serverRoutine();
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << '\n';
+	}
+	
+
+	return 0;
 }

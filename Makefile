@@ -6,7 +6,7 @@
 #    By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/10/08 15:49:16 by elagouch          #+#    #+#              #
-#    Updated: 2025/10/16 19:27:09 by elagouch         ###   ########.fr        #
+#    Updated: 2025/12/08 14:56:46 by elagouch         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -34,49 +34,42 @@ FGGRAY			:=	$(shell tput setaf 244)
 
 # == mandatory ==
 CXXFLAGS	+=	-Wall -Werror -Wextra --std=c++98
-# == code quality ==
-CXXFLAGS	+=	-Wpedantic		# increas portability
-CXXFLAGS	+=	-Wconversion	# warns against implicit coversion
-CXXFLAGS	+=	-Wformat -Wformat=2 -Werror=format-security
-														# harden against string vulns
-CXXFLAGS	+=	-Wshadow			# warns against shadowing (common error)
-CXXFLAGS	+=	-Wnon-virtual-dtor
-														# warns if a class with virtual functions lacks a
-														# virtual destructor (basically when you don't
-														# actually know virtuality)
-CXXFLAGS	+=	-Wold-style-cast
-														# prefers CPP-style rather than C-style casts
-CXXFLAGS	+=	-Wnull-dereference -Wunused -Wuninitialized
-														# code hygiene
-# == compiler additions ==
-CXXFLAGS	+=	-MMD -MP			# deps
-CXXFLAGS	+=	-D_GLIBCXX_ASSERTIONS
-														# additional runtime checks for STL
-# CXXFLAGS	+=	-fstrict-flex-arrays=3
-# 														# ensures safe usage of flexible array members
-# == security ==
-CXXFLAGS	+=	-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3
-														# better runtime checks for buffer overflows and such
-CXXFLAGS	+=	-fstack-clash-protection -fstack-protector-strong
-														# protects against buffer overflows and such attacks
-CXXFLAGS	+=	-Wl,-z,noexecstack
-														# prevents execution of code on the stack
-CXXFLAGS	+=	-Wl,-z,nodlopen
-														# restricts runtime libs loaing to known safe code
 
-# == prod ==
-CXXFLAGS	+=	-O2						# slower comp, faster runtime
+# == test ==
+TESTFLAGS	:= $(CXXFLAGS)
 
 # **************************************************************************** #
 #                                     SRC                                      #
 # **************************************************************************** #
 
-NAME			:=		ft_irc
-SRC_O			?=		main Logger Socket
-SRC				:=		$(addprefix src/, $(addsuffix .cpp, $(SRC_O)))
-OBJ				:=		$(SRC:.cpp=.o)
-DEPS			:=		$(SRC:.cpp=.d)
-RM_LIST		:=		"$(OBJ) $(SRC:.cpp=.d)"
+NAME				:=	ircserv
+# main and utils
+SRC_O				:=	main 
+# irc logic
+SRC_O				+=	Client ClientManager
+
+# parser
+SRC_O				+=	IRCMessage 
+#channel / commands
+SRC_O				+=	Channel ChannelManager Commands Server
+SRC_O				+=	ReplyMessage
+SRC					:=	$(addprefix src/, $(addsuffix .cpp, $(SRC_O)))
+OBJ					:=	$(SRC:.cpp=.o)
+DEPS				:=	$(SRC:.cpp=.d)
+RM_LIST			:=	"$(OBJ) $(SRC:.cpp=.d)"
+
+# testing w/ doctest.h
+TEST_NAME		:=	tester
+TEST_DIR		:=	test
+TEST_SRC		:=	$(TEST_DIR)/test_main.cpp \
+								$(TEST_DIR)/test_IRCMessage.cpp \
+								$(TEST_DIR)/test_Client.cpp \
+								$(TEST_DIR)/test_Channel.cpp \
+								$(TEST_DIR)/test_ChannelModes.cpp \
+								$(TEST_DIR)/test_Commands_Integration.cpp
+TEST_OBJ		:=	$(TEST_SRC:.cpp=.o)
+TEST_DEPS		:=	$(TEST_SRC:.cpp=.d)
+CORE_OBJ		:=	$(filter-out src/main.o, $(OBJ))
 
 # **************************************************************************** #
 #                                   TARGETS                                    #
@@ -108,12 +101,32 @@ title:
 	@$(ECHO) "\033[1;30;48;5;180m \033[0m\033[1;30;48;5;180m \033[0m\033[1;30;48;5;180m \033[0m\033[1;30;48;5;180m \033[0m\033[1;30;48;5;150m \033[0m\033[1;30;48;5;150m \033[0m\033[1;30;48;5;151m/\033[0m\033[1;30;48;5;115m_\033[0m\033[1;30;48;5;115m_\033[0m\033[1;30;48;5;116m_\033[0m\033[1;30;48;5;116m/\033[0m\033[1;30;48;5;116m \033[0m\033[1;30;48;5;116m \033[0m\033[1;30;48;5;117m \033[0m\033[1;30;48;5;147m \033[0m\033[1;30;48;5;147m \033[0m\033[1;30;48;5;147m \033[0m\033[1;30;48;5;182m \033[0m\033[1;30;48;5;182m \033[0m\033[1;30;48;5;182m \033[0m\033[1;30;48;5;182m \033[0m\033[1;30;48;5;181m\`\033[0m\n"
 	@$(ECHO) "\n"
 
+val: all
+	@$(VALGRIND) ./$(NAME) 6667 pass123
+
 run: all
-	@$(VALGRIND) ./$(NAME)
+	@./$(NAME) 6667 pass123
 
 re: fclean all
 
--include $(DEPS)
+tests: $(TEST_NAME)
+
+$(TEST_NAME): $(CORE_OBJ) $(TEST_OBJ)
+	@$(ECHO) "$(BLUE)$(BOLD) CC $(RESET)$(FGGRAY) $(TEST_NAME)$(RESET)\n"
+	@$(CXX) $(TESTFLAGS) -o $(TEST_NAME) $(CORE_OBJ) $(TEST_OBJ)
+
+$(TEST_DIR)/%.o: $(TEST_DIR)/%.cpp Makefile
+	@$(ECHO) "$(BLUE)$(BOLD) CC $(RESET)$(FGGRAY) $@$(RESET)\n"
+	@$(CXX) $(TESTFLAGS) -c $< -o $@
+
+# The actual job to run tests
+check: tests
+	@$(VALGRIND) ./$(TEST_NAME)
+
+clean_tests:
+	@$(RM) $(TEST_OBJ) $(TEST_NAME)
+
+-include $(DEPS) $(TEST_DEPS)
 
 MAKEFLAGS	+= --no-print-directory
 .PHONY: all clean fclean re
