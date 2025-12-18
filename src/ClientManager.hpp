@@ -2,6 +2,7 @@
 #define CLIENTMANAGER_HPP
 
 #include "Client.hpp"
+#include <unistd.h>
 #include <map>
 #include <stdexcept>
 #include <vector>
@@ -27,6 +28,7 @@ public:
 	// setter
 	void	addClient(const Client& client);
 	void	removeClient(int socket);
+	void	clearClients();
 	// utility
 	bool	isNicknameUsed(const std::string& nickname);
 	bool	isUsernameUsed(const std::string& username);
