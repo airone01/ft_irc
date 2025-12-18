@@ -4,6 +4,7 @@
 #include "Client.hpp"
 #include <map>
 #include <stdexcept>
+#include <vector>
 
 //NE PLUS TOUCHER CE FICHIER SAUF POUR METTRE DES METHODS UTILES
 
@@ -22,6 +23,7 @@ public:
 	Client&	getClientFromNickname(const std::string& nickname);
 	Client&	getClientFromSocket(const int& socket);
 	size_t	getClientCount() const;
+	std::vector<Client*> getAllClients();
 	// setter
 	void	addClient(const Client& client);
 	void	removeClient(int socket);
