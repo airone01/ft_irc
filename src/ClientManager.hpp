@@ -24,7 +24,6 @@ public:
 	Client&	getClientFromSocket(const int& socket);
 	size_t	getClientCount() const;
   std::vector<Client*> getAllClients();
-  std::vector<std::string> getAllClientsName();
 	// setter
 	void	addClient(const Client& client);
 	void	removeClient(int socket);

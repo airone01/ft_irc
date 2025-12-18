@@ -69,22 +69,11 @@ bool ClientManager::isUsernameUsed(const std::string& username){
 
 // this should never allocate anything
 std::vector<Client*> ClientManager::getAllClients() {
-    std::vector<Client*> clients;
-    std::map<int, Client>::iterator it = _clients.begin();
-    std::map<int, Client>::iterator ite = _clients.end();
-    for (; it != ite; ++it) {
-        clients.push_back(&(it->second));
-    }
-    return clients;
-}
-
-// this should never allocate anything
-std::vector<std::string> ClientManager::getAllClientsName() {
-  std::vector<std::string> names;
+	std::vector<Client*> clients;
 	std::map<int, Client>::iterator it = _clients.begin();
 	std::map<int, Client>::iterator ite = _clients.end();
 	for (; it != ite; ++it) {
-    names.push_back(it->second.getUsername());
-  }
-  return names;
+		clients.push_back(&(it->second));
+	}
+	return clients;
 }
