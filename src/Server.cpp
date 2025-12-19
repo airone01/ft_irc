@@ -167,8 +167,7 @@ void Server::setSock(){
 		throw std::runtime_error("listen failed.");
 
 	setsockopt(this->_socketFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-	int oldflags = fcntl(this->_socketFd, F_GETFL, 0);
-	fcntl(this->_socketFd, F_SETFL, oldflags | O_NONBLOCK);
+	fcntl(this->_socketFd, F_SETFL, O_NONBLOCK);
 
 	sockaddr_in sin;
 	sin.sin_family = AF_INET;
@@ -229,9 +228,7 @@ void Server::serverRoutine() {
 					std::cerr << "accept failed on fd" << this->_events[i].data.fd << '\n' << std::endl;
 					continue;
 				}
-
-				int oldflags = fcntl(this->_events[i].data.fd, F_GETFL, 0);
-				fcntl(connSock, F_SETFL, oldflags | O_NONBLOCK);
+				fcntl(connSock, F_SETFL, O_NONBLOCK);
 				this->_ev.events = EPOLLIN;
 				this->_ev.data.fd = connSock;
 				if (epoll_ctl(this->_epfd, EPOLL_CTL_ADD, connSock, &this->_ev) == -1)

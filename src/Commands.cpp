@@ -25,12 +25,15 @@ static std::vector<std::string> paramHandler(const std::string& params) {
 	std::vector<std::string> newParam;
 	std::string tmp;
 	for (size_t i = 0;;) {
-		tmp = params.substr(i, params.find(','));
-		newParam.push_back(tmp);
-		i = params.find(',', i);
-		if (i == std::string::npos)
+		size_t nextComma = params.find(',', i);
+		if (nextComma == std::string::npos) {
+			tmp = params.substr(i);
+			newParam.push_back(tmp);
 			break;
-		i++;
+		}
+		tmp = params.substr(i, nextComma - i);
+		newParam.push_back(tmp);
+		i = nextComma + 1;
 	}
 	return newParam;
 }
@@ -449,29 +452,30 @@ void Commands::user(int clientSocket, const IRCMessage& msg, ClientManager& clie
 void Commands::privmsg(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients){
 	try {
 		Client &client = clients.getClientFromSocket(clientSocket);
-		if (msg.getParams().size() > 1){
-			client.sendMessage(ReplyMessage::errTooManyTargets(msg.getParams()[1]));
-			return ;
-		}
 		if (msg.getParams().empty()) {
 			client.sendMessage(ReplyMessage::errNoRecipient(msg.getCommand()));
 			return ;
 		}
+		if (msg.getTrailing().empty()) {
+			client.sendMessage(ReplyMessage::errNoTextToSend());
+			return ;
+		}
 		std::vector<std::string> tmp = paramHandler(msg.getParams()[0]);
+		if (tmp.size() > 4) {
+			client.sendMessage(ReplyMessage::errTooManyTargets(tmp[0]));
+			return ;
+		}
 		std::vector<std::string>::iterator it = tmp.begin();
 		std::vector<std::string>::iterator ite = tmp.end();
+		std::string privMsg = ":" + client.getNickname() + " PRIVMSG ";
 		for (; it != ite; ++it ) {
-			if (channels.hasChannel(*it) && channels.getChannelFromName(*it).hasUser(client.getSocket())){
-				std::string privMsg = ":" + client.getNickname() + " PRIVMSG " + *it + " :" + msg.getTrailing() + "\r\n";
+			privMsg += *it + " :" + msg.getTrailing() + "\r\n";
+			if (channels.hasChannel(*it) && channels.getChannelFromName(*it).hasUser(client.getSocket()))
 				broadcastToChannel(channels.getChannelFromName(*it), privMsg, clients, clientSocket);
-			}
-			else if (clients.isNicknameUsed(*it)){
-				std::string privMsg = ":" + client.getNickname() + " PRIVMSG " + *it + " :" + msg.getTrailing() + "\r\n";
+			else if (clients.isNicknameUsed(*it))
 				send(clients.getClientFromNickname(*it).getSocket(), privMsg.c_str(), privMsg.size(), 0);
-			}
 			else {
 				client.sendMessage(ReplyMessage::errNoSuchNick(*it));
-				return ;
 			}
 		}
 	}

@@ -12,9 +12,8 @@
 
 #include <cerrno>
 #include <cstdlib>
-#include <cstring>
 #include <iostream>
-#include <signal.h>
+#include <csignal>
 #include <unistd.h>
 #include <sstream>
 
@@ -31,11 +30,9 @@ void handleSigint(int sig){
 }
 
 void sigHandler(){
-	struct sigaction sa;
-	memset(&sa, 0, sizeof(sa));
+	struct sigaction sa = {};
 	sa.sa_handler = handleSigint;
 	sigemptyset(&sa.sa_mask);
-	sa.sa_flags = 0;
 	sigaction(SIGINT, &sa, NULL);
 }
 
@@ -51,9 +48,7 @@ int main(int argc, char **argv) {
 		std::cerr << "error: unvalid port." << std::endl;
 		return 1;
 	}
-
 	sigHandler();
-
 	try
 	{
 		Server serv(port, argv[2]);
@@ -63,7 +58,5 @@ int main(int argc, char **argv) {
 	{
 		std::cerr << e.what() << '\n';
 	}
-	
-
 	return 0;
 }
