@@ -417,8 +417,7 @@ void Commands::who(int clientSocket, const IRCMessage& msg, ClientManager& clien
 void Commands::nick(int clientSocket, const IRCMessage& msg, ClientManager& clients) {
 	Client &client = clients.getClientFromSocket(clientSocket);
 	if (!client.getAuth()) {
-		client.sendMessage(ReplyMessage::errPasswdMismatch());
-		client.clearBuffer();
+		client.sendMessage("Error : Need to authenticate first\r\n");
 		return;
 	}
 	if (!msg.getPrefix().empty() && msg.getPrefix() != client.getNickname())
@@ -445,8 +444,7 @@ void Commands::nick(int clientSocket, const IRCMessage& msg, ClientManager& clie
 void Commands::user(int clientSocket, const IRCMessage& msg, ClientManager& clients) {
 	Client &client = clients.getClientFromSocket(clientSocket);
 	if (!client.getAuth()) {
-		client.sendMessage(ReplyMessage::errPasswdMismatch());
-		client.clearBuffer();
+		client.sendMessage("Error : Need to authenticate first\r\n");
 		return;
 	}
 	if (client.getRegistered()) {

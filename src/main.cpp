@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
 	std::istringstream ss(argv[1]);
 	unsigned short port; ss >> port;
 	if (!ss.eof()){
-		std::cerr << "error: unvalid port." << std::endl;
+		std::cerr << "error: invalid port." << std::endl;
 		return 1;
 	}
 	sigHandler();
