@@ -44,6 +44,8 @@ void Commands::join(int clientSocket, const IRCMessage& msg, ChannelManager& cha
 		client.sendMessage(ReplyMessage::errNotRegistered());
 		return;
 	}
+	if (!msg.getPrefix().empty() && msg.getPrefix() != client.getNickname())
+		return ;
 	const std::vector<std::string>& params = msg.getParams();
 	if (params.empty()) {
 		client.sendMessage(ReplyMessage::errNeedMoreParams("JOIN"));
@@ -116,6 +118,8 @@ void Commands::part(int clientSocket, const IRCMessage& msg, ChannelManager& cha
 		client.sendMessage(ReplyMessage::errNotRegistered());
 		return;
 	}
+	if (!msg.getPrefix().empty() && msg.getPrefix() != client.getNickname())
+		return ;
 	if (msg.getParams().empty()) {
 		client.sendMessage(ReplyMessage::errNeedMoreParams("PART"));
 		return;
@@ -151,6 +155,8 @@ void Commands::topic(int clientSocket, const IRCMessage& msg, ChannelManager& ch
 		client.sendMessage(ReplyMessage::errNotRegistered());
 		return;
 	}
+	if (!msg.getPrefix().empty() && msg.getPrefix() != client.getNickname())
+		return ;
 	if (msg.getCountParams() != 1) {
 		client.sendMessage(ReplyMessage::errNeedMoreParams("TOPIC"));
 		return ;
@@ -184,6 +190,8 @@ void Commands::mode(int clientSocket, const IRCMessage& msg, ChannelManager& cha
 		client.sendMessage(ReplyMessage::errNotRegistered());
 		return;
 	}
+	if (!msg.getPrefix().empty() && msg.getPrefix() != client.getNickname())
+		return ;
 	const std::vector<std::string>& params = msg.getParams();
 	if (params.empty()) {
 		client.sendMessage(ReplyMessage::errNeedMoreParams("MODE"));
@@ -253,6 +261,8 @@ void Commands::kick(int clientSocket, const IRCMessage& msg, ChannelManager& cha
 		client.sendMessage(ReplyMessage::errNotRegistered());
 		return;
 	}
+	if (!msg.getPrefix().empty() && msg.getPrefix() != client.getNickname())
+		return ;
 	const std::vector<std::string>& params = msg.getParams();
 	if (params.size() < 2) {
 		client.sendMessage(ReplyMessage::errNeedMoreParams("KICK"));
@@ -297,6 +307,8 @@ void Commands::invite(int clientSocket, const IRCMessage& msg, ChannelManager& c
 		client.sendMessage(ReplyMessage::errNotRegistered());
 		return;
 	}
+	if (!msg.getPrefix().empty() && msg.getPrefix() != client.getNickname())
+		return ;
 	const std::vector<std::string>& params = msg.getParams();
 	if (params.size() < 2) {
 		client.sendMessage(ReplyMessage::errNeedMoreParams("INVITE"));
@@ -355,7 +367,11 @@ void Commands::pass(int clientSocket, const IRCMessage& msg, ClientManager& clie
 }
 
 void Commands::who(int clientSocket, const IRCMessage& msg, ClientManager& clients) {
-	Client& requestor = clients.getClientFromSocket(clientSocket);
+	Client& client = clients.getClientFromSocket(clientSocket);
+	if (!client.getRegistered()) {
+		client.sendMessage(ReplyMessage::errNotRegistered());
+		return;
+	}
 	const std::vector<std::string>& params = msg.getParams();
 	std::vector<Client*> allClients = clients.getAllClients();
 
@@ -390,13 +406,12 @@ void Commands::who(int clientSocket, const IRCMessage& msg, ClientManager& clien
 			std::stringstream ss;
 			ss << 0;
 			std::string hopcount = ss.str();
-
-			requestor.sendMessage(ReplyMessage::rplWhoReply(
+			client.sendMessage(ReplyMessage::rplWhoReply(
 				"*", target->getUsername(), "ft_irc", "ft_irc", nick, "H", hopcount, "realname"
 			));
 		}
 	}
-	requestor.sendMessage(ReplyMessage::rplEndOfWho(searchMask));
+	client.sendMessage(ReplyMessage::rplEndOfWho(searchMask));
 }
 
 void Commands::nick(int clientSocket, const IRCMessage& msg, ClientManager& clients) {
@@ -406,6 +421,8 @@ void Commands::nick(int clientSocket, const IRCMessage& msg, ClientManager& clie
 		client.clearBuffer();
 		return;
 	}
+	if (!msg.getPrefix().empty() && msg.getPrefix() != client.getNickname())
+		return ;
 	if (msg.getParams().empty()) {
 		client.sendMessage(ReplyMessage::errNeedMoreParams("NICK"));
 		return;
@@ -452,6 +469,12 @@ void Commands::user(int clientSocket, const IRCMessage& msg, ClientManager& clie
 void Commands::privmsg(int clientSocket, const IRCMessage& msg, ChannelManager& channels, ClientManager& clients){
 	try {
 		Client &client = clients.getClientFromSocket(clientSocket);
+		if (!client.getRegistered()) {
+			client.sendMessage(ReplyMessage::errNotRegistered());
+			return;
+		}
+		if (!msg.getPrefix().empty() && msg.getPrefix() != client.getNickname())
+			return ;
 		if (msg.getParams().empty()) {
 			client.sendMessage(ReplyMessage::errNoRecipient(msg.getCommand()));
 			return ;
