@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/10/08 16:46:16 by elagouch          #+#    #+#             */
-/*   Updated: 2025/12/08 14:43:24 by elagouch         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include <cerrno>
 #include <cstdlib>
 #include <iostream>
@@ -17,9 +5,6 @@
 #include <unistd.h>
 #include <sstream>
 
-#include "Channel.hpp"
-#include "ChannelManager.hpp"
-#include "Client.hpp"
 #include "Server.hpp"
 
 bool doQuit = false;

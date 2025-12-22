@@ -1,20 +1,8 @@
 # **************************************************************************** #
-#                                                                              #
-#                                                         :::      ::::::::    #
-#    Makefile                                           :+:      :+:    :+:    #
-#                                                     +:+ +:+         +:+      #
-#    By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+         #
-#                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2025/10/08 15:49:16 by elagouch          #+#    #+#              #
-#    Updated: 2025/12/08 14:56:46 by elagouch         ###   ########.fr        #
-#                                                                              #
-# **************************************************************************** #
-
-# **************************************************************************** #
 #                                   COMMANDS                                   #
 # **************************************************************************** #
 
-CXX				?=	c++
+CPP				:=	c++
 ECHO			:=	printf
 VALGRIND	?=	valgrind --leak-check=full --show-leak-kinds=all --track-fds=yes --trace-children=yes --trace-children-skip=/bin/*,/usr/bin/*
 
@@ -23,20 +11,14 @@ RESET			:=	$(shell tput sgr0)
 RED				:=	$(shell tput setab 1)
 GREEN			:=	$(shell tput setab 2)
 BLUE			:=	$(shell tput setab 4)
-FGGRAY			:=	$(shell tput setaf 244)
-# GREEN			:=	$(shell tput setab 2)
-# GREEN			:=	$(shell tput setab 2)
-# GREEN			:=	$(shell tput setab 2)
+FGGRAY		:=	$(shell tput setaf 244)
 
 # **************************************************************************** #
 #                                    FLAGS                                     #
 # **************************************************************************** #
 
 # == mandatory ==
-CXXFLAGS	+=	-Wall -Werror -Wextra --std=c++98
-
-# == test ==
-TESTFLAGS	:= $(CXXFLAGS)
+CPPFLAGS	+=	-Wall -Werror -Wextra --std=c++98
 
 # **************************************************************************** #
 #                                     SRC                                      #
@@ -58,19 +40,6 @@ OBJ					:=	$(SRC:.cpp=.o)
 DEPS				:=	$(SRC:.cpp=.d)
 RM_LIST			:=	"$(OBJ) $(SRC:.cpp=.d)"
 
-# testing w/ doctest.h
-TEST_NAME		:=	tester
-TEST_DIR		:=	test
-TEST_SRC		:=	$(TEST_DIR)/test_main.cpp \
-								$(TEST_DIR)/test_IRCMessage.cpp \
-								$(TEST_DIR)/test_Client.cpp \
-								$(TEST_DIR)/test_Channel.cpp \
-								$(TEST_DIR)/test_ChannelModes.cpp \
-								$(TEST_DIR)/test_Commands_Integration.cpp
-TEST_OBJ		:=	$(TEST_SRC:.cpp=.o)
-TEST_DEPS		:=	$(TEST_SRC:.cpp=.d)
-CORE_OBJ		:=	$(filter-out src/main.o, $(OBJ))
-
 # **************************************************************************** #
 #                                   TARGETS                                    #
 # **************************************************************************** #
@@ -79,11 +48,11 @@ all: title $(NAME)
 
 $(NAME): $(OBJ)
 	@$(ECHO) "$(GREEN)$(BOLD) CC $(RESET)$(FGGRAY) $(NAME)$(RESET)\n"
-	@$(CXX) $(CXXFLAGS) -o $(NAME) $(OBJ)
+	@$(CPP) $(CPPFLAGS) -o $(NAME) $(OBJ)
 
 %.o: %.cpp Makefile
 	@$(ECHO) "$(BLUE)$(BOLD) CC $(RESET)$(FGGRAY) $@$(RESET)\n"
-	@$(CXX) $(CXXFLAGS) -c $< -o $@
+	@$(CPP) $(CPPFLAGS) -c $< -o $@
 
 clean:
 	@$(ECHO) "$(RED)$(BOLD) RM $(RESET)$(FGGRAY) $(shell echo $(OBJ) $(SRC:.cpp=.d) | cut -c1-40)...$(RESET)\n"
@@ -109,24 +78,7 @@ run: all
 
 re: fclean all
 
-tests: $(TEST_NAME)
-
-$(TEST_NAME): $(CORE_OBJ) $(TEST_OBJ)
-	@$(ECHO) "$(BLUE)$(BOLD) CC $(RESET)$(FGGRAY) $(TEST_NAME)$(RESET)\n"
-	@$(CXX) $(TESTFLAGS) -o $(TEST_NAME) $(CORE_OBJ) $(TEST_OBJ)
-
-$(TEST_DIR)/%.o: $(TEST_DIR)/%.cpp Makefile
-	@$(ECHO) "$(BLUE)$(BOLD) CC $(RESET)$(FGGRAY) $@$(RESET)\n"
-	@$(CXX) $(TESTFLAGS) -c $< -o $@
-
-# The actual job to run tests
-check: tests
-	@$(VALGRIND) ./$(TEST_NAME)
-
-clean_tests:
-	@$(RM) $(TEST_OBJ) $(TEST_NAME)
-
--include $(DEPS) $(TEST_DEPS)
+-include $(DEPS)
 
 MAKEFLAGS	+= --no-print-directory
 .PHONY: all clean fclean re
