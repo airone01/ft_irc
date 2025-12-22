@@ -6,7 +6,7 @@
 #    By: elagouch <elagouch@student.42lyon.fr>      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/10/08 15:49:16 by elagouch          #+#    #+#              #
-#    Updated: 2025/12/08 14:56:46 by elagouch         ###   ########.fr        #
+#    Updated: 2025/12/22 12:22:58 by elagouch         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,7 +14,7 @@
 #                                   COMMANDS                                   #
 # **************************************************************************** #
 
-CXX				?=	c++
+CXX				:=	c++
 ECHO			:=	printf
 VALGRIND	?=	valgrind --leak-check=full --show-leak-kinds=all --track-fds=yes --trace-children=yes --trace-children-skip=/bin/*,/usr/bin/*
 
@@ -33,7 +33,7 @@ FGGRAY			:=	$(shell tput setaf 244)
 # **************************************************************************** #
 
 # == mandatory ==
-CXXFLAGS	+=	-Wall -Werror -Wextra --std=c++98
+CXXFLAGS	+=	-Wall -Werror -Wextra --std=c++98 -g3
 
 # == test ==
 TESTFLAGS	:= $(CXXFLAGS)
@@ -61,12 +61,7 @@ RM_LIST			:=	"$(OBJ) $(SRC:.cpp=.d)"
 # testing w/ doctest.h
 TEST_NAME		:=	tester
 TEST_DIR		:=	test
-TEST_SRC		:=	$(TEST_DIR)/test_main.cpp \
-								$(TEST_DIR)/test_IRCMessage.cpp \
-								$(TEST_DIR)/test_Client.cpp \
-								$(TEST_DIR)/test_Channel.cpp \
-								$(TEST_DIR)/test_ChannelModes.cpp \
-								$(TEST_DIR)/test_Commands_Integration.cpp
+TEST_SRC		:=	$(TEST_DIR)/main.cpp
 TEST_OBJ		:=	$(TEST_SRC:.cpp=.o)
 TEST_DEPS		:=	$(TEST_SRC:.cpp=.d)
 CORE_OBJ		:=	$(filter-out src/main.o, $(OBJ))
