@@ -197,16 +197,16 @@ void Server::serverRoutine() {
 	this->_ev.data.fd = this->_socketFd;
 	this->_epfd = epoll_create1(0);
 	if (this->_epfd < 0) {
-    close(this->_epfd);
-    close(this->_ev.data.fd);
+		close(this->_epfd);
+		close(this->_ev.data.fd);
 		throw std::runtime_error("epoll_create1 failed.");
-  }
+	}
 
 	if (epoll_ctl(this->_epfd, EPOLL_CTL_ADD, this->_socketFd, &this->_ev) == -1) {
-    close(this->_epfd);
-    close(this->_ev.data.fd);
+		close(this->_epfd);
+		close(this->_ev.data.fd);
 		throw std::runtime_error("server epoll_ctl_add failed");
-  }
+	}
 
 	for(;;){
 		int nfds = epoll_wait(this->_epfd, this->_events, maxEvents, -1);
@@ -236,12 +236,12 @@ void Server::serverRoutine() {
 				this->_ev.events = EPOLLIN;
 				this->_ev.data.fd = connSock;
 				if (epoll_ctl(this->_epfd, EPOLL_CTL_ADD, connSock, &this->_ev) == -1) {
-			    _clients.clearClients();
-			    close(connSock);
-			    close(this->_epfd);
-			    close(this->_socketFd);
+					_clients.clearClients();
+					close(connSock);
+					close(this->_epfd);
+					close(this->_socketFd);
 					throw std::runtime_error("client epoll_ctl_add failed");
-        }
+		}
 				_clients.addClient(Client(connSock));
 			}
 			else if (this->_events[i].events & EPOLLIN) {
