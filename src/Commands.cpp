@@ -488,9 +488,9 @@ void Commands::privmsg(int clientSocket, const IRCMessage& msg, ChannelManager& 
 		}
 		std::vector<std::string>::iterator it = tmp.begin();
 		std::vector<std::string>::iterator ite = tmp.end();
-		std::string privMsg = ":" + client.getNickname() + " PRIVMSG ";
+		std::string privMsgBase = ":" + client.getNickname() + " PRIVMSG ";
 		for (; it != ite; ++it ) {
-			privMsg += *it + " :" + msg.getTrailing() + "\r\n";
+			std::string privMsg = privMsgBase + *it + " :" + msg.getTrailing() + "\r\n";
 			if (channels.hasChannel(*it) && channels.getChannelFromName(*it).hasUser(client.getSocket()))
 				broadcastToChannel(channels.getChannelFromName(*it), privMsg, clients, clientSocket);
 			else if (clients.isNicknameUsed(*it))
